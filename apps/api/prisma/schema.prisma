@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountRole {
+  CLIENT
+  TRANSPORTER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+model Account {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  role               AccountRole
+  status             AccountStatus       @default(ACTIVE)
+  isEmailVerified    Boolean             @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  userProfile        UserProfile?
+  transporterProfile TransporterProfile?
+  sessions           Session[]
+
+  @@index([role])
+  @@index([status])
+  @@index([role, status])
+  @@map("accounts")
+}
+
+model UserProfile {
+  id         String    @id @default(cuid())
+  accountId  String    @unique
+  firstName  String
+  lastName   String
+  phone      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  account    Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([lastName, firstName])
+  @@map("user_profiles")
+}
+
+model TransporterProfile {
+  id                 String    @id @default(cuid())
+  accountId          String    @unique
+  displayName        String
+  businessName       String?
+  contactPhone       String?
+  bio                String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  account            Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("transporter_profiles")
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  accountId        String
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  account          Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+  @@map("sessions")
+}
