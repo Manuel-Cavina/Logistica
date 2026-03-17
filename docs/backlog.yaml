@@ -1,0 +1,312 @@
+epics:
+  - key: E1-BE
+    title: Auth y registro backend
+    milestone: Sprint 1
+    labels: [backend, auth,feature]
+    issues:
+      - title: Crear modelo User y UserRole en Prisma
+        objective: Definir la identidad base del sistema para autenticación y autorización.
+        implementation:
+          - Editar apps/api/prisma/schema.prisma
+          - Crear enum UserRole con CLIENT, TRANSPORTER y ADMIN
+          - Crear modelo User con email, passwordHash, role, isActive, emailVerified, createdAt y updatedAt
+          - Definir email unique
+          - Ejecutar migración y generar Prisma Client
+        acceptance:
+          - Existe UserRole
+          - Existe User
+          - El email es unique
+          - Existe passwordHash
+          - Existen roles CLIENT, TRANSPORTER y ADMIN
+          - La migración corre sin errores
+
+      - title: Crear PrismaModule y PrismaService en NestJS
+        objective: Integrar Prisma como capa reusable de acceso a datos.
+        implementation:
+          - Crear prisma.module.ts
+          - Crear prisma.service.ts
+          - Exportar PrismaService
+        acceptance:
+          - Existe PrismaModule
+          - Existe PrismaService
+          - La API inicia correctamente
+
+      - title: Crear UsersModule y UsersService
+        objective: Crear la capa base de usuarios para auth.
+        implementation:
+          - Crear users.module.ts
+          - Crear users.service.ts
+          - Implementar findByEmail, findById y createUser
+        acceptance:
+          - Existe UsersModule
+          - Existe UsersService
+          - Se puede crear usuario
+          - Se puede buscar por email
+          - Se puede buscar por id
+
+      - title: Implementar hashing seguro de contraseñas con Argon2id
+        objective: Proteger contraseñas con password hashing moderno.
+        implementation:
+          - Instalar argon2
+          - Crear PasswordService
+          - Implementar hashPassword
+          - Implementar verifyPassword
+          - Evaluar rehashNeeded
+        acceptance:
+          - Ninguna contraseña se guarda en texto plano
+          - Se usa Argon2id
+          - Existe verificación segura
+          - El sistema soporta rehash futuro
+
+      - title: Agregar validación global y DTOs de auth
+        objective: Validar register y login de forma consistente.
+        implementation:
+          - Crear RegisterDto
+          - Crear LoginDto
+          - Configurar ValidationPipe global
+          - Validar email, password y role
+        acceptance:
+          - Existe RegisterDto
+          - Existe LoginDto
+          - Errores inválidos responden de forma consistente
+
+      - title: Crear AuthModule y AuthService
+        objective: Centralizar el flujo de autenticación.
+        implementation:
+          - Crear auth.module.ts
+          - Crear auth.service.ts
+          - Integrar UsersService y PasswordService
+        acceptance:
+          - Existe AuthModule
+          - Existe AuthService
+          - AuthService puede registrar y autenticar usuarios
+
+      - title: Implementar endpoint POST auth/register
+        objective: Registrar usuarios CLIENT y TRANSPORTER.
+        implementation:
+          - Crear endpoint register
+          - Validar email duplicado
+          - Hashear password
+          - Crear usuario
+          - No devolver passwordHash
+        acceptance:
+          - Existe POST auth/register
+          - No permite email duplicado
+          - No devuelve passwordHash
+
+      - title: Implementar endpoint POST auth/login
+        objective: Autenticar usuario con email y contraseña.
+        implementation:
+          - Buscar por email
+          - Verificar password
+          - Responder error genérico ante credenciales inválidas
+          - Iniciar emisión de tokens
+        acceptance:
+          - Existe POST auth/login
+          - Login válido funciona
+          - Login inválido falla sin filtrar información sensible
+
+      - title: Implementar access token corto y refresh token rotado
+        objective: Tener sesiones más seguras que un único token largo.
+        implementation:
+          - Configurar JwtModule
+          - Generar access token de vida corta
+          - Generar refresh token separado
+          - Rotar refresh token en cada refresh
+          - Detectar refresh inválido o reutilizado
+        acceptance:
+          - Existe access token corto
+          - Existe refresh token
+          - El refresh rota correctamente
+          - Un refresh inválido es rechazado
+
+      - title: Persistir refresh token hasheado
+        objective: Evitar guardar refresh tokens en texto plano.
+        implementation:
+          - Agregar tabla o campos para refresh token session
+          - Hashear refresh token antes de persistir
+          - Asociarlo al usuario o sesión
+        acceptance:
+          - Refresh tokens no se guardan en texto plano
+          - Se puede invalidar sesión por token o por usuario
+
+      - title: Implementar cookies seguras para sesión
+        objective: Entregar refresh token por cookie endurecida.
+        implementation:
+          - Setear cookie HttpOnly
+          - Setear Secure en producción
+          - Configurar SameSite
+          - Usar Path=/
+          - Usar prefijo __Host- en producción si aplica
+          - Limpiar cookie en logout
+        acceptance:
+          - La cookie es HttpOnly
+          - La cookie es Secure en producción
+          - La cookie tiene SameSite definido
+          - Logout elimina la cookie correctamente
+
+      - title: Implementar endpoint POST auth/refresh
+        objective: Renovar la sesión sin exponer refresh token al frontend JavaScript.
+        implementation:
+          - Leer refresh token desde cookie
+          - Verificar token
+          - Rotar token
+          - Emitir nuevo access token
+        acceptance:
+          - Existe POST auth/refresh
+          - Usa cookie HttpOnly
+          - Rota refresh token correctamente
+
+      - title: Implementar endpoint POST auth/logout
+        objective: Cerrar sesión e invalidar refresh token.
+        implementation:
+          - Invalidar refresh token persistido
+          - Limpiar cookie
+        acceptance:
+          - Existe POST auth/logout
+          - Invalida la sesión
+          - Limpia la cookie
+
+      - title: Implementar endpoint GET auth/me
+        objective: Obtener el usuario autenticado actual.
+        implementation:
+          - Crear endpoint me
+          - Resolver usuario desde access token
+          - Devolver sólo campos seguros
+        acceptance:
+          - Existe GET auth/me
+          - No expone información sensible
+
+      - title: Crear JwtAuthGuard, Roles decorator y RolesGuard
+        objective: Proteger endpoints privados y por rol.
+        implementation:
+          - Crear JwtAuthGuard
+          - Crear Roles decorator
+          - Crear RolesGuard
+        acceptance:
+          - Se pueden proteger rutas autenticadas
+          - Se pueden restringir rutas por role
+
+      - title: Agregar rate limiting y hardening de auth
+        objective: Reducir abuso y enumeración de cuentas.
+        implementation:
+          - Limitar intentos en login y register
+          - Homogeneizar mensajes de error
+          - Registrar eventos de auth
+        acceptance:
+          - Existe rate limiting
+          - No se filtra si un email existe o no en mensajes sensibles
+          - Se registran eventos clave
+
+      - title: Crear TransporterProfile base y registro extendido
+        objective: Separar perfil operativo del transportista del usuario base.
+        implementation:
+          - Crear TransporterProfile en Prisma
+          - Relacionarlo con User
+          - Permitir creación sólo para TRANSPORTER
+        acceptance:
+          - Existe TransporterProfile
+          - Sólo TRANSPORTER puede crearlo
+
+      - title: Documentar arquitectura de auth y seguridad
+        objective: Dejar documentado el flujo real implementado.
+        implementation:
+          - Actualizar docs/architecture.md
+          - Documentar tokens, cookies, guards, roles y logout
+        acceptance:
+          - La arquitectura de auth queda documentada
+          - Las decisiones de seguridad quedan registradas
+
+  - key: E1-FE
+    title: Auth y registro frontend
+    milestone: Sprint 1
+    labels: [frontend, auth,feature]
+    issues:
+      - title: Crear pantalla de login en web
+        objective: Permitir login desde apps/web.
+        implementation:
+          - Crear ruta o página login
+          - Crear formulario controlado
+          - Conectar con POST auth/login
+          - Manejar estados loading y error
+        acceptance:
+          - Existe pantalla login
+          - Consume API real
+          - Muestra errores correctamente
+
+      - title: Crear pantalla de registro en web
+        objective: Permitir registro de CLIENT y TRANSPORTER.
+        implementation:
+          - Crear ruta o página register
+          - Agregar selector de role permitido
+          - Conectar con POST auth/register
+          - Validar campos mínimos
+        acceptance:
+          - Existe pantalla register
+          - Permite registrar CLIENT
+          - Permite registrar TRANSPORTER
+
+      - title: Configurar cliente HTTP con credentials
+        objective: Permitir envío de cookies entre web y API.
+        implementation:
+          - Configurar fetch o cliente HTTP con credentials include
+          - Centralizar base URL y errores
+        acceptance:
+          - Las requests autenticadas envían credentials
+          - La configuración es reutilizable
+
+      - title: Implementar bootstrap de sesión con auth/me y refresh
+        objective: Restaurar sesión al cargar la app.
+        implementation:
+          - Consultar auth/me al iniciar
+          - Si access token expiró, intentar refresh
+          - Mantener estado autenticado
+        acceptance:
+          - La app puede restaurar sesión existente
+          - El usuario no pierde sesión innecesariamente
+
+      - title: Implementar logout desde web
+        objective: Permitir cierre de sesión seguro.
+        implementation:
+          - Llamar POST auth/logout
+          - Limpiar estado local
+          - Redirigir a login o home pública
+        acceptance:
+          - Logout funciona
+          - La sesión se cierra correctamente
+
+      - title: Crear protección de rutas privadas en web
+        objective: Restringir vistas privadas a usuarios autenticados.
+        implementation:
+          - Crear wrapper, middleware o guard de rutas
+          - Redirigir no autenticados
+        acceptance:
+          - Las rutas privadas quedan protegidas
+          - No autenticados son redirigidos
+
+      - title: Crear base de autorización por rol en frontend
+        objective: Preparar vistas diferenciadas por CLIENT y TRANSPORTER.
+        implementation:
+          - Exponer role del usuario autenticado
+          - Crear helpers o guards por rol
+        acceptance:
+          - La app conoce el role actual
+          - Se pueden ocultar o proteger vistas por role
+
+      - title: Crear formularios seguros con validación UX
+        objective: Mejorar calidad de login y registro.
+        implementation:
+          - Validar email
+          - Validar password mínima
+          - Evitar doble submit
+          - Mostrar feedback claro
+        acceptance:
+          - Los formularios validan correctamente
+          - El UX evita errores comunes
+
+      - title: Documentar flujo frontend de auth
+        objective: Dejar claro cómo web consume auth del backend.
+        implementation:
+          - Documentar flujo login, refresh, logout y me
+        acceptance:
+          - El flujo frontend queda documentado

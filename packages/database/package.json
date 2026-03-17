@@ -1,0 +1,32 @@
+{
+  "name": "@logistica/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+  "db:generate": "dotenv -e ../../.env -- prisma generate --schema prisma/schema.prisma",
+  "db:migrate": "dotenv -e ../../.env -- prisma migrate dev --schema prisma/schema.prisma",
+  "db:studio": "dotenv -e ../../.env -- prisma studio --schema prisma/schema.prisma",
+  "prisma:deploy": "dotenv -e ../../.env -- prisma migrate deploy --schema prisma/schema.prisma",
+  "prebuild": "pnpm run db:generate",
+  "build": "tsc -p tsconfig.json",
+  "pretypecheck": "pnpm run db:generate",
+  "typecheck": "tsc -p tsconfig.json --noEmit"
+},
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@prisma/client": "^6.19.2"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0",
+    "prisma": "^6.19.2",
+    "typescript": "^5.0.0"
+  }
+}
