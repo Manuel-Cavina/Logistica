@@ -2,6 +2,11 @@
   "name": "@logistica/api",
   "private": true,
   "scripts": {
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "prisma:deploy": "prisma migrate deploy",
     "dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint .",
@@ -11,10 +16,10 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-    "@prisma/client": "^6.0.0"
+    "@prisma/client": "^6.19.2"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "prisma": "^6.0.0"
+    "prisma": "^6.19.2"
   }
 }
