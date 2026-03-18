@@ -8,6 +8,7 @@
     "prisma:deploy": "pnpm --filter @logistica/database prisma:deploy",
     "prebuild": "pnpm --filter @logistica/shared build && pnpm --filter @logistica/database build",
     "predev": "pnpm --filter @logistica/shared build && pnpm --filter @logistica/database build",
+    "pretest": "pnpm --filter @logistica/shared build",
     "pretypecheck": "pnpm --filter @logistica/shared typecheck && pnpm --filter @logistica/database typecheck",
     "dev": "nest start --watch",
     "build": "nest build",
@@ -22,7 +23,8 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-    "argon2": "^0.44.0"
+    "argon2": "^0.44.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
