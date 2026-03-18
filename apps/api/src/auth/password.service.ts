@@ -12,15 +12,23 @@ export class PasswordService {
     parallelism: 1,
   };
 
-  async hashPassword(plainPassword: string): Promise<string> {
+  async hash(plainPassword: string): Promise<string> {
     return argon2.hash(plainPassword, this.ARGON2_OPTIONS);
+  }
+
+  async verify(plainPassword: string, passwordHash: string): Promise<boolean> {
+    return argon2.verify(passwordHash, plainPassword);
+  }
+
+  async hashPassword(plainPassword: string): Promise<string> {
+    return this.hash(plainPassword);
   }
 
   async verifyPassword(
     plainPassword: string,
     passwordHash: string,
   ): Promise<boolean> {
-    return argon2.verify(passwordHash, plainPassword);
+    return this.verify(plainPassword, passwordHash);
   }
 
   needsRehash(passwordHash: string): boolean {

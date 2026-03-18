@@ -1,14 +1,15 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   LoginSchema,
+  RegisterSchema,
   RegisterClientSchema,
   RegisterTransporterSchema,
-} from '../schemas/auth.schema';
+} from "../schemas/auth.schema";
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
 
-export const AccountRoleSchema = z.enum(['CLIENT', 'TRANSPORTER', 'ADMIN']);
+export const AccountRoleSchema = z.enum(["CLIENT", "TRANSPORTER", "ADMIN"]);
 export type AccountRole = z.infer<typeof AccountRoleSchema>;
 
 export const RegisterClientDtoSchema = RegisterClientSchema;
@@ -18,6 +19,9 @@ export const RegisterTransporterDtoSchema = RegisterTransporterSchema;
 export type IRegisterTransporterDto = z.infer<
   typeof RegisterTransporterDtoSchema
 >;
+
+export const RegisterDtoSchema = RegisterSchema;
+export type IRegisterDto = z.infer<typeof RegisterDtoSchema>;
 
 export const LoginDtoSchema = LoginSchema;
 export type ILoginDto = z.infer<typeof LoginDtoSchema>;
@@ -60,6 +64,11 @@ export const LoginResponseSchema = z.object({
   profile: AuthProfileViewSchema,
 });
 export type ILoginResponse = z.infer<typeof LoginResponseSchema>;
+
+export const RegisterResponseSchema = z.object({
+  account: AuthAccountSchema,
+});
+export type IRegisterResponse = z.infer<typeof RegisterResponseSchema>;
 
 export const MeResponseSchema = z.object({
   account: AuthAccountSchema,
