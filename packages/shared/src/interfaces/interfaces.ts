@@ -59,9 +59,7 @@ export const AuthProfileViewSchema = z
 export type IAuthProfileView = z.infer<typeof AuthProfileViewSchema>;
 
 export const LoginResponseSchema = z.object({
-  accessToken: z.string().min(1),
   account: AuthAccountSchema,
-  profile: AuthProfileViewSchema,
 });
 export type ILoginResponse = z.infer<typeof LoginResponseSchema>;
 
