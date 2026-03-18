@@ -1,40 +1,25 @@
 import { z } from 'zod';
+import {
+  LoginSchema,
+  RegisterClientSchema,
+  RegisterTransporterSchema,
+} from '../schemas/auth.schema';
 
 const emailSchema = z.string().trim().email().max(320);
-const passwordSchema = z.string().min(8).max(128);
-const optionalPhoneSchema = z.string().trim().min(1).max(32).optional();
-const optionalTextSchema = z.string().trim().min(1).max(255).optional();
-const optionalBioSchema = z.string().trim().min(1).max(1000).optional();
 const cuidSchema = z.string().cuid();
 
 export const AccountRoleSchema = z.enum(['CLIENT', 'TRANSPORTER', 'ADMIN']);
 export type AccountRole = z.infer<typeof AccountRoleSchema>;
 
-export const RegisterClientDtoSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  firstName: z.string().trim().min(1).max(120),
-  lastName: z.string().trim().min(1).max(120),
-  phone: optionalPhoneSchema,
-});
+export const RegisterClientDtoSchema = RegisterClientSchema;
 export type IRegisterClientDto = z.infer<typeof RegisterClientDtoSchema>;
 
-export const RegisterTransporterDtoSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  displayName: z.string().trim().min(1).max(160),
-  businessName: optionalTextSchema,
-  contactPhone: optionalPhoneSchema,
-  bio: optionalBioSchema,
-});
+export const RegisterTransporterDtoSchema = RegisterTransporterSchema;
 export type IRegisterTransporterDto = z.infer<
   typeof RegisterTransporterDtoSchema
 >;
 
-export const LoginDtoSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-});
+export const LoginDtoSchema = LoginSchema;
 export type ILoginDto = z.infer<typeof LoginDtoSchema>;
 
 export const AuthAccountSchema = z.object({
