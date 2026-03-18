@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -9,6 +9,7 @@ describe('AuthService', () => {
   };
   const passwordService = {
     hash: jest.fn(),
+    verify: jest.fn(),
   };
 
   let authService: AuthService;
@@ -116,5 +117,88 @@ describe('AuthService', () => {
     expect(passwordService.hash).not.toHaveBeenCalled();
     expect(accountsService.createClientAccount).not.toHaveBeenCalled();
     expect(accountsService.createTransporterAccount).not.toHaveBeenCalled();
+  });
+
+  it('logs in with a normalized email and returns a public account payload', async () => {
+    accountsService.findByEmail.mockResolvedValue({
+      id: 'client-account-id',
+      email: 'client@example.com',
+      role: 'CLIENT',
+      isEmailVerified: false,
+      passwordHash: 'stored-password-hash',
+    });
+    passwordService.verify.mockResolvedValue(true);
+
+    await expect(
+      authService.login({
+        email: '  CLIENT@Example.com ',
+        password: 'supersafe123',
+      }),
+    ).resolves.toEqual({
+      account: {
+        id: 'client-account-id',
+        email: 'client@example.com',
+        role: 'CLIENT',
+        isEmailVerified: false,
+      },
+    });
+
+    expect(accountsService.findByEmail).toHaveBeenCalledWith(
+      'client@example.com',
+    );
+    expect(passwordService.verify).toHaveBeenCalledWith(
+      'supersafe123',
+      'stored-password-hash',
+    );
+  });
+
+  it('returns the same generic error when the account does not exist', async () => {
+    accountsService.findByEmail.mockResolvedValue(null);
+
+    const loginPromise = authService.login({
+      email: 'missing@example.com',
+      password: 'supersafe123',
+    });
+
+    await expect(loginPromise).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(
+      loginPromise.catch((error: unknown) => {
+        throw error;
+      }),
+    ).rejects.toMatchObject({
+      message: 'Invalid credentials.',
+    });
+
+    expect(passwordService.verify).not.toHaveBeenCalled();
+  });
+
+  it('returns the same generic error when the password is invalid', async () => {
+    accountsService.findByEmail.mockResolvedValue({
+      id: 'client-account-id',
+      email: 'client@example.com',
+      role: 'CLIENT',
+      isEmailVerified: false,
+      passwordHash: 'stored-password-hash',
+    });
+    passwordService.verify.mockResolvedValue(false);
+
+    const loginPromise = authService.login({
+      email: 'client@example.com',
+      password: 'wrong-password',
+    });
+
+    await expect(loginPromise).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(
+      loginPromise.catch((error: unknown) => {
+        throw error;
+      }),
+    ).rejects.toMatchObject({
+      message: 'Invalid credentials.',
+    });
+
+    expect(passwordService.verify).toHaveBeenCalledWith(
+      'wrong-password',
+      'stored-password-hash',
+    );
   });
 });
