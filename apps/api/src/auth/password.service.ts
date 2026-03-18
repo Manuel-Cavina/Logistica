@@ -12,14 +12,11 @@ export class PasswordService {
     parallelism: 1,
   };
 
-  async hashPassword(plainPassword: string): Promise<string> {
+  async hash(plainPassword: string): Promise<string> {
     return argon2.hash(plainPassword, this.ARGON2_OPTIONS);
   }
 
-  async verifyPassword(
-    plainPassword: string,
-    passwordHash: string,
-  ): Promise<boolean> {
+  async verify(plainPassword: string, passwordHash: string): Promise<boolean> {
     return argon2.verify(passwordHash, plainPassword);
   }
 
