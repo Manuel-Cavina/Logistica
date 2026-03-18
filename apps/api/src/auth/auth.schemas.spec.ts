@@ -1,10 +1,58 @@
 import {
   LoginSchema,
+  RegisterSchema,
   RegisterClientSchema,
   RegisterTransporterSchema,
 } from '@logistica/shared';
 
 describe('auth schemas', () => {
+  it('RegisterSchema accepts a CLIENT payload', () => {
+    const result = RegisterSchema.safeParse({
+      role: 'CLIENT',
+      email: 'client@example.com',
+      password: 'supersafe123',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      phone: '+5491112345678',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('RegisterSchema accepts a TRANSPORTER payload', () => {
+    const result = RegisterSchema.safeParse({
+      role: 'TRANSPORTER',
+      email: 'transporter@example.com',
+      password: 'supersafe123',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme SRL',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('RegisterSchema rejects ADMIN role', () => {
+    const result = RegisterSchema.safeParse({
+      role: 'ADMIN',
+      email: 'admin@example.com',
+      password: 'supersafe123',
+      firstName: 'Jane',
+      lastName: 'Doe',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('RegisterSchema rejects a CLIENT payload without required profile fields', () => {
+    const result = RegisterSchema.safeParse({
+      role: 'CLIENT',
+      email: 'client@example.com',
+      password: 'supersafe123',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it('RegisterClientSchema rejects invalid email', () => {
     const result = RegisterClientSchema.safeParse({
       email: 'invalid-email',
