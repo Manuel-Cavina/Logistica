@@ -9,43 +9,43 @@ describe('PasswordService', () => {
     passwordService = new PasswordService();
   });
 
-  it('hashPassword returns a hash different from the plain password', async () => {
-    const passwordHash = await passwordService.hashPassword(plainPassword);
+  it('hash returns a hash different from the plain password', async () => {
+    const passwordHash = await passwordService.hash(plainPassword);
 
     expect(passwordHash).not.toBe(plainPassword);
   });
 
-  it('hashPassword uses Argon2id', async () => {
-    const passwordHash = await passwordService.hashPassword(plainPassword);
+  it('hash uses Argon2id', async () => {
+    const passwordHash = await passwordService.hash(plainPassword);
 
     expect(passwordHash.startsWith('$argon2id$')).toBe(true);
   });
 
-  it('hashPassword returns different hashes for the same password', async () => {
-    const firstHash = await passwordService.hashPassword(plainPassword);
-    const secondHash = await passwordService.hashPassword(plainPassword);
+  it('hash returns different hashes for the same password', async () => {
+    const firstHash = await passwordService.hash(plainPassword);
+    const secondHash = await passwordService.hash(plainPassword);
 
     expect(firstHash).not.toBe(secondHash);
   });
 
-  it('verifyPassword returns true for the correct password', async () => {
-    const passwordHash = await passwordService.hashPassword(plainPassword);
+  it('verify returns true for the correct password', async () => {
+    const passwordHash = await passwordService.hash(plainPassword);
 
     await expect(
-      passwordService.verifyPassword(plainPassword, passwordHash),
+      passwordService.verify(plainPassword, passwordHash),
     ).resolves.toBe(true);
   });
 
-  it('verifyPassword returns false for an incorrect password', async () => {
-    const passwordHash = await passwordService.hashPassword(plainPassword);
+  it('verify returns false for an incorrect password', async () => {
+    const passwordHash = await passwordService.hash(plainPassword);
 
     await expect(
-      passwordService.verifyPassword('wrong-password', passwordHash),
+      passwordService.verify('wrong-password', passwordHash),
     ).resolves.toBe(false);
   });
 
   it('needsRehash returns false for hashes generated with the current config', async () => {
-    const passwordHash = await passwordService.hashPassword(plainPassword);
+    const passwordHash = await passwordService.hash(plainPassword);
 
     expect(passwordService.needsRehash(passwordHash)).toBe(false);
   });
