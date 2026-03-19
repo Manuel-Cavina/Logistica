@@ -143,6 +143,21 @@ export class AccountsService {
     return result.count;
   }
 
+  async revokeSessionsByAccount(
+    accountId: string,
+    revokedAt: Date = new Date(),
+  ): Promise<number> {
+    const result = await this.prisma.session.updateMany({
+      where: {
+        accountId,
+        revokedAt: null,
+      },
+      data: { revokedAt },
+    });
+
+    return result.count;
+  }
+
   async rotateSession(
     currentSessionId: string,
     successorSession: CreateSessionInput,
