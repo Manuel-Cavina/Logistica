@@ -39,6 +39,7 @@ export interface CreateTransporterAccountInput {
 }
 
 export interface CreateSessionInput {
+  id: string;
   accountId: string;
   tokenHash: string;
   tokenFamily: string;

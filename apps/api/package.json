@@ -22,13 +22,16 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.0.0",
     "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@nestjs/testing": "^11.1.17",
+    "@types/cookie-parser": "^1.4.10",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@types/supertest": "^7.2.0",
