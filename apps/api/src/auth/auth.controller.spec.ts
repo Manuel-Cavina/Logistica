@@ -20,6 +20,17 @@ function getSetCookieHeader(response: {
   return setCookieHeader[0];
 }
 
+function expectRefreshCookieAttributes(
+  setCookieHeader: string,
+  expectedName: string,
+): void {
+  expect(setCookieHeader).toContain(`${expectedName}=`);
+  expect(setCookieHeader).toContain('HttpOnly');
+  expect(setCookieHeader).toContain('SameSite=Lax');
+  expect(setCookieHeader).toContain('Path=/');
+  expect(setCookieHeader).not.toContain('Secure');
+}
+
 describe('AuthController', () => {
   const authService = {
     login: jest.fn(),
@@ -198,7 +209,10 @@ describe('AuthController', () => {
         accessToken: 'access-token',
       });
 
-    expect(getSetCookieHeader(response)).toContain('refresh_token=');
+    expectRefreshCookieAttributes(
+      getSetCookieHeader(response),
+      'refresh_token',
+    );
 
     const loginContext = authService.login.mock.calls[0]?.[1] as
       | { ipAddress?: string | null; userAgent?: string | null }
@@ -272,7 +286,10 @@ describe('AuthController', () => {
         accessToken: 'rotated-access-token',
       });
 
-    expect(getSetCookieHeader(response)).toContain('refresh_token=');
+    expectRefreshCookieAttributes(
+      getSetCookieHeader(response),
+      'refresh_token',
+    );
 
     const refreshContext = authService.refresh.mock.calls[0]?.[1] as
       | { ipAddress?: string | null; userAgent?: string | null }
@@ -301,7 +318,30 @@ describe('AuthController', () => {
       .set('Cookie', 'refresh_token=stale-refresh-token')
       .expect(401);
 
-    expect(getSetCookieHeader(response)).toContain('refresh_token=;');
+    const setCookieHeader = getSetCookieHeader(response);
+
+    expect(setCookieHeader).toContain('refresh_token=;');
+    expect(setCookieHeader).toContain('HttpOnly');
+    expect(setCookieHeader).toContain('SameSite=Lax');
+    expect(setCookieHeader).toContain('Path=/');
+    expect(setCookieHeader).not.toContain('Secure');
+
+    await app.close();
+  });
+
+  it('returns 204 and clears the refresh cookie on logout', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    const response = await request(server).post('/auth/logout').expect(204);
+
+    const setCookieHeader = getSetCookieHeader(response);
+
+    expect(setCookieHeader).toContain('refresh_token=;');
+    expect(setCookieHeader).toContain('HttpOnly');
+    expect(setCookieHeader).toContain('SameSite=Lax');
+    expect(setCookieHeader).toContain('Path=/');
+    expect(setCookieHeader).not.toContain('Secure');
 
     await app.close();
   });

@@ -21,8 +21,8 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { getAuthConfiguration } from './auth.config';
 import { AuthService } from './auth.service';
 import type {
-  AuthConfiguration,
   AuthRequestContext,
+  RefreshCookieConfiguration,
   RefreshCookieOptions,
 } from './auth.types';
 import type { LoginDto } from './dto/login.dto';
@@ -41,13 +41,13 @@ interface HttpResponse {
 
 @Controller('auth')
 export class AuthController {
-  private readonly authConfig: AuthConfiguration;
+  private readonly refreshCookie: RefreshCookieConfiguration;
 
   constructor(
     private readonly authService: AuthService,
     configService: ConfigService,
   ) {
-    this.authConfig = getAuthConfiguration(configService);
+    this.refreshCookie = getAuthConfiguration(configService).refreshCookie;
   }
 
   @Post('register')
@@ -100,6 +100,12 @@ export class AuthController {
     }
   }
 
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  logout(@Res({ passthrough: true }) response: HttpResponse): void {
+    this.clearRefreshCookie(response);
+  }
+
   private getRequestContext(request: HttpRequest): AuthRequestContext {
     const userAgentHeader = request.headers['user-agent'];
 
@@ -113,7 +119,7 @@ export class AuthController {
   }
 
   private extractRefreshToken(request: HttpRequest): string | null {
-    const cookieName = this.authConfig.refreshCookieName;
+    const cookieName = this.refreshCookie.name;
     const parsedCookie = request.cookies?.[cookieName];
 
     if (typeof parsedCookie === 'string' && parsedCookie.length > 0) {
@@ -142,16 +148,16 @@ export class AuthController {
 
   private setRefreshCookie(response: HttpResponse, refreshToken: string): void {
     response.cookie(
-      this.authConfig.refreshCookieName,
+      this.refreshCookie.name,
       refreshToken,
-      this.authConfig.refreshCookieOptions,
+      this.refreshCookie.setOptions,
     );
   }
 
   private clearRefreshCookie(response: HttpResponse): void {
     response.clearCookie(
-      this.authConfig.refreshCookieName,
-      this.authConfig.refreshCookieOptions,
+      this.refreshCookie.name,
+      this.refreshCookie.clearOptions,
     );
   }
 }
