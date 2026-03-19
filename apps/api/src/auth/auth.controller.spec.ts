@@ -305,6 +305,34 @@ describe('AuthController', () => {
     await app.close();
   });
 
+  it('returns 401 and clears the cookie when the refresh cookie is missing', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authService.refresh.mockRejectedValue(
+      new UnauthorizedException('Invalid credentials.'),
+    );
+
+    const response = await request(server).post('/auth/refresh').expect(401);
+
+    const setCookieHeader = getSetCookieHeader(response);
+
+    expect(setCookieHeader).toContain('refresh_token=;');
+    expect(setCookieHeader).toContain('HttpOnly');
+    expect(setCookieHeader).toContain('SameSite=Lax');
+    expect(setCookieHeader).toContain('Path=/');
+    expect(setCookieHeader).not.toContain('Secure');
+    expect(authService.refresh).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({
+        ipAddress: expect.any(String),
+        userAgent: null,
+      }),
+    );
+
+    await app.close();
+  });
+
   it('clears the cookie when refresh is rejected', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
