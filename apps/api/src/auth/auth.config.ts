@@ -1,8 +1,44 @@
 import type { ConfigService } from '@nestjs/config';
-import type { AuthConfiguration } from './auth.types';
+import type {
+  AuthConfiguration,
+  RefreshCookieConfiguration,
+} from './auth.types';
 
 const DEFAULT_REFRESH_COOKIE_NAME = 'refresh_token';
-const DEFAULT_REFRESH_COOKIE_PATH = '/auth';
+const DEFAULT_REFRESH_COOKIE_PATH = '/';
+
+function resolveRefreshCookieName(
+  configuredName: string,
+  isProduction: boolean,
+): string {
+  if (!isProduction || configuredName.startsWith('__Host-')) {
+    return configuredName;
+  }
+
+  return `__Host-${configuredName}`;
+}
+
+function getRefreshCookieConfiguration(
+  refreshTokenTtlSeconds: number,
+  configuredName: string,
+  isProduction: boolean,
+): RefreshCookieConfiguration {
+  const baseOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    path: DEFAULT_REFRESH_COOKIE_PATH,
+  };
+
+  return {
+    name: resolveRefreshCookieName(configuredName, isProduction),
+    setOptions: {
+      ...baseOptions,
+      maxAge: refreshTokenTtlSeconds * 1000,
+    },
+    clearOptions: baseOptions,
+  };
+}
 
 function parsePositiveInteger(value: string, key: string): number {
   const parsedValue = Number.parseInt(value, 10);
@@ -42,13 +78,10 @@ export function getAuthConfiguration(
     accessTokenTtlSeconds,
     refreshTokenSecret,
     refreshTokenTtlSeconds,
-    refreshCookieName,
-    refreshCookieOptions: {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: DEFAULT_REFRESH_COOKIE_PATH,
-      maxAge: refreshTokenTtlSeconds * 1000,
-    },
+    refreshCookie: getRefreshCookieConfiguration(
+      refreshTokenTtlSeconds,
+      refreshCookieName,
+      isProduction,
+    ),
   };
 }

@@ -23,13 +23,18 @@ export interface RefreshResult {
   refreshToken: string;
 }
 
+export interface RefreshCookieConfiguration {
+  name: string;
+  setOptions: RefreshCookieOptions;
+  clearOptions: RefreshCookieOptions;
+}
+
 export interface AuthConfiguration {
   accessTokenSecret: string;
   accessTokenTtlSeconds: number;
   refreshTokenSecret: string;
   refreshTokenTtlSeconds: number;
-  refreshCookieName: string;
-  refreshCookieOptions: RefreshCookieOptions;
+  refreshCookie: RefreshCookieConfiguration;
 }
 
 export interface RefreshCookieOptions {
@@ -37,5 +42,6 @@ export interface RefreshCookieOptions {
   secure?: boolean;
   sameSite?: boolean | 'lax' | 'strict' | 'none';
   path?: string;
+  domain?: string;
   maxAge?: number;
 }
