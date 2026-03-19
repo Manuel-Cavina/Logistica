@@ -60,8 +60,14 @@ export type IAuthProfileView = z.infer<typeof AuthProfileViewSchema>;
 
 export const LoginResponseSchema = z.object({
   account: AuthAccountSchema,
+  accessToken: z.string().min(1),
 });
 export type ILoginResponse = z.infer<typeof LoginResponseSchema>;
+
+export const RefreshResponseSchema = z.object({
+  accessToken: z.string().min(1),
+});
+export type IRefreshResponse = z.infer<typeof RefreshResponseSchema>;
 
 export const RegisterResponseSchema = z.object({
   account: AuthAccountSchema,

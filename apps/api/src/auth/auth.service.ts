@@ -4,18 +4,25 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { ILoginResponse, IRegisterResponse } from '@logistica/shared';
+import type { IRegisterResponse } from '@logistica/shared';
 import { AccountsService } from '../accounts/accounts.service';
 import type { AccountWithProfiles } from '../accounts/accounts.types';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { PasswordService } from './password.service';
+import { AuthSessionService } from './services/auth-session.service';
+import type {
+  AuthRequestContext,
+  LoginResult,
+  RefreshResult,
+} from './auth.types';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly accountsService: AccountsService,
     private readonly passwordService: PasswordService,
+    private readonly authSessionService: AuthSessionService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<IRegisterResponse> {
@@ -61,12 +68,15 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<ILoginResponse> {
+  async login(
+    loginDto: LoginDto,
+    context: AuthRequestContext,
+  ): Promise<LoginResult> {
     const normalizedEmail = this.normalizeEmail(loginDto.email);
     const account = await this.accountsService.findByEmail(normalizedEmail);
 
     if (!account) {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw this.invalidAuthAttempt();
     }
 
     const isPasswordValid = await this.passwordService.verify(
@@ -75,20 +85,42 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw this.invalidAuthAttempt();
     }
 
-    return this.toLoginResponse(account);
+    const sessionTokens = await this.authSessionService.createLoginSession(
+      account,
+      context,
+    );
+
+    return {
+      response: {
+        account: this.toAuthAccount(account),
+        accessToken: sessionTokens.accessToken,
+      },
+      refreshToken: sessionTokens.refreshToken,
+    };
+  }
+
+  async refresh(
+    refreshToken: string | null | undefined,
+    context: AuthRequestContext,
+  ): Promise<RefreshResult> {
+    const sessionTokens = await this.authSessionService.refreshSession(
+      refreshToken,
+      context,
+    );
+
+    return {
+      response: {
+        accessToken: sessionTokens.accessToken,
+      },
+      refreshToken: sessionTokens.refreshToken,
+    };
   }
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
-  }
-
-  private toLoginResponse(account: AccountWithProfiles): ILoginResponse {
-    return {
-      account: this.toAuthAccount(account),
-    };
   }
 
   private toRegisterResponse(account: AccountWithProfiles): IRegisterResponse {
@@ -104,5 +136,9 @@ export class AuthService {
       role: account.role,
       isEmailVerified: account.isEmailVerified,
     };
+  }
+
+  private invalidAuthAttempt(): UnauthorizedException {
+    return new UnauthorizedException('Invalid credentials.');
   }
 }
