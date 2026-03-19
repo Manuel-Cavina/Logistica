@@ -14,6 +14,7 @@ describe('AuthService', () => {
   const authSessionService = {
     createLoginSession: jest.fn(),
     refreshSession: jest.fn(),
+    logoutSession: jest.fn(),
   };
 
   let authService: AuthService;
@@ -198,6 +199,16 @@ describe('AuthService', () => {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       },
+    );
+  });
+
+  it('delegates logout to the session service', async () => {
+    authSessionService.logoutSession.mockResolvedValue(undefined);
+
+    await expect(authService.logout('refresh-token')).resolves.toBeUndefined();
+
+    expect(authSessionService.logoutSession).toHaveBeenCalledWith(
+      'refresh-token',
     );
   });
 

@@ -115,6 +115,42 @@ export class AuthSessionService {
     };
   }
 
+  async logoutSession(refreshToken: string | null | undefined): Promise<void> {
+    if (!refreshToken) {
+      return;
+    }
+
+    try {
+      const payload =
+        await this.authTokenService.verifyRefreshToken(refreshToken);
+      const session = await this.accountsService.findSessionById(payload.sid);
+
+      if (!session) {
+        return;
+      }
+
+      if (
+        session.accountId !== payload.sub ||
+        session.tokenFamily !== payload.family ||
+        session.revokedAt ||
+        !this.authTokenService.matchesRefreshTokenHash(
+          session.tokenHash,
+          refreshToken,
+        )
+      ) {
+        return;
+      }
+
+      await this.accountsService.revokeSession(session.id);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        return;
+      }
+
+      throw error;
+    }
+  }
+
   private buildSessionInput(input: {
     id: string;
     accountId: string;
