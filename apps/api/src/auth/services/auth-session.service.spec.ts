@@ -30,6 +30,7 @@ describe('AuthSessionService', () => {
     createSession: jest.fn(),
     findSessionById: jest.fn(),
     rotateSession: jest.fn(),
+    revokeSession: jest.fn(),
     revokeSessionFamily: jest.fn(),
   };
   const authTokenService = {
@@ -91,8 +92,10 @@ describe('AuthSessionService', () => {
       refreshToken: 'refresh-token',
     });
 
-    const createSessionInput = accountsService.createSession.mock
-      .calls[0]?.[0] as SessionInputAssertion | undefined;
+    const createSessionCalls = accountsService.createSession.mock.calls as
+      | [SessionInputAssertion][]
+      | undefined;
+    const createSessionInput = createSessionCalls?.[0]?.[0];
 
     expect(createSessionInput).toBeDefined();
     expect(createSessionInput?.accountId).toBe('client-account-id');
@@ -175,6 +178,64 @@ describe('AuthSessionService', () => {
     expect(authTokenService.verifyRefreshToken).not.toHaveBeenCalled();
   });
 
+  it('revokes the current session on logout when the refresh token matches the active session', async () => {
+    authTokenService.verifyRefreshToken.mockResolvedValue({
+      sub: 'client-account-id',
+      sid: 'current-session-id',
+      family: 'token-family',
+    });
+    accountsService.findSessionById.mockResolvedValue(activeSession);
+    accountsService.revokeSession.mockResolvedValue(1);
+
+    await expect(
+      authSessionService.logoutSession('secret'),
+    ).resolves.toBeUndefined();
+
+    expect(accountsService.revokeSession).toHaveBeenCalledWith(
+      'current-session-id',
+    );
+  });
+
+  it('keeps logout idempotent when the token is missing', async () => {
+    await expect(
+      authSessionService.logoutSession(null),
+    ).resolves.toBeUndefined();
+
+    expect(authTokenService.verifyRefreshToken).not.toHaveBeenCalled();
+    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps logout idempotent when the token is invalid', async () => {
+    authTokenService.verifyRefreshToken.mockRejectedValue(
+      new UnauthorizedException('Invalid credentials.'),
+    );
+
+    await expect(
+      authSessionService.logoutSession('invalid-token'),
+    ).resolves.toBeUndefined();
+
+    expect(accountsService.findSessionById).not.toHaveBeenCalled();
+    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps logout idempotent when the stored session is already revoked', async () => {
+    authTokenService.verifyRefreshToken.mockResolvedValue({
+      sub: 'client-account-id',
+      sid: 'current-session-id',
+      family: 'token-family',
+    });
+    accountsService.findSessionById.mockResolvedValue({
+      ...activeSession,
+      revokedAt: new Date('2026-03-18T12:00:00.000Z'),
+    });
+
+    await expect(
+      authSessionService.logoutSession('secret'),
+    ).resolves.toBeUndefined();
+
+    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+  });
+
   it('rejects refresh when the session cannot be found', async () => {
     authTokenService.verifyRefreshToken.mockResolvedValue({
       sub: 'client-account-id',
@@ -208,6 +269,22 @@ describe('AuthSessionService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
     expect(accountsService.rotateSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps logout idempotent when the stored hash does not match the token', async () => {
+    authTokenService.verifyRefreshToken.mockResolvedValue({
+      sub: 'client-account-id',
+      sid: 'current-session-id',
+      family: 'token-family',
+    });
+    accountsService.findSessionById.mockResolvedValue(activeSession);
+    authTokenService.matchesRefreshTokenHash.mockReturnValue(false);
+
+    await expect(
+      authSessionService.logoutSession('secret'),
+    ).resolves.toBeUndefined();
+
+    expect(accountsService.revokeSession).not.toHaveBeenCalled();
   });
 
   it('rejects refresh when the session is expired', async () => {

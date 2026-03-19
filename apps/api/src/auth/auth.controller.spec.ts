@@ -32,10 +32,15 @@ function expectRefreshCookieAttributes(
 }
 
 describe('AuthController', () => {
+  type RequestContext = {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
   const authService = {
     login: jest.fn(),
     refresh: jest.fn(),
     register: jest.fn(),
+    logout: jest.fn(),
   };
   const configService = {
     get: jest.fn(),
@@ -214,9 +219,10 @@ describe('AuthController', () => {
       'refresh_token',
     );
 
-    const loginContext = authService.login.mock.calls[0]?.[1] as
-      | { ipAddress?: string | null; userAgent?: string | null }
+    const loginCall = authService.login.mock.calls as
+      | [unknown, RequestContext][]
       | undefined;
+    const loginContext = loginCall?.[0]?.[1];
 
     expect(authService.login).toHaveBeenCalledWith(
       {
@@ -291,9 +297,10 @@ describe('AuthController', () => {
       'refresh_token',
     );
 
-    const refreshContext = authService.refresh.mock.calls[0]?.[1] as
-      | { ipAddress?: string | null; userAgent?: string | null }
+    const refreshCall = authService.refresh.mock.calls as
+      | [unknown, RequestContext][]
       | undefined;
+    const refreshContext = refreshCall?.[0]?.[1];
 
     expect(authService.refresh).toHaveBeenCalledWith(
       'previous-refresh-token',
@@ -333,10 +340,36 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
+    authService.logout.mockResolvedValue(undefined);
+
+    const response = await request(server)
+      .post('/auth/logout')
+      .set('Cookie', 'refresh_token=active-refresh-token')
+      .expect(204);
+
+    const setCookieHeader = getSetCookieHeader(response);
+
+    expect(authService.logout).toHaveBeenCalledWith('active-refresh-token');
+    expect(setCookieHeader).toContain('refresh_token=;');
+    expect(setCookieHeader).toContain('HttpOnly');
+    expect(setCookieHeader).toContain('SameSite=Lax');
+    expect(setCookieHeader).toContain('Path=/');
+    expect(setCookieHeader).not.toContain('Secure');
+
+    await app.close();
+  });
+
+  it('returns 204 and clears the refresh cookie on logout when there is no cookie', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authService.logout.mockResolvedValue(undefined);
+
     const response = await request(server).post('/auth/logout').expect(204);
 
     const setCookieHeader = getSetCookieHeader(response);
 
+    expect(authService.logout).toHaveBeenCalledWith(null);
     expect(setCookieHeader).toContain('refresh_token=;');
     expect(setCookieHeader).toContain('HttpOnly');
     expect(setCookieHeader).toContain('SameSite=Lax');

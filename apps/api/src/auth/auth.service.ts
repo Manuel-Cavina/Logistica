@@ -119,6 +119,10 @@ export class AuthService {
     };
   }
 
+  async logout(refreshToken: string | null | undefined): Promise<void> {
+    await this.authSessionService.logoutSession(refreshToken);
+  }
+
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
   }

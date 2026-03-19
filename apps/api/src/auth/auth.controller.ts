@@ -102,7 +102,11 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  logout(@Res({ passthrough: true }) response: HttpResponse): void {
+  async logout(
+    @Req() request: HttpRequest,
+    @Res({ passthrough: true }) response: HttpResponse,
+  ): Promise<void> {
+    await this.authService.logout(this.extractRefreshToken(request));
     this.clearRefreshCookie(response);
   }
 
