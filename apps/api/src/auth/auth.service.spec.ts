@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 describe('AuthService', () => {
   const accountsService = {
     findByEmail: jest.fn(),
+    findById: jest.fn(),
     createClientAccount: jest.fn(),
     createTransporterAccount: jest.fn(),
   };
@@ -256,5 +257,40 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
     expect(authSessionService.createLoginSession).not.toHaveBeenCalled();
+  });
+
+  it('returns the authenticated account with only safe public fields', async () => {
+    accountsService.findById.mockResolvedValue({
+      id: 'client-account-id',
+      email: 'client@example.com',
+      role: 'CLIENT',
+      isEmailVerified: true,
+      passwordHash: 'stored-password-hash',
+      userProfile: {
+        id: 'profile-id',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phone: '+5491112345678',
+      },
+      transporterProfile: null,
+    });
+
+    await expect(
+      authService.getCurrentAccount('client-account-id'),
+    ).resolves.toEqual({
+      id: 'client-account-id',
+      email: 'client@example.com',
+      role: 'CLIENT',
+    });
+
+    expect(accountsService.findById).toHaveBeenCalledWith('client-account-id');
+  });
+
+  it('rejects auth/me when the authenticated account no longer exists', async () => {
+    accountsService.findById.mockResolvedValue(null);
+
+    await expect(
+      authService.getCurrentAccount('missing-account-id'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

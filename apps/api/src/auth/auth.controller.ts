@@ -1,16 +1,19 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   LoginSchema,
+  type IMeResponse,
   RegisterSchema,
   type ILoginResponse,
   type IRefreshResponse,
@@ -20,7 +23,9 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { getAuthConfiguration } from './auth.config';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import type {
+  AuthenticatedAccount,
   AuthRequestContext,
   RefreshCookieConfiguration,
   RefreshCookieOptions,
@@ -37,6 +42,10 @@ interface HttpRequest {
 interface HttpResponse {
   cookie(name: string, value: string, options?: RefreshCookieOptions): unknown;
   clearCookie(name: string, options?: RefreshCookieOptions): unknown;
+}
+
+interface AuthenticatedHttpRequest extends HttpRequest {
+  user: AuthenticatedAccount;
 }
 
 @Controller('auth')
@@ -74,6 +83,12 @@ export class AuthController {
     this.setRefreshCookie(response, loginResult.refreshToken);
 
     return loginResult.response;
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async me(@Req() request: AuthenticatedHttpRequest): Promise<IMeResponse> {
+    return this.authService.getCurrentAccount(request.user.accountId);
   }
 
   @Post('refresh')

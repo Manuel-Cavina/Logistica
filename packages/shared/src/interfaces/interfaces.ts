@@ -74,8 +74,9 @@ export const RegisterResponseSchema = z.object({
 });
 export type IRegisterResponse = z.infer<typeof RegisterResponseSchema>;
 
-export const MeResponseSchema = z.object({
-  account: AuthAccountSchema,
-  profile: AuthProfileViewSchema,
+export const MeResponseSchema = AuthAccountSchema.pick({
+  id: true,
+  email: true,
+  role: true,
 });
 export type IMeResponse = z.infer<typeof MeResponseSchema>;

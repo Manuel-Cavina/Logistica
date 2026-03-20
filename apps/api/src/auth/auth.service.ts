@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { IRegisterResponse } from '@logistica/shared';
+import type { IMeResponse, IRegisterResponse } from '@logistica/shared';
 import { AccountsService } from '../accounts/accounts.service';
 import type { AccountWithProfiles } from '../accounts/accounts.types';
 import type { LoginDto } from './dto/login.dto';
@@ -123,6 +123,16 @@ export class AuthService {
     await this.authSessionService.logoutSession(refreshToken);
   }
 
+  async getCurrentAccount(accountId: string): Promise<IMeResponse> {
+    const account = await this.accountsService.findById(accountId);
+
+    if (!account) {
+      throw this.invalidAuthAttempt();
+    }
+
+    return this.toMeResponse(account);
+  }
+
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
   }
@@ -139,6 +149,14 @@ export class AuthService {
       email: account.email,
       role: account.role,
       isEmailVerified: account.isEmailVerified,
+    };
+  }
+
+  private toMeResponse(account: AccountWithProfiles): IMeResponse {
+    return {
+      id: account.id,
+      email: account.email,
+      role: account.role,
     };
   }
 

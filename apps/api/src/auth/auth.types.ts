@@ -1,4 +1,8 @@
-import type { ILoginResponse, IRefreshResponse } from '@logistica/shared';
+import type {
+  AccountRole,
+  ILoginResponse,
+  IRefreshResponse,
+} from '@logistica/shared';
 
 export interface AuthRequestContext {
   ipAddress?: string | null;
@@ -11,6 +15,17 @@ export interface RefreshTokenPayload {
   family: string;
   iat?: number;
   exp?: number;
+}
+
+export interface AccessTokenPayload {
+  sub: string;
+  role: AccountRole;
+  iat?: number;
+  exp?: number;
+}
+
+export interface AuthenticatedAccount {
+  accountId: string;
 }
 
 export interface LoginResult {

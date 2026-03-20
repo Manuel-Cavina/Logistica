@@ -1,9 +1,16 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  type ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+
+let authenticatedAccountId = 'client-account-id';
 
 function getSetCookieHeader(response: {
   headers: Record<string, unknown>;
@@ -41,6 +48,7 @@ describe('AuthController', () => {
     refresh: jest.fn(),
     register: jest.fn(),
     logout: jest.fn(),
+    getCurrentAccount: jest.fn(),
   };
   const configService = {
     get: jest.fn(),
@@ -49,6 +57,7 @@ describe('AuthController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    authenticatedAccountId = 'client-account-id';
     configService.get.mockImplementation((key: string) => {
       if (key === 'NODE_ENV') {
         return 'test';
@@ -77,7 +86,7 @@ describe('AuthController', () => {
   });
 
   async function createApp() {
-    const moduleRef = await Test.createTestingModule({
+    const moduleBuilder = Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
@@ -89,7 +98,31 @@ describe('AuthController', () => {
           useValue: configService,
         },
       ],
-    }).compile();
+    });
+    moduleBuilder.overrideGuard(JwtAuthGuard).useValue({
+      canActivate(context: ExecutionContext): boolean {
+        const request = context.switchToHttp().getRequest<{
+          headers: Record<string, string | string[] | undefined>;
+          user?: { accountId: string };
+        }>();
+        const authorizationHeader = request.headers.authorization;
+
+        if (
+          typeof authorizationHeader !== 'string' ||
+          !authorizationHeader.startsWith('Bearer ')
+        ) {
+          throw new UnauthorizedException();
+        }
+
+        request.user = {
+          accountId: authenticatedAccountId,
+        };
+
+        return true;
+      },
+    });
+
+    const moduleRef = await moduleBuilder.compile();
 
     const app = moduleRef.createNestApplication();
     await app.init();
@@ -308,6 +341,44 @@ describe('AuthController', () => {
     );
     expect(typeof refreshContext?.ipAddress).toBe('string');
     expect(refreshContext?.userAgent).toBeNull();
+
+    await app.close();
+  });
+
+  it('returns 200 and the authenticated account payload for a valid access token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authService.getCurrentAccount.mockResolvedValue({
+      id: 'client-account-id',
+      email: 'client@example.com',
+      role: 'CLIENT',
+    });
+
+    await request(server)
+      .get('/auth/me')
+      .set('Authorization', 'Bearer access-token')
+      .expect(200)
+      .expect({
+        id: 'client-account-id',
+        email: 'client@example.com',
+        role: 'CLIENT',
+      });
+
+    expect(authService.getCurrentAccount).toHaveBeenCalledWith(
+      'client-account-id',
+    );
+
+    await app.close();
+  });
+
+  it('returns 401 for auth/me when the access token is missing', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server).get('/auth/me').expect(401);
+
+    expect(authService.getCurrentAccount).not.toHaveBeenCalled();
 
     await app.close();
   });
