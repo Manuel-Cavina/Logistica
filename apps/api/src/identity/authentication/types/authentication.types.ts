@@ -28,6 +28,7 @@ export interface AccessTokenPayload {
 
 export interface AuthenticatedAccount {
   accountId: string;
+  role: AccountRole;
 }
 
 export interface LoginResult {
