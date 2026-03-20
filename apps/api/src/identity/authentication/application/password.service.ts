@@ -3,7 +3,7 @@ import * as argon2 from 'argon2';
 
 @Injectable()
 export class PasswordService {
-  // TODO: move to ConfigService when auth.config.ts is implemented (#18)
+  // TODO: move to ConfigService when password tuning becomes environment-specific.
   // so Argon2 cost parameters can be tuned per environment.
   private readonly ARGON2_OPTIONS: Readonly<argon2.Options> = {
     type: argon2.argon2id,

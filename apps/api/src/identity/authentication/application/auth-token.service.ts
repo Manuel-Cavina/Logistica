@@ -2,19 +2,22 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
-import type { AccountWithProfiles } from '../../accounts/accounts.types';
-import { getAuthConfiguration } from '../auth.config';
-import type { AuthConfiguration, RefreshTokenPayload } from '../auth.types';
+import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import { getAuthenticationConfiguration } from '../cookies/authentication-cookie.config';
+import type {
+  AuthenticationConfiguration,
+  RefreshTokenPayload,
+} from '../types/authentication.types';
 
 @Injectable()
 export class AuthTokenService {
-  private readonly authConfig: AuthConfiguration;
+  private readonly authConfig: AuthenticationConfiguration;
 
   constructor(
     private readonly jwtService: JwtService,
     configService: ConfigService,
   ) {
-    this.authConfig = getAuthConfiguration(configService);
+    this.authConfig = getAuthenticationConfiguration(configService);
   }
 
   createSessionId(): string {
@@ -89,12 +92,12 @@ export class AuthTokenService {
   ): payload is RefreshTokenPayload {
     return Boolean(
       payload &&
-      typeof payload.sub === 'string' &&
-      payload.sub.length > 0 &&
-      typeof payload.sid === 'string' &&
-      payload.sid.length > 0 &&
-      typeof payload.family === 'string' &&
-      payload.family.length > 0,
+        typeof payload.sub === 'string' &&
+        payload.sub.length > 0 &&
+        typeof payload.sid === 'string' &&
+        payload.sid.length > 0 &&
+        typeof payload.family === 'string' &&
+        payload.family.length > 0,
     );
   }
 

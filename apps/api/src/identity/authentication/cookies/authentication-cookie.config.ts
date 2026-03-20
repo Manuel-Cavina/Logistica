@@ -1,8 +1,8 @@
 import type { ConfigService } from '@nestjs/config';
 import type {
-  AuthConfiguration,
+  AuthenticationConfiguration,
   RefreshCookieConfiguration,
-} from './auth.types';
+} from '../types/authentication.types';
 
 const DEFAULT_REFRESH_COOKIE_NAME = 'refresh_token';
 const DEFAULT_REFRESH_COOKIE_PATH = '/';
@@ -50,9 +50,9 @@ function parsePositiveInteger(value: string, key: string): number {
   return parsedValue;
 }
 
-export function getAuthConfiguration(
+export function getAuthenticationConfiguration(
   configService: ConfigService,
-): AuthConfiguration {
+): AuthenticationConfiguration {
   const accessTokenSecret = configService.getOrThrow<string>(
     'AUTH_ACCESS_TOKEN_SECRET',
   );
