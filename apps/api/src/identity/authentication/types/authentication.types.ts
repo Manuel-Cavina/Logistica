@@ -1,8 +1,10 @@
+import { Prisma } from '@logistica/database';
 import type {
   AccountRole,
   ILoginResponse,
   IRefreshResponse,
 } from '@logistica/shared';
+import { accountWithProfilesInclude } from '../../accounts/types/accounts.types';
 
 export interface AuthRequestContext {
   ipAddress?: string | null;
@@ -44,7 +46,7 @@ export interface RefreshCookieConfiguration {
   clearOptions: RefreshCookieOptions;
 }
 
-export interface AuthConfiguration {
+export interface AuthenticationConfiguration {
   accessTokenSecret: string;
   accessTokenTtlSeconds: number;
   refreshTokenSecret: string;
@@ -60,3 +62,21 @@ export interface RefreshCookieOptions {
   domain?: string;
   maxAge?: number;
 }
+
+export interface CreateSessionInput {
+  id: string;
+  accountId: string;
+  tokenHash: string;
+  tokenFamily: string;
+  expiresAt: Date;
+  userAgent?: string | null;
+  ipAddress?: string | null;
+}
+
+export type SessionWithAccount = Prisma.SessionGetPayload<{
+  include: {
+    account: {
+      include: typeof accountWithProfilesInclude;
+    };
+  };
+}>;

@@ -6,19 +6,8 @@ export const accountWithProfilesInclude =
     transporterProfile: true,
   });
 
-export const sessionWithAccountInclude =
-  Prisma.validator<Prisma.SessionInclude>()({
-    account: {
-      include: accountWithProfilesInclude,
-    },
-  });
-
 export type AccountWithProfiles = Prisma.AccountGetPayload<{
   include: typeof accountWithProfilesInclude;
-}>;
-
-export type SessionWithAccount = Prisma.SessionGetPayload<{
-  include: typeof sessionWithAccountInclude;
 }>;
 
 export interface CreateClientAccountInput {
@@ -36,14 +25,4 @@ export interface CreateTransporterAccountInput {
   businessName?: string | null;
   contactPhone?: string | null;
   bio?: string | null;
-}
-
-export interface CreateSessionInput {
-  id: string;
-  accountId: string;
-  tokenHash: string;
-  tokenFamily: string;
-  expiresAt: Date;
-  userAgent?: string | null;
-  ipAddress?: string | null;
 }

@@ -1,16 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { AccountsService } from '../../accounts/accounts.service';
+import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import { SessionsRepository } from '../repositories/sessions.repository';
 import type {
-  AccountWithProfiles,
+  AuthRequestContext,
   CreateSessionInput,
-} from '../../accounts/accounts.types';
-import type { AuthRequestContext } from '../auth.types';
+} from '../types/authentication.types';
 import { AuthTokenService } from './auth-token.service';
 
 @Injectable()
 export class AuthSessionService {
   constructor(
-    private readonly accountsService: AccountsService,
+    private readonly sessionsRepository: SessionsRepository,
     private readonly authTokenService: AuthTokenService,
   ) {}
 
@@ -27,7 +27,7 @@ export class AuthSessionService {
     });
     const accessToken = await this.authTokenService.signAccessToken(account);
 
-    await this.accountsService.createSession(
+    await this.sessionsRepository.createSession(
       this.buildSessionInput({
         id: sessionId,
         accountId: account.id,
@@ -53,7 +53,7 @@ export class AuthSessionService {
 
     const payload =
       await this.authTokenService.verifyRefreshToken(refreshToken);
-    const session = await this.accountsService.findSessionById(payload.sid);
+    const session = await this.sessionsRepository.findSessionById(payload.sid);
 
     if (!session) {
       throw this.invalidAuthAttempt();
@@ -71,7 +71,7 @@ export class AuthSessionService {
     }
 
     if (session.revokedAt) {
-      await this.accountsService.revokeSessionFamily(
+      await this.sessionsRepository.revokeSessionFamily(
         session.accountId,
         session.tokenFamily,
       );
@@ -88,7 +88,7 @@ export class AuthSessionService {
       sid: successorSessionId,
       family: session.tokenFamily,
     });
-    const rotatedSession = await this.accountsService.rotateSession(
+    const rotatedSession = await this.sessionsRepository.rotateSession(
       session.id,
       this.buildSessionInput({
         id: successorSessionId,
@@ -102,7 +102,7 @@ export class AuthSessionService {
     );
 
     if (!rotatedSession) {
-      await this.accountsService.revokeSessionFamily(
+      await this.sessionsRepository.revokeSessionFamily(
         session.accountId,
         session.tokenFamily,
       );
@@ -123,7 +123,7 @@ export class AuthSessionService {
     try {
       const payload =
         await this.authTokenService.verifyRefreshToken(refreshToken);
-      const session = await this.accountsService.findSessionById(payload.sid);
+      const session = await this.sessionsRepository.findSessionById(payload.sid);
 
       if (!session) {
         return;
@@ -141,7 +141,7 @@ export class AuthSessionService {
         return;
       }
 
-      await this.accountsService.revokeSession(session.id);
+      await this.sessionsRepository.revokeSession(session.id);
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         return;

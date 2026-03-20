@@ -5,20 +5,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { IMeResponse, IRegisterResponse } from '@logistica/shared';
-import { AccountsService } from '../accounts/accounts.service';
-import type { AccountWithProfiles } from '../accounts/accounts.types';
-import type { LoginDto } from './dto/login.dto';
-import type { RegisterDto } from './dto/register.dto';
-import { PasswordService } from './password.service';
-import { AuthSessionService } from './services/auth-session.service';
+import { AccountsService } from '../../accounts/application/accounts.service';
+import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import type { LoginDto } from '../dto/login.dto';
+import type { RegisterDto } from '../dto/register.dto';
 import type {
   AuthRequestContext,
   LoginResult,
   RefreshResult,
-} from './auth.types';
+} from '../types/authentication.types';
+import { AuthSessionService } from './auth-session.service';
+import { PasswordService } from './password.service';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   constructor(
     private readonly accountsService: AccountsService,
     private readonly passwordService: PasswordService,

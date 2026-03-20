@@ -13,25 +13,25 @@ import {
 import { ConfigService } from '@nestjs/config';
 import {
   LoginSchema,
-  type IMeResponse,
-  RegisterSchema,
   type ILoginResponse,
+  type IMeResponse,
   type IRefreshResponse,
   type IRegisterResponse,
+  RegisterSchema,
 } from '@logistica/shared';
 import type { IncomingHttpHeaders } from 'node:http';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { getAuthConfiguration } from './auth.config';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { AuthenticationService } from './application/authentication.service';
+import { getAuthenticationConfiguration } from './cookies/authentication-cookie.config';
+import type { LoginDto } from './dto/login.dto';
+import type { RegisterDto } from './dto/register.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type {
   AuthenticatedAccount,
   AuthRequestContext,
   RefreshCookieConfiguration,
   RefreshCookieOptions,
-} from './auth.types';
-import type { LoginDto } from './dto/login.dto';
-import type { RegisterDto } from './dto/register.dto';
+} from './types/authentication.types';
 
 interface HttpRequest {
   ip?: string | null;
@@ -49,14 +49,15 @@ interface AuthenticatedHttpRequest extends HttpRequest {
 }
 
 @Controller('auth')
-export class AuthController {
+export class AuthenticationController {
   private readonly refreshCookie: RefreshCookieConfiguration;
 
   constructor(
-    private readonly authService: AuthService,
+    private readonly authenticationService: AuthenticationService,
     configService: ConfigService,
   ) {
-    this.refreshCookie = getAuthConfiguration(configService).refreshCookie;
+    this.refreshCookie =
+      getAuthenticationConfiguration(configService).refreshCookie;
   }
 
   @Post('register')
@@ -64,7 +65,7 @@ export class AuthController {
     @Body(new ZodValidationPipe(RegisterSchema))
     registerDto: RegisterDto,
   ): Promise<IRegisterResponse> {
-    return this.authService.register(registerDto);
+    return this.authenticationService.register(registerDto);
   }
 
   @Post('login')
@@ -75,7 +76,7 @@ export class AuthController {
     @Req() request: HttpRequest,
     @Res({ passthrough: true }) response: HttpResponse,
   ): Promise<ILoginResponse> {
-    const loginResult = await this.authService.login(
+    const loginResult = await this.authenticationService.login(
       loginDto,
       this.getRequestContext(request),
     );
@@ -88,7 +89,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@Req() request: AuthenticatedHttpRequest): Promise<IMeResponse> {
-    return this.authService.getCurrentAccount(request.user.accountId);
+    return this.authenticationService.getCurrentAccount(request.user.accountId);
   }
 
   @Post('refresh')
@@ -98,7 +99,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: HttpResponse,
   ): Promise<IRefreshResponse> {
     try {
-      const refreshResult = await this.authService.refresh(
+      const refreshResult = await this.authenticationService.refresh(
         this.extractRefreshToken(request),
         this.getRequestContext(request),
       );
@@ -121,7 +122,7 @@ export class AuthController {
     @Req() request: HttpRequest,
     @Res({ passthrough: true }) response: HttpResponse,
   ): Promise<void> {
-    await this.authService.logout(this.extractRefreshToken(request));
+    await this.authenticationService.logout(this.extractRefreshToken(request));
     this.clearRefreshCookie(response);
   }
 

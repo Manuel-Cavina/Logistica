@@ -6,9 +6,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthenticationService } from './application/authentication.service';
+import { AuthenticationController } from './authentication.controller';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 let authenticatedAccountId = 'client-account-id';
 
@@ -38,12 +38,12 @@ function expectRefreshCookieAttributes(
   expect(setCookieHeader).not.toContain('Secure');
 }
 
-describe('AuthController', () => {
+describe('AuthenticationController', () => {
   type RequestContext = {
     ipAddress?: string | null;
     userAgent?: string | null;
   };
-  const authService = {
+  const authenticationService = {
     login: jest.fn(),
     refresh: jest.fn(),
     register: jest.fn(),
@@ -87,11 +87,11 @@ describe('AuthController', () => {
 
   async function createApp() {
     const moduleBuilder = Test.createTestingModule({
-      controllers: [AuthController],
+      controllers: [AuthenticationController],
       providers: [
         {
-          provide: AuthService,
-          useValue: authService,
+          provide: AuthenticationService,
+          useValue: authenticationService,
         },
         {
           provide: ConfigService,
@@ -134,7 +134,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.register.mockResolvedValue({
+    authenticationService.register.mockResolvedValue({
       account: {
         id: 'client-account-id',
         email: 'client@example.com',
@@ -162,7 +162,7 @@ describe('AuthController', () => {
         },
       });
 
-    expect(authService.register).toHaveBeenCalledWith({
+    expect(authenticationService.register).toHaveBeenCalledWith({
       role: 'CLIENT',
       email: 'client@example.com',
       password: 'supersafe123',
@@ -186,7 +186,7 @@ describe('AuthController', () => {
       })
       .expect(400);
 
-    expect(authService.register).not.toHaveBeenCalled();
+    expect(authenticationService.register).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -195,7 +195,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.register.mockRejectedValue(
+    authenticationService.register.mockRejectedValue(
       new ConflictException('An account with this email already exists.'),
     );
 
@@ -217,7 +217,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.login.mockResolvedValue({
+    authenticationService.login.mockResolvedValue({
       response: {
         account: {
           id: 'client-account-id',
@@ -252,12 +252,12 @@ describe('AuthController', () => {
       'refresh_token',
     );
 
-    const loginCall = authService.login.mock.calls as
+    const loginCall = authenticationService.login.mock.calls as
       | [unknown, RequestContext][]
       | undefined;
     const loginContext = loginCall?.[0]?.[1];
 
-    expect(authService.login).toHaveBeenCalledWith(
+    expect(authenticationService.login).toHaveBeenCalledWith(
       {
         email: 'client@example.com',
         password: 'supersafe123',
@@ -282,7 +282,7 @@ describe('AuthController', () => {
       })
       .expect(400);
 
-    expect(authService.login).not.toHaveBeenCalled();
+    expect(authenticationService.login).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -291,7 +291,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.login.mockRejectedValue(
+    authenticationService.login.mockRejectedValue(
       new UnauthorizedException('Invalid credentials.'),
     );
 
@@ -310,7 +310,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.refresh.mockResolvedValue({
+    authenticationService.refresh.mockResolvedValue({
       response: {
         accessToken: 'rotated-access-token',
       },
@@ -330,12 +330,12 @@ describe('AuthController', () => {
       'refresh_token',
     );
 
-    const refreshCall = authService.refresh.mock.calls as
+    const refreshCall = authenticationService.refresh.mock.calls as
       | [unknown, RequestContext][]
       | undefined;
     const refreshContext = refreshCall?.[0]?.[1];
 
-    expect(authService.refresh).toHaveBeenCalledWith(
+    expect(authenticationService.refresh).toHaveBeenCalledWith(
       'previous-refresh-token',
       refreshContext,
     );
@@ -349,7 +349,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.getCurrentAccount.mockResolvedValue({
+    authenticationService.getCurrentAccount.mockResolvedValue({
       id: 'client-account-id',
       email: 'client@example.com',
       role: 'CLIENT',
@@ -365,7 +365,7 @@ describe('AuthController', () => {
         role: 'CLIENT',
       });
 
-    expect(authService.getCurrentAccount).toHaveBeenCalledWith(
+    expect(authenticationService.getCurrentAccount).toHaveBeenCalledWith(
       'client-account-id',
     );
 
@@ -378,7 +378,7 @@ describe('AuthController', () => {
 
     await request(server).get('/auth/me').expect(401);
 
-    expect(authService.getCurrentAccount).not.toHaveBeenCalled();
+    expect(authenticationService.getCurrentAccount).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -387,7 +387,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.refresh.mockRejectedValue(
+    authenticationService.refresh.mockRejectedValue(
       new UnauthorizedException('Invalid credentials.'),
     );
 
@@ -411,7 +411,7 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.logout.mockResolvedValue(undefined);
+    authenticationService.logout.mockResolvedValue(undefined);
 
     const response = await request(server)
       .post('/auth/logout')
@@ -420,7 +420,9 @@ describe('AuthController', () => {
 
     const setCookieHeader = getSetCookieHeader(response);
 
-    expect(authService.logout).toHaveBeenCalledWith('active-refresh-token');
+    expect(authenticationService.logout).toHaveBeenCalledWith(
+      'active-refresh-token',
+    );
     expect(setCookieHeader).toContain('refresh_token=;');
     expect(setCookieHeader).toContain('HttpOnly');
     expect(setCookieHeader).toContain('SameSite=Lax');
@@ -434,13 +436,13 @@ describe('AuthController', () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
-    authService.logout.mockResolvedValue(undefined);
+    authenticationService.logout.mockResolvedValue(undefined);
 
     const response = await request(server).post('/auth/logout').expect(204);
 
     const setCookieHeader = getSetCookieHeader(response);
 
-    expect(authService.logout).toHaveBeenCalledWith(null);
+    expect(authenticationService.logout).toHaveBeenCalledWith(null);
     expect(setCookieHeader).toContain('refresh_token=;');
     expect(setCookieHeader).toContain('HttpOnly');
     expect(setCookieHeader).toContain('SameSite=Lax');

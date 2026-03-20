@@ -26,7 +26,7 @@ describe('AuthSessionService', () => {
       isEmailVerified: false,
     },
   };
-  const accountsService = {
+  const sessionsRepository = {
     createSession: jest.fn(),
     findSessionById: jest.fn(),
     rotateSession: jest.fn(),
@@ -60,7 +60,7 @@ describe('AuthSessionService', () => {
     );
     authTokenService.matchesRefreshTokenHash.mockReturnValue(true);
     authSessionService = new AuthSessionService(
-      accountsService as never,
+      sessionsRepository as never,
       authTokenService as never,
     );
   });
@@ -72,7 +72,7 @@ describe('AuthSessionService', () => {
   it('creates the initial login session and persists the hashed refresh token', async () => {
     authTokenService.signRefreshToken.mockResolvedValue('refresh-token');
     authTokenService.signAccessToken.mockResolvedValue('access-token');
-    accountsService.createSession.mockResolvedValue({ id: 'session-id' });
+    sessionsRepository.createSession.mockResolvedValue({ id: 'session-id' });
 
     await expect(
       authSessionService.createLoginSession(
@@ -92,7 +92,7 @@ describe('AuthSessionService', () => {
       refreshToken: 'refresh-token',
     });
 
-    const createSessionCalls = accountsService.createSession.mock.calls as
+    const createSessionCalls = sessionsRepository.createSession.mock.calls as
       | [SessionInputAssertion][]
       | undefined;
     const createSessionInput = createSessionCalls?.[0]?.[0];
@@ -113,11 +113,13 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
     authTokenService.signRefreshToken.mockResolvedValue(
       'rotated-refresh-token',
     );
-    accountsService.rotateSession.mockResolvedValue({ id: 'next-session-id' });
+    sessionsRepository.rotateSession.mockResolvedValue({
+      id: 'next-session-id',
+    });
     authTokenService.signAccessToken.mockResolvedValue('rotated-access-token');
 
     await expect(
@@ -130,7 +132,7 @@ describe('AuthSessionService', () => {
       refreshToken: 'rotated-refresh-token',
     });
 
-    expect(accountsService.rotateSession).toHaveBeenCalledWith(
+    expect(sessionsRepository.rotateSession).toHaveBeenCalledWith(
       'current-session-id',
       expect.objectContaining({
         accountId: 'client-account-id',
@@ -140,7 +142,7 @@ describe('AuthSessionService', () => {
         expiresAt: new Date('2026-03-25T12:00:00.000Z'),
       }),
     );
-    expect(accountsService.revokeSessionFamily).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSessionFamily).not.toHaveBeenCalled();
   });
 
   it('revokes the family when a rotated refresh token is reused', async () => {
@@ -149,7 +151,7 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue({
+    sessionsRepository.findSessionById.mockResolvedValue({
       ...activeSession,
       revokedAt: new Date('2026-03-18T12:00:00.000Z'),
     });
@@ -161,7 +163,7 @@ describe('AuthSessionService', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
-    expect(accountsService.revokeSessionFamily).toHaveBeenCalledWith(
+    expect(sessionsRepository.revokeSessionFamily).toHaveBeenCalledWith(
       'client-account-id',
       'token-family',
     );
@@ -184,14 +186,14 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
-    accountsService.revokeSession.mockResolvedValue(1);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.revokeSession.mockResolvedValue(1);
 
     await expect(
       authSessionService.logoutSession('secret'),
     ).resolves.toBeUndefined();
 
-    expect(accountsService.revokeSession).toHaveBeenCalledWith(
+    expect(sessionsRepository.revokeSession).toHaveBeenCalledWith(
       'current-session-id',
     );
   });
@@ -202,7 +204,7 @@ describe('AuthSessionService', () => {
     ).resolves.toBeUndefined();
 
     expect(authTokenService.verifyRefreshToken).not.toHaveBeenCalled();
-    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSession).not.toHaveBeenCalled();
   });
 
   it('keeps logout idempotent when the token is invalid', async () => {
@@ -214,8 +216,8 @@ describe('AuthSessionService', () => {
       authSessionService.logoutSession('invalid-token'),
     ).resolves.toBeUndefined();
 
-    expect(accountsService.findSessionById).not.toHaveBeenCalled();
-    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.findSessionById).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSession).not.toHaveBeenCalled();
   });
 
   it('keeps logout idempotent when the stored session is already revoked', async () => {
@@ -224,7 +226,7 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue({
+    sessionsRepository.findSessionById.mockResolvedValue({
       ...activeSession,
       revokedAt: new Date('2026-03-18T12:00:00.000Z'),
     });
@@ -233,7 +235,7 @@ describe('AuthSessionService', () => {
       authSessionService.logoutSession('secret'),
     ).resolves.toBeUndefined();
 
-    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSession).not.toHaveBeenCalled();
   });
 
   it('rejects refresh when the session cannot be found', async () => {
@@ -242,7 +244,7 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(null);
+    sessionsRepository.findSessionById.mockResolvedValue(null);
 
     await expect(
       authSessionService.refreshSession('secret', {
@@ -258,7 +260,7 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
     authTokenService.matchesRefreshTokenHash.mockReturnValue(false);
 
     await expect(
@@ -268,7 +270,7 @@ describe('AuthSessionService', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
-    expect(accountsService.rotateSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.rotateSession).not.toHaveBeenCalled();
   });
 
   it('keeps logout idempotent when the stored hash does not match the token', async () => {
@@ -277,14 +279,14 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
     authTokenService.matchesRefreshTokenHash.mockReturnValue(false);
 
     await expect(
       authSessionService.logoutSession('secret'),
     ).resolves.toBeUndefined();
 
-    expect(accountsService.revokeSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSession).not.toHaveBeenCalled();
   });
 
   it('rejects refresh when the session is expired', async () => {
@@ -294,7 +296,7 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
 
     await expect(
       authSessionService.refreshSession('secret', {
@@ -303,7 +305,7 @@ describe('AuthSessionService', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
-    expect(accountsService.rotateSession).not.toHaveBeenCalled();
+    expect(sessionsRepository.rotateSession).not.toHaveBeenCalled();
   });
 
   it('revokes the family when session rotation loses the race', async () => {
@@ -312,11 +314,11 @@ describe('AuthSessionService', () => {
       sid: 'current-session-id',
       family: 'token-family',
     });
-    accountsService.findSessionById.mockResolvedValue(activeSession);
+    sessionsRepository.findSessionById.mockResolvedValue(activeSession);
     authTokenService.signRefreshToken.mockResolvedValue(
       'rotated-refresh-token',
     );
-    accountsService.rotateSession.mockResolvedValue(null);
+    sessionsRepository.rotateSession.mockResolvedValue(null);
 
     await expect(
       authSessionService.refreshSession('secret', {
@@ -325,7 +327,7 @@ describe('AuthSessionService', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
-    expect(accountsService.revokeSessionFamily).toHaveBeenCalledWith(
+    expect(sessionsRepository.revokeSessionFamily).toHaveBeenCalledWith(
       'client-account-id',
       'token-family',
     );

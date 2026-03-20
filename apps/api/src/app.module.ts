@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AccountsModule } from './accounts/accounts.module';
-import { AuthModule } from './auth/auth.module';
+import { AccountsModule } from './identity/accounts/accounts.module';
+import { AuthenticationModule } from './identity/authentication/authentication.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { AuthModule } from './auth/auth.module';
       },
     }),
     AccountsModule,
-    AuthModule,
+    AuthenticationModule,
   ],
   controllers: [],
   providers: [],

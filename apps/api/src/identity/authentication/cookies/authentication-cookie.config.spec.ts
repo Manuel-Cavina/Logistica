@@ -1,5 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
-import { getAuthConfiguration } from './auth.config';
+import { getAuthenticationConfiguration } from './authentication-cookie.config';
 
 function createConfigService(
   overrides?: Record<string, string>,
@@ -28,9 +28,9 @@ function createConfigService(
   } as unknown as ConfigService;
 }
 
-describe('getAuthConfiguration', () => {
+describe('getAuthenticationConfiguration', () => {
   it('builds a host-wide lax refresh cookie outside production', () => {
-    const authConfig = getAuthConfiguration(createConfigService());
+    const authConfig = getAuthenticationConfiguration(createConfigService());
 
     expect(authConfig.refreshCookie).toEqual({
       name: 'refresh_token',
@@ -51,7 +51,7 @@ describe('getAuthConfiguration', () => {
   });
 
   it('uses a __Host- prefixed cookie name and Secure in production', () => {
-    const authConfig = getAuthConfiguration(
+    const authConfig = getAuthenticationConfiguration(
       createConfigService({
         NODE_ENV: 'production',
       }),
@@ -63,7 +63,7 @@ describe('getAuthConfiguration', () => {
   });
 
   it('does not add the __Host- prefix twice', () => {
-    const authConfig = getAuthConfiguration(
+    const authConfig = getAuthenticationConfiguration(
       createConfigService({
         NODE_ENV: 'production',
         AUTH_REFRESH_COOKIE_NAME: '__Host-custom_refresh',

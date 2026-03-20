@@ -1,7 +1,7 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthenticationService } from './authentication.service';
 
-describe('AuthService', () => {
+describe('AuthenticationService', () => {
   const accountsService = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
@@ -18,11 +18,11 @@ describe('AuthService', () => {
     logoutSession: jest.fn(),
   };
 
-  let authService: AuthService;
+  let authenticationService: AuthenticationService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    authService = new AuthService(
+    authenticationService = new AuthenticationService(
       accountsService as never,
       passwordService as never,
       authSessionService as never,
@@ -40,7 +40,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.register({
+      authenticationService.register({
         role: 'CLIENT',
         email: '  CLIENT@Example.com ',
         password: 'supersafe123',
@@ -81,7 +81,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.register({
+      authenticationService.register({
         role: 'TRANSPORTER',
         email: 'transporter@example.com',
         password: 'supersafe123',
@@ -112,7 +112,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.register({
+      authenticationService.register({
         role: 'CLIENT',
         email: 'client@example.com',
         password: 'supersafe123',
@@ -141,7 +141,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.login(
+      authenticationService.login(
         {
           email: '  CLIENT@Example.com ',
           password: 'supersafe123',
@@ -183,7 +183,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.refresh('refresh-token', {
+      authenticationService.refresh('refresh-token', {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       }),
@@ -206,7 +206,9 @@ describe('AuthService', () => {
   it('delegates logout to the session service', async () => {
     authSessionService.logoutSession.mockResolvedValue(undefined);
 
-    await expect(authService.logout('refresh-token')).resolves.toBeUndefined();
+    await expect(
+      authenticationService.logout('refresh-token'),
+    ).resolves.toBeUndefined();
 
     expect(authSessionService.logoutSession).toHaveBeenCalledWith(
       'refresh-token',
@@ -217,7 +219,7 @@ describe('AuthService', () => {
     accountsService.findByEmail.mockResolvedValue(null);
 
     await expect(
-      authService.login(
+      authenticationService.login(
         {
           email: 'missing@example.com',
           password: 'supersafe123',
@@ -244,7 +246,7 @@ describe('AuthService', () => {
     passwordService.verify.mockResolvedValue(false);
 
     await expect(
-      authService.login(
+      authenticationService.login(
         {
           email: 'client@example.com',
           password: 'wrong-password',
@@ -276,7 +278,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      authService.getCurrentAccount('client-account-id'),
+      authenticationService.getCurrentAccount('client-account-id'),
     ).resolves.toEqual({
       id: 'client-account-id',
       email: 'client@example.com',
@@ -290,7 +292,7 @@ describe('AuthService', () => {
     accountsService.findById.mockResolvedValue(null);
 
     await expect(
-      authService.getCurrentAccount('missing-account-id'),
+      authenticationService.getCurrentAccount('missing-account-id'),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });
