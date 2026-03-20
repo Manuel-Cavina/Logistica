@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import {
   LoginSchema,
   type ILoginResponse,
@@ -21,10 +22,15 @@ import {
 } from '@logistica/shared';
 import type { IncomingHttpHeaders } from 'node:http';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import {
+  AUTH_LOGIN_THROTTLE,
+  AUTH_REGISTER_THROTTLE,
+} from './authentication-throttling.config';
 import { AuthenticationService } from './application/authentication.service';
 import { getAuthenticationConfiguration } from './cookies/authentication-cookie.config';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
+import { AuthRateLimitGuard } from './guards/auth-rate-limit.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type {
   AuthenticatedAccount,
@@ -61,6 +67,8 @@ export class AuthenticationController {
   }
 
   @Post('register')
+  @UseGuards(AuthRateLimitGuard)
+  @Throttle(AUTH_REGISTER_THROTTLE)
   async register(
     @Body(new ZodValidationPipe(RegisterSchema))
     registerDto: RegisterDto,
@@ -70,6 +78,8 @@ export class AuthenticationController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthRateLimitGuard)
+  @Throttle(AUTH_LOGIN_THROTTLE)
   async login(
     @Body(new ZodValidationPipe(LoginSchema))
     loginDto: LoginDto,

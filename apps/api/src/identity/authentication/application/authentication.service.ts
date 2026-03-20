@@ -1,9 +1,10 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Prisma } from '@logistica/database';
 import type { IMeResponse, IRegisterResponse } from '@logistica/shared';
 import { AccountsService } from '../../accounts/application/accounts.service';
 import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
@@ -19,6 +20,8 @@ import { PasswordService } from './password.service';
 
 @Injectable()
 export class AuthenticationService {
+  private readonly logger = new Logger(AuthenticationService.name);
+
   constructor(
     private readonly accountsService: AccountsService,
     private readonly passwordService: PasswordService,
@@ -27,44 +30,58 @@ export class AuthenticationService {
 
   async register(registerDto: RegisterDto): Promise<IRegisterResponse> {
     const normalizedEmail = this.normalizeEmail(registerDto.email);
+
+    this.logInfo('register_attempt', {
+      email: normalizedEmail,
+      role: registerDto.role,
+    });
+
     const existingAccount =
       await this.accountsService.findByEmail(normalizedEmail);
 
     if (existingAccount) {
-      throw new ConflictException('An account with this email already exists.');
+      throw this.registrationFailed();
     }
 
     const passwordHash = await this.passwordService.hash(registerDto.password);
 
-    switch (registerDto.role) {
-      case 'CLIENT': {
-        const account = await this.accountsService.createClientAccount({
-          email: normalizedEmail,
-          passwordHash,
-          firstName: registerDto.firstName,
-          lastName: registerDto.lastName,
-          phone: registerDto.phone ?? null,
-        });
+    try {
+      switch (registerDto.role) {
+        case 'CLIENT': {
+          const account = await this.accountsService.createClientAccount({
+            email: normalizedEmail,
+            passwordHash,
+            firstName: registerDto.firstName,
+            lastName: registerDto.lastName,
+            phone: registerDto.phone ?? null,
+          });
 
-        return this.toRegisterResponse(account);
-      }
-      case 'TRANSPORTER': {
-        const account = await this.accountsService.createTransporterAccount({
-          email: normalizedEmail,
-          passwordHash,
-          displayName: registerDto.displayName,
-          businessName: registerDto.businessName ?? null,
-          contactPhone: registerDto.contactPhone ?? null,
-          bio: registerDto.bio ?? null,
-        });
+          return this.toRegisterResponse(account);
+        }
+        case 'TRANSPORTER': {
+          const account = await this.accountsService.createTransporterAccount({
+            email: normalizedEmail,
+            passwordHash,
+            displayName: registerDto.displayName,
+            businessName: registerDto.businessName ?? null,
+            contactPhone: registerDto.contactPhone ?? null,
+            bio: registerDto.bio ?? null,
+          });
 
-        return this.toRegisterResponse(account);
+          return this.toRegisterResponse(account);
+        }
+        default: {
+          throw new BadRequestException(
+            'Public registration only supports CLIENT and TRANSPORTER roles.',
+          );
+        }
       }
-      default: {
-        throw new BadRequestException(
-          'Public registration only supports CLIENT and TRANSPORTER roles.',
-        );
+    } catch (error) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw this.registrationFailed();
       }
+
+      throw error;
     }
   }
 
@@ -76,6 +93,12 @@ export class AuthenticationService {
     const account = await this.accountsService.findByEmail(normalizedEmail);
 
     if (!account) {
+      this.logWarn('login_failed', {
+        email: normalizedEmail,
+        ipAddress: context.ipAddress ?? null,
+        userAgent: context.userAgent ?? null,
+      });
+
       throw this.invalidAuthAttempt();
     }
 
@@ -85,6 +108,12 @@ export class AuthenticationService {
     );
 
     if (!isPasswordValid) {
+      this.logWarn('login_failed', {
+        email: normalizedEmail,
+        ipAddress: context.ipAddress ?? null,
+        userAgent: context.userAgent ?? null,
+      });
+
       throw this.invalidAuthAttempt();
     }
 
@@ -92,6 +121,13 @@ export class AuthenticationService {
       account,
       context,
     );
+
+    this.logInfo('login_success', {
+      accountId: account.id,
+      email: normalizedEmail,
+      ipAddress: context.ipAddress ?? null,
+      userAgent: context.userAgent ?? null,
+    });
 
     return {
       response: {
@@ -137,6 +173,18 @@ export class AuthenticationService {
     return email.trim().toLowerCase();
   }
 
+  private maskEmail(email: string): string {
+    const [localPart, domainPart] = email.split('@');
+
+    if (!localPart || !domainPart) {
+      return '[invalid-email]';
+    }
+
+    const visibleLocalPart = localPart.slice(0, 1);
+
+    return `${visibleLocalPart}***@${domainPart}`;
+  }
+
   private toRegisterResponse(account: AccountWithProfiles): IRegisterResponse {
     return {
       account: this.toAuthAccount(account),
@@ -160,7 +208,44 @@ export class AuthenticationService {
     };
   }
 
+  private logInfo(
+    event: 'login_success' | 'register_attempt',
+    payload: Record<string, string | null>,
+  ): void {
+    this.logger.log(
+      JSON.stringify({
+        event,
+        ...payload,
+        email: payload.email ? this.maskEmail(payload.email) : null,
+      }),
+    );
+  }
+
+  private logWarn(
+    event: 'login_failed',
+    payload: Record<string, string | null>,
+  ): void {
+    this.logger.warn(
+      JSON.stringify({
+        event,
+        ...payload,
+        email: payload.email ? this.maskEmail(payload.email) : null,
+      }),
+    );
+  }
+
+  private registrationFailed(): BadRequestException {
+    return new BadRequestException('Unable to complete registration.');
+  }
+
   private invalidAuthAttempt(): UnauthorizedException {
     return new UnauthorizedException('Invalid credentials.');
+  }
+
+  private isUniqueConstraintViolation(error: unknown): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
   }
 }

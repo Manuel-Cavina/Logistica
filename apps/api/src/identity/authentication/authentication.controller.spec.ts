@@ -1,13 +1,17 @@
 import {
-  ConflictException,
+  BadRequestException,
+  Logger,
   type ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { AUTH_THROTTLER_OPTIONS } from './authentication-throttling.config';
 import { AuthenticationService } from './application/authentication.service';
 import { AuthenticationController } from './authentication.controller';
+import { AuthRateLimitGuard } from './guards/auth-rate-limit.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 let authenticatedAccountId = 'client-account-id';
@@ -85,8 +89,11 @@ describe('AuthenticationController', () => {
     });
   });
 
-  async function createApp() {
+  async function createApp(options?: { enableRateLimiting?: boolean }) {
     const moduleBuilder = Test.createTestingModule({
+      imports: options?.enableRateLimiting
+        ? [ThrottlerModule.forRoot(AUTH_THROTTLER_OPTIONS)]
+        : [],
       controllers: [AuthenticationController],
       providers: [
         {
@@ -97,8 +104,14 @@ describe('AuthenticationController', () => {
           provide: ConfigService,
           useValue: configService,
         },
+        ...(options?.enableRateLimiting ? [AuthRateLimitGuard] : []),
       ],
     });
+    if (!options?.enableRateLimiting) {
+      moduleBuilder.overrideGuard(AuthRateLimitGuard).useValue({
+        canActivate: jest.fn().mockResolvedValue(true),
+      });
+    }
     moduleBuilder.overrideGuard(JwtAuthGuard).useValue({
       canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest<{
@@ -191,12 +204,12 @@ describe('AuthenticationController', () => {
     await app.close();
   });
 
-  it('returns 409 when the service rejects a duplicated email', async () => {
+  it('returns 400 when the service rejects a duplicated email with a generic message', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
     authenticationService.register.mockRejectedValue(
-      new ConflictException('An account with this email already exists.'),
+      new BadRequestException('Unable to complete registration.'),
     );
 
     await request(server)
@@ -208,7 +221,7 @@ describe('AuthenticationController', () => {
         firstName: 'Jane',
         lastName: 'Doe',
       })
-      .expect(409);
+      .expect(400);
 
     await app.close();
   });
@@ -302,6 +315,109 @@ describe('AuthenticationController', () => {
         password: 'supersafe123',
       })
       .expect(401);
+
+    await app.close();
+  });
+
+  it('returns 429 after exceeding the login rate limit', async () => {
+    const loggerWarnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation();
+    const app = await createApp({ enableRateLimiting: true });
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authenticationService.login.mockResolvedValue({
+      response: {
+        account: {
+          id: 'client-account-id',
+          email: 'client@example.com',
+          role: 'CLIENT',
+          isEmailVerified: false,
+        },
+        accessToken: 'access-token',
+      },
+      refreshToken: 'refresh-token',
+    });
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await request(server).post('/auth/login').send({
+        email: 'client@example.com',
+        password: 'supersafe123',
+      });
+    }
+
+    await request(server)
+      .post('/auth/login')
+      .send({
+        email: 'client@example.com',
+        password: 'supersafe123',
+      })
+      .expect(429);
+
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"rate_limit_hit"'),
+    );
+
+    loggerWarnSpy.mockRestore();
+    await app.close();
+  });
+
+  it('returns 429 after exceeding the register rate limit', async () => {
+    const app = await createApp({ enableRateLimiting: true });
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authenticationService.register.mockResolvedValue({
+      account: {
+        id: 'client-account-id',
+        email: 'client@example.com',
+        role: 'CLIENT',
+        isEmailVerified: false,
+      },
+    });
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await request(server)
+        .post('/auth/register')
+        .send({
+          role: 'CLIENT',
+          email: `client${attempt}@example.com`,
+          password: 'supersafe123',
+          firstName: 'Jane',
+          lastName: 'Doe',
+        });
+    }
+
+    await request(server)
+      .post('/auth/register')
+      .send({
+        role: 'CLIENT',
+        email: 'client3@example.com',
+        password: 'supersafe123',
+        firstName: 'Jane',
+        lastName: 'Doe',
+      })
+      .expect(429);
+
+    await app.close();
+  });
+
+  it('does not apply rate limiting to refresh', async () => {
+    const app = await createApp({ enableRateLimiting: true });
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    authenticationService.refresh.mockResolvedValue({
+      response: {
+        accessToken: 'rotated-access-token',
+      },
+      refreshToken: 'rotated-refresh-token',
+    });
+
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', 'refresh_token=previous-refresh-token')
+        .expect(200);
+    }
 
     await app.close();
   });

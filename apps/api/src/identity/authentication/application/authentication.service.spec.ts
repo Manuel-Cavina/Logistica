@@ -1,4 +1,9 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Prisma } from '@logistica/database';
 import { AuthenticationService } from './authentication.service';
 
 describe('AuthenticationService', () => {
@@ -19,14 +24,23 @@ describe('AuthenticationService', () => {
   };
 
   let authenticationService: AuthenticationService;
+  let loggerLogSpy: jest.SpyInstance;
+  let loggerWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     authenticationService = new AuthenticationService(
       accountsService as never,
       passwordService as never,
       authSessionService as never,
     );
+  });
+
+  afterEach(() => {
+    loggerLogSpy.mockRestore();
+    loggerWarnSpy.mockRestore();
   });
 
   it('registers a CLIENT account with a normalized email', async () => {
@@ -119,11 +133,34 @@ describe('AuthenticationService', () => {
         firstName: 'Jane',
         lastName: 'Doe',
       }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(passwordService.hash).not.toHaveBeenCalled();
     expect(accountsService.createClientAccount).not.toHaveBeenCalled();
     expect(accountsService.createTransporterAccount).not.toHaveBeenCalled();
+  });
+
+  it('maps database unique violations to the same generic register error', async () => {
+    accountsService.findByEmail.mockResolvedValue(null);
+    passwordService.hash.mockResolvedValue('hashed-password');
+    accountsService.createClientAccount.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed.', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+
+    await expect(
+      authenticationService.register({
+        role: 'CLIENT',
+        email: 'client@example.com',
+        password: 'supersafe123',
+        firstName: 'Jane',
+        lastName: 'Doe',
+      }),
+    ).rejects.toEqual(
+      new BadRequestException('Unable to complete registration.'),
+    );
   });
 
   it('delegates session creation after validating login credentials', async () => {
@@ -173,6 +210,9 @@ describe('AuthenticationService', () => {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       },
+    );
+    expect(loggerLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"login_success"'),
     );
   });
 
@@ -233,6 +273,9 @@ describe('AuthenticationService', () => {
 
     expect(passwordService.verify).not.toHaveBeenCalled();
     expect(authSessionService.createLoginSession).not.toHaveBeenCalled();
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"login_failed"'),
+    );
   });
 
   it('returns the same generic error when the password is invalid', async () => {
@@ -259,6 +302,29 @@ describe('AuthenticationService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
     expect(authSessionService.createLoginSession).not.toHaveBeenCalled();
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"login_failed"'),
+    );
+  });
+
+  it('logs register_attempt before checking the account', async () => {
+    accountsService.findByEmail.mockResolvedValue({
+      id: 'existing-account-id',
+    });
+
+    await expect(
+      authenticationService.register({
+        role: 'CLIENT',
+        email: 'client@example.com',
+        password: 'supersafe123',
+        firstName: 'Jane',
+        lastName: 'Doe',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(loggerLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"register_attempt"'),
+    );
   });
 
   it('returns the authenticated account with only safe public fields', async () => {
