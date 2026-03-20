@@ -43,6 +43,7 @@ describe('JwtAccessStrategy', () => {
       }),
     ).toEqual({
       accountId: 'client-account-id',
+      role: 'CLIENT',
     });
   });
 

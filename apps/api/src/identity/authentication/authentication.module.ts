@@ -11,6 +11,7 @@ import { PasswordService } from './application/password.service';
 import { AuthenticationController } from './authentication.controller';
 import { getAuthenticationConfiguration } from './cookies/authentication-cookie.config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { SessionsRepository } from './repositories/sessions.repository';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 
@@ -42,6 +43,7 @@ import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
     SessionsRepository,
     JwtAccessStrategy,
     JwtAuthGuard,
+    RolesGuard,
   ],
   exports: [PasswordService],
 })
