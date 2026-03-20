@@ -1,3 +1,4 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 
 describe('AccountsService', () => {
@@ -66,6 +67,10 @@ describe('AccountsService', () => {
       id: 'transporter-account-id',
       email: 'transporter@example.com',
       role: 'TRANSPORTER',
+      transporterProfile: {
+        id: 'transporter-profile-id',
+        displayName: 'Acme Transportes',
+      },
     });
 
     await expect(
@@ -74,16 +79,39 @@ describe('AccountsService', () => {
         passwordHash: 'hash',
         displayName: 'Acme Transportes',
       }),
-    ).resolves.toEqual({
-      id: 'transporter-account-id',
-      email: 'transporter@example.com',
-      role: 'TRANSPORTER',
-    });
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: 'transporter-account-id',
+        email: 'transporter@example.com',
+        role: 'TRANSPORTER',
+        transporterProfile: {
+          id: 'transporter-profile-id',
+          displayName: 'Acme Transportes',
+        },
+      }),
+    );
 
     expect(accountsRepository.createTransporterAccount).toHaveBeenCalledWith({
       email: 'transporter@example.com',
       passwordHash: 'hash',
       displayName: 'Acme Transportes',
     });
+  });
+
+  it('rejects an inconsistent transporter account without transporterProfile', async () => {
+    accountsRepository.createTransporterAccount.mockResolvedValue({
+      id: 'transporter-account-id',
+      email: 'transporter@example.com',
+      role: 'TRANSPORTER',
+      transporterProfile: null,
+    });
+
+    await expect(
+      accountsService.createTransporterAccount({
+        email: 'transporter@example.com',
+        passwordHash: 'hash',
+        displayName: 'Acme Transportes',
+      }),
+    ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 });

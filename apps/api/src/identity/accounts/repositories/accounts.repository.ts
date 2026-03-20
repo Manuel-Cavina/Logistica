@@ -50,14 +50,7 @@ export class AccountsRepository {
   async createTransporterAccount(
     input: CreateTransporterAccountInput,
   ): Promise<AccountWithProfiles> {
-    const {
-      email,
-      passwordHash,
-      displayName,
-      businessName,
-      contactPhone,
-      bio,
-    } = input;
+    const { email, passwordHash, displayName } = input;
 
     return this.prisma.account.create({
       data: {
@@ -67,9 +60,6 @@ export class AccountsRepository {
         transporterProfile: {
           create: {
             displayName,
-            businessName: businessName ?? null,
-            contactPhone: contactPhone ?? null,
-            bio: bio ?? null,
           },
         },
       },

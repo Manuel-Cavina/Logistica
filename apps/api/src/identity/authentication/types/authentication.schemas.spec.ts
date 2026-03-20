@@ -25,7 +25,6 @@ describe('auth schemas', () => {
       email: 'transporter@example.com',
       password: 'supersafe123',
       displayName: 'Acme Transportes',
-      businessName: 'Acme SRL',
     });
 
     expect(result.success).toBe(true);
@@ -83,6 +82,25 @@ describe('auth schemas', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it('RegisterTransporterSchema strips advanced transporter fields from the base flow', () => {
+    const result = RegisterTransporterSchema.safeParse({
+      email: 'transporter@example.com',
+      password: 'supersafe123',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme SRL',
+    });
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data).toEqual({
+        email: 'transporter@example.com',
+        password: 'supersafe123',
+        displayName: 'Acme Transportes',
+      });
+    }
   });
 
   it('LoginSchema rejects invalid email', () => {

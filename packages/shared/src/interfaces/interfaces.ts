@@ -45,9 +45,6 @@ export type IUserProfileView = z.infer<typeof UserProfileViewSchema>;
 export const TransporterProfileViewSchema = z.object({
   id: cuidSchema,
   displayName: z.string().trim().min(1).max(160),
-  businessName: z.string().trim().min(1).max(255).nullable(),
-  contactPhone: z.string().trim().min(1).max(32).nullable(),
-  bio: z.string().trim().min(1).max(1000).nullable(),
 });
 export type ITransporterProfileView = z.infer<
   typeof TransporterProfileViewSchema

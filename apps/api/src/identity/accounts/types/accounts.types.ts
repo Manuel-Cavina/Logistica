@@ -22,7 +22,4 @@ export interface CreateTransporterAccountInput {
   email: string;
   passwordHash: string;
   displayName: string;
-  businessName?: string | null;
-  contactPhone?: string | null;
-  bio?: string | null;
 }

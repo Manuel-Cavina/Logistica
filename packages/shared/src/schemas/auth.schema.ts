@@ -4,8 +4,6 @@ const emailSchema = z.string().trim().email().max(320);
 const passwordSchema = z.string().min(8).max(128);
 const nonEmptyStringSchema = z.string().trim().min(1);
 const optionalPhoneSchema = z.string().trim().min(1).max(32).optional();
-const optionalTextSchema = z.string().trim().min(1).max(255).optional();
-const optionalBioSchema = z.string().trim().min(1).max(1000).optional();
 export const PublicRegisterRoleSchema = z.enum(["CLIENT", "TRANSPORTER"]);
 
 export const RegisterClientSchema = z.object({
@@ -20,9 +18,6 @@ export const RegisterTransporterSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   displayName: nonEmptyStringSchema,
-  businessName: optionalTextSchema,
-  contactPhone: optionalPhoneSchema,
-  bio: optionalBioSchema,
 });
 
 export const RegisterSchema = z.discriminatedUnion("role", [
