@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { AccountRole } from '@logistica/database';
 import type {
   AccountWithProfiles,
   CreateClientAccountInput,
@@ -27,6 +28,17 @@ export class AccountsService {
   async createTransporterAccount(
     input: CreateTransporterAccountInput,
   ): Promise<AccountWithProfiles> {
-    return this.accountsRepository.createTransporterAccount(input);
+    const account = await this.accountsRepository.createTransporterAccount(input);
+
+    if (
+      account.role !== AccountRole.TRANSPORTER ||
+      !account.transporterProfile
+    ) {
+      throw new InternalServerErrorException(
+        'Transporter account creation must include a base transporter profile.',
+      );
+    }
+
+    return account;
   }
 }

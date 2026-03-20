@@ -63,9 +63,6 @@ export class AuthenticationService {
             email: normalizedEmail,
             passwordHash,
             displayName: registerDto.displayName,
-            businessName: registerDto.businessName ?? null,
-            contactPhone: registerDto.contactPhone ?? null,
-            bio: registerDto.bio ?? null,
           });
 
           return this.toRegisterResponse(account);

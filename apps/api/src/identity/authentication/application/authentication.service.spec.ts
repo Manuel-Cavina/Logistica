@@ -114,9 +114,6 @@ describe('AuthenticationService', () => {
       email: 'transporter@example.com',
       passwordHash: 'hashed-password',
       displayName: 'Acme Transportes',
-      businessName: null,
-      contactPhone: null,
-      bio: null,
     });
   });
 
