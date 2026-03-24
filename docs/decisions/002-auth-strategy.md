@@ -1,70 +1,172 @@
-Quiero que implementes el documento `docs/decisions/002-auth-strategy.md`.
+# 002 - Auth Strategy
+<!-- status: accepted | última actualización: 2026-03-23 -->
 
-Objetivo de este bloque:
-- dejar cerrada la arquitectura técnica de autenticación del proyecto
-- respetar el DER actual basado en `Account`, `UserProfile`, `TransporterProfile` y `Session`
-- usar refresh token rotation con `tokenFamily` para detección de reutilización
-- dejar contratos compartidos en `packages/shared/src/interfaces`
-- dejar DTOs de NestJS implementando esos contratos en `apps/api/src/auth/dto`
+## Contexto
 
-Reglas obligatorias:
-1. No cambies la regla de negocio: una `Account` tiene un único rol.
-2. `CLIENT` usa `UserProfile`. `TRANSPORTER` usa `TransporterProfile`.
-3. `ADMIN` no debe exponerse en registro público.
-4. La tabla `Session` debe incluir: `tokenHash`, `tokenFamily`, `expiresAt`,
-   `revokedAt`, `userAgent`, `ipAddress`.
-5. El refresh token payload debe incluir: `sub`, `sid`, `family`.
-6. `JwtRefreshStrategy` debe extraer el token desde `req.cookies` via
-   `ExtractJwt.fromExtractors` — no desde el header.
-7. `PasswordService` debe implementar `hash()`, `verify()` y `needsRehash()`.
-8. No implementes features fuera de auth en este bloque.
-9. Si encontrás inconsistencias, proponé el ajuste mínimo y explícitalo
-   antes de implementar.
+El MVP necesita autenticación vendible, simple de operar y consistente con zonas
+críticas del proyecto: auth, permisos y roles.
 
-Ancla del schema:
-- El schema actual está en `apps/api/prisma/schema.prisma`.
-- Si no existe, crealo desde cero siguiendo el DER de este documento.
-- Si existe, ajustá solo los modelos de auth sin tocar otros modelos existentes.
+Las restricciones activas del producto y del repositorio son:
 
-Orden de implementación:
+- una `Account` tiene un único rol
+- `CLIENT` usa `UserProfile`
+- `TRANSPORTER` usa `TransporterProfile`
+- `ADMIN` existe en dominio y autorización, pero no en registro público
+- el frontend no debe custodiar refresh tokens en JavaScript persistente
+- la solución debe soportar revocación de sesión y detección de reutilización de
+  refresh token
 
-Bloque 0 — Schema Prisma
-- Revisar o crear schema con Account, Session, UserProfile, TransporterProfile
-- Ejecutar `prisma migrate dev`
-- Ejecutar `prisma generate`
+La primera versión de este archivo quedó como instrucción de implementación.
+Después de ejecutar ese trabajo, el documento debe reflejar la decisión vigente y
+no una checklist histórica.
 
-Criterio de aceptación del Bloque 0:
-- `prisma migrate dev` corre sin errores
-- `prisma generate` corre sin errores
-- los cuatro modelos existen con todos los campos requeridos
-No avances al Bloque 1 hasta que esto esté verificado.
+## Decisión
 
-Bloque 1 — PrismaModule + AccountsModule
-- PrismaService + PrismaModule
-- AccountsService: findByEmail, findById, createClient, createTransporter,
-  createSession, revokeSession, revokeFamily, findSessionById
+Se adopta una estrategia de autenticación basada en JWT de acceso corto más
+refresh token rotado, con sesiones persistidas en base de datos.
 
-Bloque 2 — PasswordService + JWT config + cookies
-- PasswordService con Argon2id: hash(), verify(), needsRehash()
-- auth.config.ts con variables de entorno tipadas via @nestjs/config
-- Configuración de cookies por entorno
+La decisión concreta del proyecto es:
 
-Bloque 3 — Register y login
-- POST /auth/register/client
-- POST /auth/register/transporter
-- POST /auth/login con emisión de tokens y creación de sesión
+- usar `accessToken` firmado para autenticar requests vía bearer token
+- usar `refreshToken` firmado solo para renovar sesión
+- guardar el refresh token en cookie `HttpOnly`
+- persistir cada sesión en la tabla `Session`
+- guardar en `Session` un `tokenHash` del refresh token, nunca el token en texto
+  plano
+- agrupar rotaciones con `tokenFamily` para poder revocar una familia completa si
+  se detecta reutilización
+- mantener roles en `Account` y aplicar autorización con `JwtAuthGuard`,
+  `@Roles()` y `RolesGuard`
+- compartir contratos públicos de auth en `packages/shared`
 
-Bloque 4 — Sessions, refresh y logout
-- POST /auth/refresh con rotación y detección de reutilización
-- POST /auth/logout con revocación y limpieza de cookie
+## Implementación vigente
 
-Bloque 5 — Strategies, guards y me
-- JwtAccessStrategy + JwtRefreshStrategy
-- JwtAccessGuard + JwtRefreshGuard
-- GET /auth/me
+### Modelo y perfiles
 
-Bloque 6 — Roles, hardening y tests
-- @Roles() decorator + RolesGuard
-- Rate limiting en login/register
-- Tests unitarios de PasswordService y AuthService
-- Tests de integración de los endpoints principales
+El modelo vigente en Prisma usa:
+
+- `Account` como identidad principal
+- `UserProfile` para cuentas `CLIENT`
+- `TransporterProfile` para cuentas `TRANSPORTER`
+- `Session` para persistir sesiones activas y revocadas
+
+La tabla `Session` conserva los campos necesarios para rotación y auditoría
+mínima:
+
+- `tokenHash`
+- `tokenFamily`
+- `expiresAt`
+- `revokedAt`
+- `userAgent`
+- `ipAddress`
+
+### Endpoints públicos
+
+La interfaz pública actual queda unificada en:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/me`
+
+El registro público no expone endpoints separados por rol. El rol se envía en el
+payload validado y solo admite `CLIENT` o `TRANSPORTER`.
+
+### Tokens y cookies
+
+El `accessToken` incluye `sub` y `role` y se entrega en el body de respuesta.
+
+El `refreshToken` incluye:
+
+- `sub`
+- `sid`
+- `family`
+
+El refresh token:
+
+- se firma con secreto y TTL propios
+- se persiste como hash SHA-256 en `Session`
+- se rota en cada `POST /auth/refresh`
+- revoca toda la familia si se detecta reuso de un token ya rotado o revocado
+
+La cookie de refresh se configura con estas reglas:
+
+- `HttpOnly`
+- `SameSite=Lax`
+- `Secure` en producción
+- prefijo `__Host-` en producción si el nombre configurado no lo incluye
+- `path=/`
+
+### Contratos y validación
+
+Los contratos compartidos viven en `packages/shared` y definen los schemas y tipos
+de:
+
+- registro público
+- login
+- respuestas de login, refresh, register y me
+
+En la API, los DTOs de auth son aliases tipados sobre esos contratos y la
+validación de entrada se aplica con `ZodValidationPipe`.
+
+### Guards y autorización
+
+La autenticación de rutas protegidas usa `JwtAuthGuard` sobre un bearer token.
+
+La autorización por rol usa:
+
+- decorador `@Roles()`
+- `RolesGuard`
+
+El endpoint de refresh no usa hoy una `JwtRefreshStrategy` dedicada. La extracción
+del refresh token se resuelve en el controller a partir de la cookie configurada y
+la validación criptográfica y de sesión se ejecuta en `AuthSessionService`.
+
+## Alternativas consideradas
+
+### Sesiones puras en base de datos
+
+Se descartó usar solo sesiones stateful sin JWT como estrategia principal porque
+el proyecto ya necesita integrar API y web con autenticación simple, portable y
+de bajo acoplamiento.
+
+### Refresh token expuesto al frontend
+
+Se descartó devolver el refresh token para almacenamiento en `localStorage` o
+similar porque aumenta superficie de exposición en cliente y contradice las reglas
+de seguridad ya definidas para el proyecto.
+
+### Endpoints públicos separados por rol
+
+Se descartó mantener `POST /auth/register/client` y
+`POST /auth/register/transporter` porque la validación actual ya distingue rol y
+payload sin duplicar rutas ni lógica pública.
+
+## Consecuencias
+
+### Positivas
+
+- auth queda alineado con el modelo de cuentas y perfiles ya implementado
+- la sesión puede revocarse por token o por familia
+- el frontend solo necesita custodiar el access token y enviar cookies
+- los contratos públicos se comparten entre backend y frontend
+- la autorización por rol queda separada de la lógica de negocio
+
+### Costos y límites
+
+- la implementación actual depende de persistencia de sesiones además del JWT
+- el refresh flow no está encapsulado en una strategy/guard específica
+- `ADMIN` existe en dominio, pero requiere alta interna o flujo no público
+- `PasswordService.needsRehash()` existe, pero todavía no se usa para migración
+  transparente al hacer login
+
+## Estado resultante
+
+Este ADR reemplaza la versión anterior basada en instrucciones de ejecución.
+Desde ahora debe mantenerse sincronizado con cambios relevantes en:
+
+- modelo Prisma de identidad y sesión
+- contratos compartidos de auth
+- endpoints públicos de autenticación
+- cookies, guards y reglas de autorización
