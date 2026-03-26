@@ -1,19 +1,33 @@
 {
   "name": "@logistica/web",
   "private": true,
+  "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @logistica/shared build",
     "dev": "next dev",
+    "prebuild": "pnpm --filter @logistica/shared build",
     "build": "next build",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "pretypecheck": "pnpm --filter @logistica/shared build",
+    "typecheck": "tsc --noEmit",
+    "pretest": "pnpm --filter @logistica/shared build",
+    "test": "jest --config jest.config.cjs --runInBand"
   },
   "dependencies": {
+    "@logistica/shared": "workspace:*",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2"
+    "@types/react-dom": "^19.2.2",
+    "@types/jest": "^30.0.0",
+    "autoprefixer": "^10.4.21",
+    "jest": "^30.3.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.6"
   }
 }

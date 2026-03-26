@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
+import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+
+const headingFont = Space_Grotesk({
+  variable: "--font-heading",
+  subsets: ["latin"],
+});
+
+const bodyFont = Source_Sans_3({
+  variable: "--font-body",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Logistica",
-  description: "MVP de logística en construcción",
+  description: "Plataforma de cupos y retornos para transporte",
 };
 
 export default function RootLayout({
@@ -13,7 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body className={`${headingFont.variable} ${bodyFont.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

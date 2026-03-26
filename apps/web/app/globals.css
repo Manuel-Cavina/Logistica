@@ -1,50 +1,53 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+    --background: 42 54% 93%;
+    --foreground: 155 30% 16%;
+    --muted: 218 16% 35%;
+    --panel: 42 45% 96%;
+    --panel-foreground: 155 30% 16%;
+    --border: 41 31% 80%;
+    --input: 42 42% 94%;
+    --primary: 155 43% 18%;
+    --primary-foreground: 42 57% 95%;
+    --secondary: 218 17% 35%;
+    --secondary-foreground: 42 57% 95%;
+    --tertiary: 153 40% 30%;
+    --tertiary-foreground: 42 57% 95%;
+    --accent: 153 40% 30%;
+    --accent-foreground: 42 57% 95%;
+    --destructive: 8 56% 43%;
+    --destructive-foreground: 42 57% 95%;
+    --ring: 153 40% 30%;
+    --canvas: 42 66% 86%;
+    --neutral: 42 66% 86%;
   }
 
-  .imgLight {
-    display: none;
+  * {
+    @apply border-border;
+    box-sizing: border-box;
   }
-  .imgDark {
-    display: unset;
+
+  html,
+  body {
+    min-height: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-canvas font-body text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(45, 106, 79, 0.16), transparent 30%),
+      radial-gradient(circle at 85% 15%, rgba(27, 67, 50, 0.1), transparent 24%),
+      linear-gradient(180deg, rgba(249, 244, 229, 0.92), rgba(242, 232, 206, 0.88));
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
   }
 }
