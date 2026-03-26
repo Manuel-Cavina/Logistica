@@ -112,10 +112,10 @@ describe('auth schemas', () => {
     expect(result.success).toBe(false);
   });
 
-  it('LoginSchema rejects empty password', () => {
+  it('LoginSchema rejects passwords shorter than 6 characters', () => {
     const result = LoginSchema.safeParse({
       email: 'client@example.com',
-      password: '',
+      password: '12345',
     });
 
     expect(result.success).toBe(false);

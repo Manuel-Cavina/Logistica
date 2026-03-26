@@ -31,7 +31,7 @@ export const RegisterSchema = z.discriminatedUnion("role", [
 
 export const LoginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1),
+  password: z.string().min(6).max(128),
 });
 
 export type RegisterDto = z.infer<typeof RegisterSchema>;
