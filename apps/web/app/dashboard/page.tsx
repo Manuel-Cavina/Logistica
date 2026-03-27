@@ -1,3 +1,5 @@
+import { LogoutButton } from "@/features/auth/components/logout-button";
+
 export default function DashboardPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
@@ -12,6 +14,7 @@ export default function DashboardPage() {
           El flujo base ya restaura la sesion con bootstrap global. La proteccion
           de rutas y los permisos finos quedan para el siguiente modulo de auth.
         </p>
+        <LogoutButton />
       </div>
     </main>
   );
