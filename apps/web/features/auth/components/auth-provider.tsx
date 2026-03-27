@@ -10,6 +10,7 @@ import type {
 import { bootstrapSessionState } from "../services/bootstrap-session";
 import { clearAccessToken, setAccessToken } from "../services/access-token-store";
 import { logout as logoutRequest } from "../services/auth-service";
+import { executeLogout } from "../services/logout-flow";
 import { AuthContext } from "./auth-context";
 
 type AuthProviderProps = {
@@ -117,11 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout(): Promise<void> {
-    try {
-      await logoutRequest();
-    } finally {
-      applyUnauthenticatedState();
-    }
+    await executeLogout(logoutRequest, applyUnauthenticatedState);
   }
 
   latestBootstrapRef.current = bootstrapSession;

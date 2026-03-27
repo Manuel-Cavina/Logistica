@@ -1,5 +1,5 @@
 import { clearAccessToken, getAccessToken, setAccessToken } from "./access-token-store";
-import { getMe, refreshSession } from "./auth-service";
+import { getMe, logout, refreshSession } from "./auth-service";
 
 const originalFetch = global.fetch;
 const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -76,5 +76,54 @@ describe("authService", () => {
 
     expect(response.accessToken).toBe("rotated-access-token");
     expect(getAccessToken()).toBe("rotated-access-token");
+  });
+
+  it("posts to /auth/logout with credentials included and clears the access token", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
+    setAccessToken("access-token");
+
+    const fetchMock = jest.fn<
+      ReturnType<typeof fetch>,
+      Parameters<typeof fetch>
+    >(async (input, init) => {
+      expect(String(input)).toBe("http://localhost:3001/auth/logout");
+      expect(init?.method).toBe("POST");
+      expect(init?.credentials).toBe("include");
+
+      return new Response(null, { status: 204 });
+    });
+
+    global.fetch = fetchMock;
+
+    await logout();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it("clears the access token even when /auth/logout fails", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
+    setAccessToken("stale-access-token");
+
+    const fetchMock = jest.fn<
+      ReturnType<typeof fetch>,
+      Parameters<typeof fetch>
+    >(async () =>
+      createJsonResponse(
+        {
+          statusCode: 500,
+          message: "Internal Server Error",
+        },
+        { status: 500 },
+      ));
+
+    global.fetch = fetchMock;
+
+    await expect(logout()).rejects.toMatchObject({
+      message: "Internal Server Error",
+      name: "ServerError",
+      status: 500,
+    });
+    expect(getAccessToken()).toBeNull();
   });
 });
