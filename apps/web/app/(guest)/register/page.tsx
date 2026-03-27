@@ -246,9 +246,7 @@ function RegisterInfoPanel() {
             </div>
           </div>
 
-          <div className="flex items-end justify-between gap-4">
-            
-          </div>
+          <div className="flex items-end justify-between gap-4"></div>
         </div>
       </div>
 

@@ -136,7 +136,7 @@ function LeftImagePanel() {
               La forma inteligente de mover equinos
             </p>
             <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight text-primary-foreground sm:text-4xl sm:leading-tight">
-              Reserva capacidad confiable y reducí las millas vacias.
+              Reserva capacidad confiable y reduci las millas vacias.
             </h1>
             <p className="mt-4 max-w-lg text-sm leading-6 text-primary-foreground/80 sm:text-[15px]">
               Equine Terra conecta transportistas y clientes para publicar cupos,
@@ -149,7 +149,6 @@ function LeftImagePanel() {
 
       <div className="bg-primary px-5 py-5 text-primary-foreground sm:px-6 sm:py-6">
         <div className="mx-auto flex h-full max-w-5xl flex-col justify-center">
-          
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {highlights.map((highlight) => (
               <article
