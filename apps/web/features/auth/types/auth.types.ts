@@ -1,5 +1,8 @@
 import type {
+  IAuthAccount,
   ILoginResponse,
+  IMeResponse,
+  IRefreshResponse,
   IRegisterResponse,
   LoginDto,
   RegisterDto,
@@ -7,9 +10,33 @@ import type {
 
 export type LoginFormValues = LoginDto;
 export type LoginResponse = ILoginResponse;
+export type RefreshResponse = IRefreshResponse;
 export type RegisterFormValues = RegisterDto;
 export type RegisterResponse = IRegisterResponse;
 export type RegisterRole = RegisterFormValues["role"];
+export type AuthUser = IMeResponse;
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
+export type AuthenticatedSession = {
+  accessToken: string;
+  user: AuthUser;
+};
+
+export type AuthSessionSnapshot = {
+  accessToken: string | null;
+  user: AuthUser | null;
+  status: Exclude<AuthStatus, "loading">;
+};
+
+export type AuthContextValue = {
+  user: AuthUser | null;
+  status: AuthStatus;
+  isBootstrapped: boolean;
+  bootstrapSession: () => Promise<void>;
+  setAuthenticatedSession: (session: AuthenticatedSession) => void;
+  clearSession: () => void;
+  logout: () => Promise<void>;
+};
 
 export type LoginErrorCode =
   | "CONFIGURATION_ERROR"
@@ -61,3 +88,5 @@ export type RegisterState = {
   isLoading: boolean;
   isSuccess: boolean;
 };
+
+export type AuthAccountLike = Pick<IAuthAccount, "id" | "email" | "role">;

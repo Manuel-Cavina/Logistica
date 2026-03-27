@@ -3,6 +3,8 @@
 import { LoginResponseSchema } from "@logistica/shared";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { toAuthUser } from "@/features/auth/services/auth-service";
 import type {
   LoginFormValues,
   LoginResponse,
@@ -97,6 +99,7 @@ function resolveErrorMessage(error: unknown): string {
 
 export function useLogin() {
   const router = useRouter();
+  const { setAuthenticatedSession } = useAuth();
   const [state, setState] = useState<LoginState>({
     error: null,
     isLoading: false,
@@ -112,6 +115,10 @@ export function useLogin() {
 
     try {
       const result = await loginRequest(values);
+      setAuthenticatedSession({
+        accessToken: result.accessToken,
+        user: toAuthUser(result.account),
+      });
 
       setState({
         error: null,
