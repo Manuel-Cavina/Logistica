@@ -12,7 +12,7 @@ export default function DashboardPage() {
         </h1>
         <p className="mt-4 text-base leading-7 text-muted">
           El flujo base ya restaura la sesion con bootstrap global. La proteccion
-          de rutas y los permisos finos quedan para el siguiente modulo de auth.
+          de rutas privadas y guest-only ahora se resuelve desde layouts del App Router.
         </p>
         <LogoutButton />
       </div>
