@@ -24,13 +24,11 @@ afterEach(() => {
 
 describe("loginRequest", () => {
   it("posts to /auth/login with credentials included", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input, init) => {
-      expect(String(input)).toBe("http://localhost:3001/auth/login");
+      expect(String(input)).toBe("/api/auth/login");
       expect(init?.method).toBe("POST");
       expect(init?.credentials).toBe("include");
       expect(
@@ -64,8 +62,6 @@ describe("loginRequest", () => {
   });
 
   it("maps 401 to invalid credentials", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>

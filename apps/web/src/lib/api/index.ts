@@ -1,4 +1,4 @@
-export { apiClient, request } from "./client";
+export { apiClient, buildApiUrl, request } from "./client";
 export {
   ApiError,
   BadRequestError,

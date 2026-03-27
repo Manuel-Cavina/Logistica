@@ -3,6 +3,7 @@
 import { LoginResponseSchema } from "@logistica/shared";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { toAuthUser } from "@/features/auth/services/auth-service";
 import type {
@@ -17,28 +18,11 @@ type FetchLike = typeof fetch;
 const DEFAULT_ERROR_MESSAGE =
   "No se pudo iniciar sesión. Intentá nuevamente en unos segundos.";
 
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!apiBaseUrl) {
-    throw new LoginRequestError(
-      "CONFIGURATION_ERROR",
-      "Falta configurar NEXT_PUBLIC_API_URL para conectar con la API.",
-    );
-  }
-
-  return apiBaseUrl.replace(/\/$/, "");
-}
-
-function buildLoginEndpoint(apiBaseUrl: string): string {
-  return `${apiBaseUrl}/auth/login`;
-}
-
 export async function loginRequest(
   values: LoginFormValues,
   fetchImplementation: FetchLike = fetch,
 ): Promise<LoginResponse> {
-  const response = await fetchImplementation(buildLoginEndpoint(getApiBaseUrl()), {
+  const response = await fetchImplementation(buildApiUrl("/auth/login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

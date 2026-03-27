@@ -186,15 +186,14 @@ describe("apiClient", () => {
     await expect(apiClient.get("/auth/me")).rejects.toThrow("Network error");
   });
 
-  it("logs a clear error when NEXT_PUBLIC_API_URL is missing without throwing", async () => {
+  it("defaults to the Next proxy path when NEXT_PUBLIC_API_URL is missing", async () => {
     delete process.env.NEXT_PUBLIC_API_URL;
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input) => {
-      expect(String(input)).toBe("/health");
+      expect(String(input)).toBe("/api/health");
 
       return createJsonResponse({ ok: true }, { status: 200 });
     });
@@ -204,8 +203,5 @@ describe("apiClient", () => {
     const response = await apiClient.get<{ ok: boolean }>("/health");
 
     expect(response.data.ok).toBe(true);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "NEXT_PUBLIC_API_URL is not configured. The API client will use relative paths until it is defined.",
-    );
   });
 });

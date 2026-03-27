@@ -2,6 +2,7 @@
 
 import { RegisterResponseSchema } from "@logistica/shared";
 import { useState } from "react";
+import { buildApiUrl } from "@/lib/api";
 import type {
   RegisterFormValues,
   RegisterResponse,
@@ -14,28 +15,11 @@ type FetchLike = typeof fetch;
 const DEFAULT_ERROR_MESSAGE =
   "No se pudo completar el registro. Intenta nuevamente en unos segundos.";
 
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!apiBaseUrl) {
-    throw new RegisterRequestError(
-      "CONFIGURATION_ERROR",
-      "Falta configurar NEXT_PUBLIC_API_URL para conectar con la API.",
-    );
-  }
-
-  return apiBaseUrl.replace(/\/$/, "");
-}
-
-function buildRegisterEndpoint(apiBaseUrl: string): string {
-  return `${apiBaseUrl}/auth/register`;
-}
-
 export async function registerRequest(
   values: RegisterFormValues,
   fetchImplementation: FetchLike = fetch,
 ): Promise<RegisterResponse> {
-  const response = await fetchImplementation(buildRegisterEndpoint(getApiBaseUrl()), {
+  const response = await fetchImplementation(buildApiUrl("/auth/register"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
