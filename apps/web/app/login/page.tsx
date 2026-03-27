@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import { LoginForm } from "@/features/auth/components/login-form";
 
 const horseBackground =
-  "linear-gradient(180deg, rgba(27, 67, 50, 0.2), rgba(27, 67, 50, 0.55)), url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=1400&q=80')";
+  "url('/images/auth/login-hero.jpg')";
+
+const sharedImageOverlay =
+  "radial-gradient(circle at 18% 18%, rgba(108,196,255,0.18), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,204,92,0.18), transparent 18%), linear-gradient(180deg, rgba(30,92,128,0.18), rgba(42,130,114,0.3), rgba(38,88,78,0.5))";
 
 type TrustHighlight = {
   title: string;
@@ -107,13 +110,13 @@ function LeftImagePanel() {
       <div
         className="overflow-hidden"
         style={{
-          backgroundImage: horseBackground,
+          backgroundImage: `${sharedImageOverlay}, ${horseBackground}`,
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
         }}
       >
-        <div className="relative flex h-full w-full flex-col justify-between bg-[radial-gradient(circle_at_18%_18%,rgba(243,229,197,0.1),transparent_22%),linear-gradient(180deg,rgba(7,21,15,0.06),rgba(7,21,15,0.24),rgba(7,21,15,0.52))] p-5 sm:p-6">
+        <div className="relative flex h-full w-full flex-col justify-between p-5 sm:p-6">
           <div className="inline-flex w-fit items-center gap-3 rounded-[1.5rem]  px-4 py-3 text-primary-foreground ">
             <div className="flex size-10 items-center justify-center border-full bg-transparent text-sm font-semibold tracking-[0.18em]">
               ET
@@ -128,7 +131,7 @@ function LeftImagePanel() {
             </div>
           </div>
 
-          <div className="max-w-xl px-5 py-6 text-primary-foreground shadow-[0_18px_40px_rgba(7,21,15,0.18)]  sm:px-6 sm:py-">
+          <div className="max-w-xl px-5 py-6 text-primary-foreground   sm:px-6 sm:py-">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary-foreground/68">
               La forma inteligente de mover equinos
             </p>
@@ -169,7 +172,16 @@ function LeftImagePanel() {
   );
 }
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    registered?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const justRegistered = resolvedSearchParams?.registered === "1";
+
   return (
     <>
       <main className="hidden h-screen overflow-hidden bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))] lg:grid lg:grid-cols-[1.1fr_0.9fr]">
@@ -177,10 +189,10 @@ export default function LoginPage() {
           <LeftImagePanel />
         </aside>
 
-        <main className="h-screen overflow-y-auto">
-          <div className="flex min-h-screen items-start justify-center px-10 py-16 xl:px-14 xl:py-20">
-            <div className="flex min-h-[calc(100vh-8rem)] w-full items-center justify-center">
-              <LoginForm />
+        <main className="h-screen overflow-hidden">
+          <div className="flex h-full items-center justify-center px-8 py-10 xl:px-12 xl:py-12">
+            <div className="flex w-full items-center justify-center">
+              <LoginForm justRegistered={justRegistered} />
             </div>
           </div>
         </main>
@@ -195,7 +207,7 @@ export default function LoginPage() {
 
         <section className="px-4 pb-6 pt-2 sm:px-6 sm:pb-8">
           <div className="mx-auto max-w-md">
-            <LoginForm />
+            <LoginForm justRegistered={justRegistered} />
           </div>
         </section>
       </main>
