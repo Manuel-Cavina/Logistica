@@ -88,7 +88,11 @@ function AppleLogo() {
   );
 }
 
-export function LoginForm() {
+type LoginFormProps = {
+  justRegistered?: boolean;
+};
+
+export function LoginForm({ justRegistered = false }: LoginFormProps) {
   const [values, setValues] = useState<LoginFormValues>(initialValues);
   const [touchedFields, setTouchedFields] = useState<TouchedFields>({});
   const { error, isLoading, login } = useLogin();
@@ -131,10 +135,7 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md bg-[rgba(24, 27, 3, 0.96)] p-7 shadow-[0_20px_45px_rgba(27,67,50,0.08)] sm:p-8">
-      <CardHeader className="space-y-5">
-        <div className="inline-flex w-fit items-center rounded-full border border-tertiary/12 bg-tertiary/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-tertiary">
-          Acceso seguro
-        </div>
+      <CardHeader className="space-y-3">
         <div className="space-y-3">
           <CardTitle>Iniciar sesión</CardTitle>
           <CardDescription className="max-w-sm text-base leading-7 text-secondary">
@@ -144,10 +145,10 @@ export function LoginForm() {
         </div>
       </CardHeader>
 
-      <CardContent className="mt-8">
+      <CardContent className="mt-6">
         <form className="space-y-6" noValidate onSubmit={handleSubmit}>
-          <div className="space-y-2.5">
-            <label className="text-sm font-semibold text-foreground/92" htmlFor="email">
+          <div className="space-y-2">
+            <label className="text-[13px] font-semibold text-foreground/92" htmlFor="email">
               Email
             </label>
             <Input
@@ -167,10 +168,10 @@ export function LoginForm() {
             ) : null}
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between gap-4">
               <label
-                className="text-sm font-semibold text-foreground/92"
+                className="text-[13px] font-semibold text-foreground/92"
                 htmlFor="password"
               >
                 Contraseña
@@ -197,6 +198,16 @@ export function LoginForm() {
               <p className="text-sm text-destructive/90">{visibleErrors.password}</p>
             ) : null}
           </div>
+
+          {justRegistered ? (
+            <div
+              aria-live="polite"
+              className="rounded-[1.4rem] border border-tertiary/20 bg-primary/6 px-4 py-3.5 text-sm leading-6 text-primary"
+            >
+              Tu cuenta fue creada correctamente. IngresÃ¡ con tus credenciales para
+              continuar.
+            </div>
+          ) : null}
 
           {error ? (
             <div
