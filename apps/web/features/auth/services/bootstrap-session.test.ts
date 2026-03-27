@@ -22,7 +22,6 @@ afterEach(() => {
 
 describe("bootstrapSessionState", () => {
   it("restores the current session when auth/me succeeds immediately", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
     setAccessToken("existing-access-token");
 
     const fetchMock = jest.fn<
@@ -60,8 +59,6 @@ describe("bootstrapSessionState", () => {
   });
 
   it("refreshes the session and retries auth/me after a 401", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
@@ -69,7 +66,7 @@ describe("bootstrapSessionState", () => {
       const url = String(input);
 
       if (fetchMock.mock.calls.length === 1) {
-        expect(url).toBe("http://localhost:3001/auth/me");
+        expect(url).toBe("/api/auth/me");
         expect((init?.headers as Headers).get("Authorization")).toBeNull();
 
         return createJsonResponse(
@@ -82,7 +79,7 @@ describe("bootstrapSessionState", () => {
       }
 
       if (fetchMock.mock.calls.length === 2) {
-        expect(url).toBe("http://localhost:3001/auth/refresh");
+        expect(url).toBe("/api/auth/refresh");
 
         return createJsonResponse(
           {
@@ -92,7 +89,7 @@ describe("bootstrapSessionState", () => {
         );
       }
 
-      expect(url).toBe("http://localhost:3001/auth/me");
+      expect(url).toBe("/api/auth/me");
       expect((init?.headers as Headers).get("Authorization")).toBe(
         "Bearer rotated-access-token",
       );
@@ -125,7 +122,6 @@ describe("bootstrapSessionState", () => {
   });
 
   it("marks the session as unauthenticated when refresh fails", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
     setAccessToken("stale-access-token");
 
     const fetchMock = jest.fn<
@@ -135,7 +131,7 @@ describe("bootstrapSessionState", () => {
       const url = String(input);
 
       if (fetchMock.mock.calls.length === 1) {
-        expect(url).toBe("http://localhost:3001/auth/me");
+        expect(url).toBe("/api/auth/me");
 
         return createJsonResponse(
           {
@@ -146,7 +142,7 @@ describe("bootstrapSessionState", () => {
         );
       }
 
-      expect(url).toBe("http://localhost:3001/auth/refresh");
+      expect(url).toBe("/api/auth/refresh");
 
       return createJsonResponse(
         {

@@ -22,14 +22,13 @@ afterEach(() => {
 
 describe("authService", () => {
   it("uses the in-memory access token when requesting auth/me", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
     setAccessToken("access-token");
 
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input, init) => {
-      expect(String(input)).toBe("http://localhost:3001/auth/me");
+      expect(String(input)).toBe("/api/auth/me");
       expect((init?.headers as Headers).get("Authorization")).toBe(
         "Bearer access-token",
       );
@@ -53,13 +52,11 @@ describe("authService", () => {
   });
 
   it("stores the rotated access token returned by auth/refresh", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input, init) => {
-      expect(String(input)).toBe("http://localhost:3001/auth/refresh");
+      expect(String(input)).toBe("/api/auth/refresh");
       expect(init?.method).toBe("POST");
 
       return createJsonResponse(
@@ -79,14 +76,13 @@ describe("authService", () => {
   });
 
   it("posts to /auth/logout with credentials included and clears the access token", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
     setAccessToken("access-token");
 
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input, init) => {
-      expect(String(input)).toBe("http://localhost:3001/auth/logout");
+      expect(String(input)).toBe("/api/auth/logout");
       expect(init?.method).toBe("POST");
       expect(init?.credentials).toBe("include");
 
@@ -102,7 +98,6 @@ describe("authService", () => {
   });
 
   it("clears the access token even when /auth/logout fails", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
     setAccessToken("stale-access-token");
 
     const fetchMock = jest.fn<

@@ -3,15 +3,13 @@ import type { ApiErrorBody, ApiResponse, HttpMethod, QueryParams, RequestOptions
 
 const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
 const JSON_CONTENT_TYPE = "application/json";
+const DEFAULT_BROWSER_API_BASE_URL = "/api";
 
 function getBaseUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
-  if (!baseUrl) {
-    console.error(
-      "NEXT_PUBLIC_API_URL is not configured. The API client will use relative paths until it is defined.",
-    );
-    return "";
+  if (!baseUrl || baseUrl === "undefined" || baseUrl === "null") {
+    return DEFAULT_BROWSER_API_BASE_URL;
   }
 
   return baseUrl.replace(/\/+$/, "");
@@ -52,6 +50,10 @@ function buildUrl(path: string, params?: QueryParams): string {
   }
 
   return `${urlObject.pathname}${urlObject.search}${urlObject.hash}`;
+}
+
+export function buildApiUrl(path: string, params?: QueryParams): string {
+  return buildUrl(path, params);
 }
 
 function buildHeaders(
@@ -105,7 +107,7 @@ export async function request<T>(
   method: HttpMethod = "GET",
 ): Promise<ApiResponse<T>> {
   const { body, params, rawBody, headers, ...rest } = options;
-  const url = buildUrl(path, params);
+  const url = buildApiUrl(path, params);
   const hasBody = body !== undefined;
 
   try {

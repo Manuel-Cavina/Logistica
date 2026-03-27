@@ -18,13 +18,11 @@ afterEach(() => {
 
 describe("registerRequest", () => {
   it("posts to /auth/register with credentials included", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
     >(async (input, init) => {
-      expect(String(input)).toBe("http://localhost:3001/auth/register");
+      expect(String(input)).toBe("/api/auth/register");
       expect(init?.method).toBe("POST");
       expect(init?.credentials).toBe("include");
       expect(
@@ -60,8 +58,6 @@ describe("registerRequest", () => {
   });
 
   it("maps 400 to a validation error", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
@@ -85,8 +81,6 @@ describe("registerRequest", () => {
   });
 
   it("rejects an invalid API payload", async () => {
-    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
-
     const fetchMock = jest.fn<
       ReturnType<typeof fetch>,
       Parameters<typeof fetch>
