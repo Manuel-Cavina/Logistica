@@ -16,6 +16,20 @@ const headers = {
 
 const backlog = yaml.load(fs.readFileSync("docs/backlog.yaml", "utf8"));
 
+function getEpics(backlogData) {
+  if (Array.isArray(backlogData)) {
+    return backlogData;
+  }
+
+  if (Array.isArray(backlogData?.epics)) {
+    return backlogData.epics;
+  }
+
+  throw new Error(
+    "Formato invalido de docs/backlog.yaml: se esperaba una lista de epics o un objeto con propiedad 'epics'."
+  );
+}
+
 async function getExistingIssues() {
   const url = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100`;
 
@@ -86,8 +100,9 @@ async function createIssue(title, body, labels, milestone) {
 
 async function run() {
   const existingIssues = await getExistingIssues();
+  const epics = getEpics(backlog);
 
-  for (const epic of backlog.epics) {
+  for (const epic of epics) {
     const milestoneNumber = await getOrCreateMilestone(epic.milestone);
 
     for (const issue of epic.issues) {

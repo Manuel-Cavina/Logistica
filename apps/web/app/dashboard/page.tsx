@@ -9,8 +9,8 @@ export default function DashboardPage() {
           Placeholder de dashboard
         </h1>
         <p className="mt-4 text-base leading-7 text-muted">
-          El login redirige correctamente a esta ruta. La sesión global y la
-          protección de páginas quedan para el siguiente módulo de auth.
+          El flujo base ya restaura la sesion con bootstrap global. La proteccion
+          de rutas y los permisos finos quedan para el siguiente modulo de auth.
         </p>
       </div>
     </main>
