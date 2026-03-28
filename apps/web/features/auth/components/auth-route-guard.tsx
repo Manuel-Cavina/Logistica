@@ -3,15 +3,19 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../hooks/use-auth";
+import { AuthAccessDenied } from "./auth-access-denied";
 import {
   resolveAuthRouteAccess,
   type AuthRouteGuardMode,
 } from "./auth-route-access";
+import type { AllowedRoles } from "../types/auth.types";
 
 type AuthRouteGuardProps = {
+  allowedRoles?: AllowedRoles;
   children: React.ReactNode;
   fallback?: React.ReactNode;
   mode: AuthRouteGuardMode;
+  unauthorizedFallback?: React.ReactNode;
 };
 
 function DefaultGuardFallback() {
@@ -33,17 +37,21 @@ function DefaultGuardFallback() {
 }
 
 export function AuthRouteGuard({
+  allowedRoles,
   children,
   fallback,
   mode,
+  unauthorizedFallback,
 }: AuthRouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isBootstrapped, status } = useAuth();
+  const { isBootstrapped, status, user } = useAuth();
   const resolution = resolveAuthRouteAccess({
+    allowedRoles,
     isBootstrapped,
     mode,
     status,
+    userRole: user?.role,
   });
   const redirectTo = resolution.action === "redirect" ? resolution.redirectTo : null;
 
@@ -57,6 +65,10 @@ export function AuthRouteGuard({
 
   if (resolution.action === "render") {
     return <>{children}</>;
+  }
+
+  if (resolution.action === "unauthorized") {
+    return <>{unauthorizedFallback ?? <AuthAccessDenied />}</>;
   }
 
   return <>{fallback ?? <DefaultGuardFallback />}</>;

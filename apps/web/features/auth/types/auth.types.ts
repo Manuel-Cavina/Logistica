@@ -15,6 +15,8 @@ export type RegisterFormValues = RegisterDto;
 export type RegisterResponse = IRegisterResponse;
 export type RegisterRole = RegisterFormValues["role"];
 export type AuthUser = IMeResponse;
+export type AuthRole = AuthUser["role"];
+export type AllowedRoles = readonly AuthRole[];
 export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 export type AuthenticatedSession = {
