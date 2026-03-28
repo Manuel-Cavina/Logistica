@@ -1,5 +1,4 @@
-import { LoginSchema } from "@logistica/shared";
-import type { z } from "zod";
-
-export const loginSchema = LoginSchema;
-export type LoginSchemaValues = z.infer<typeof loginSchema>;
+export {
+  loginSchema,
+  type LoginSchemaValues,
+} from "@/src/lib/forms/schemas/auth.schema";

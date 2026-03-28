@@ -3,12 +3,12 @@ module.exports = {
   moduleFileExtensions: ["js", "json", "ts", "tsx"],
   rootDir: ".",
   testEnvironment: "node",
-  testRegex: ".*\\.(test|spec)\\.ts$",
+  testRegex: ".*\\.(test|spec)\\.tsx?$",
   transform: {
     "^.+\\.(t|j)sx?$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/tsconfig.json",
+        tsconfig: "<rootDir>/tsconfig.jest.json",
       },
     ],
   },

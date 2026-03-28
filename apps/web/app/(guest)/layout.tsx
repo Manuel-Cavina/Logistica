@@ -1,4 +1,4 @@
-import { AuthRouteGuard } from "@/features/auth/components/auth-route-guard";
+import { AuthRouteGuard } from "@/features/auth/components/guards/auth-route-guard";
 
 type GuestLayoutProps = {
   children: React.ReactNode;
