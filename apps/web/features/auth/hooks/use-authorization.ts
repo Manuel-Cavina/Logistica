@@ -4,7 +4,7 @@ import { useAuth } from "./use-auth";
 import {
   getDefaultAuthorizedPath,
   hasRequiredRole,
-} from "../services/authorization";
+} from "../services/authorization/policy";
 import type { AllowedRoles, AuthRole } from "../types/auth.types";
 
 type UseAuthorizationResult = {

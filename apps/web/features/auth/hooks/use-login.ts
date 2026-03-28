@@ -1,11 +1,12 @@
 "use client";
 
-import { LoginResponseSchema } from "@logistica/shared";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { buildApiUrl } from "@/lib/api";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { toAuthUser } from "@/features/auth/services/auth-service";
+import {
+  loginRequest,
+  toAuthUser,
+} from "@/features/auth/services/api/auth-api";
 import type {
   LoginFormValues,
   LoginResponse,
@@ -13,61 +14,8 @@ import type {
 } from "../types/auth.types";
 import { LoginRequestError } from "../types/auth.types";
 
-type FetchLike = typeof fetch;
-
 const DEFAULT_ERROR_MESSAGE =
-  "No se pudo iniciar sesión. Intentá nuevamente en unos segundos.";
-
-export async function loginRequest(
-  values: LoginFormValues,
-  fetchImplementation: FetchLike = fetch,
-): Promise<LoginResponse> {
-  const response = await fetchImplementation(buildApiUrl("/auth/login"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    cache: "no-store",
-    body: JSON.stringify(values),
-  });
-
-  if (response.status === 401) {
-    throw new LoginRequestError(
-      "INVALID_CREDENTIALS",
-      "Credenciales inválidas",
-      response.status,
-    );
-  }
-
-  if (!response.ok) {
-    throw new LoginRequestError("SERVER_ERROR", DEFAULT_ERROR_MESSAGE, response.status);
-  }
-
-  let payload: unknown;
-
-  try {
-    payload = await response.json();
-  } catch {
-    throw new LoginRequestError(
-      "INVALID_RESPONSE",
-      "La API respondió con un formato inválido.",
-      response.status,
-    );
-  }
-
-  const parsedPayload = LoginResponseSchema.safeParse(payload);
-
-  if (!parsedPayload.success) {
-    throw new LoginRequestError(
-      "INVALID_RESPONSE",
-      "La API respondió con un formato inválido.",
-      response.status,
-    );
-  }
-
-  return parsedPayload.data;
-}
+  "No se pudo iniciar sesiÃ³n. IntentÃ¡ nuevamente en unos segundos.";
 
 function resolveErrorMessage(error: unknown): string {
   if (error instanceof LoginRequestError) {
@@ -75,7 +23,7 @@ function resolveErrorMessage(error: unknown): string {
   }
 
   if (error instanceof TypeError) {
-    return "No pudimos conectar con la API. Verificá tu red e intentá nuevamente.";
+    return "No pudimos conectar con la API. VerificÃ¡ tu red e intentÃ¡ nuevamente.";
   }
 
   return DEFAULT_ERROR_MESSAGE;
@@ -131,3 +79,5 @@ export function useLogin() {
     ...state,
   };
 }
+
+export { loginRequest };

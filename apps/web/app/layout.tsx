@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
-import { AuthProvider } from "@/features/auth/components/auth-provider";
+import { AuthProvider } from "@/features/auth/providers/auth-provider";
 import "./globals.css";
 
 const headingFont = Space_Grotesk({
