@@ -45,6 +45,7 @@ class TestJwtAuthGuard {
 describe('TransporterProfileController', () => {
   const transporterProfileService = {
     getOwnProfile: jest.fn(),
+    updateOwnProfile: jest.fn(),
   };
 
   beforeEach(() => {
@@ -126,6 +127,49 @@ describe('TransporterProfileController', () => {
       .expect(403);
 
     expect(transporterProfileService.getOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('updates the authenticated transporter profile for a transporter token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    transporterProfileService.updateOwnProfile.mockResolvedValue({
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+    });
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        businessName: 'Acme Transportes SA',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+      })
+      .expect(200)
+      .expect({
+        displayName: 'Acme Transportes',
+        businessName: 'Acme Transportes SA',
+        contactPhone: '+54 9 11 1234 5678',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+        verificationStatus: 'PENDING',
+      });
+
+    expect(transporterProfileService.updateOwnProfile).toHaveBeenCalledWith(
+      'transporter-account-id',
+      {
+        businessName: 'Acme Transportes SA',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+      },
+    );
 
     await app.close();
   });
