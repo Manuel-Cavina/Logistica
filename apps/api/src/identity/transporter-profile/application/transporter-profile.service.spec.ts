@@ -16,6 +16,44 @@ describe('TransporterProfileService', () => {
     );
   });
 
+  it('returns the authenticated transporter profile with only the allowed response fields', async () => {
+    transporterProfileRepository.findByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+      createdAt: new Date('2026-03-30T00:00:00.000Z'),
+      updatedAt: new Date('2026-03-30T00:00:00.000Z'),
+    });
+
+    await expect(
+      transporterProfileService.getOwnProfile('account-id'),
+    ).resolves.toEqual({
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+    });
+
+    expect(transporterProfileRepository.findByAccountId).toHaveBeenCalledWith(
+      'account-id',
+    );
+  });
+
+  it('returns a controlled error when reading the authenticated profile and no transporter profile exists', async () => {
+    transporterProfileRepository.findByAccountId.mockResolvedValue(null);
+
+    await expect(
+      transporterProfileService.getOwnProfile('missing-account-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it('updates the authenticated transporter profile with allowed fields only', async () => {
     transporterProfileRepository.findByAccountId.mockResolvedValue({
       id: 'profile-id',

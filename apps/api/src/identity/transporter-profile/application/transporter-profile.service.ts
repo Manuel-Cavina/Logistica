@@ -4,6 +4,7 @@ import type {
   TransporterProfileUpdateData,
   UpdateTransporterProfileInput,
 } from '../types/transporter-profile.types';
+import { GetOwnTransporterProfileResponseDto } from '../dto/get-own-transporter-profile.response.dto';
 import { TransporterProfileRepository } from '../repositories/transporter-profile.repository';
 
 @Injectable()
@@ -11,6 +12,21 @@ export class TransporterProfileService {
   constructor(
     private readonly transporterProfileRepository: TransporterProfileRepository,
   ) {}
+
+  async getOwnProfile(
+    accountId: string,
+  ): Promise<GetOwnTransporterProfileResponseDto> {
+    const existingProfile =
+      await this.transporterProfileRepository.findByAccountId(accountId);
+
+    if (!existingProfile) {
+      throw new NotFoundException(
+        'Transporter profile not found for the authenticated account.',
+      );
+    }
+
+    return this.toOwnProfileResponse(existingProfile);
+  }
 
   async updateOwnProfile(
     accountId: string,
@@ -105,5 +121,18 @@ export class TransporterProfileService {
 
   private hasText(value: string | null | undefined): boolean {
     return Boolean(value?.trim());
+  }
+
+  private toOwnProfileResponse(
+    profile: TransporterProfileRecord,
+  ): GetOwnTransporterProfileResponseDto {
+    return {
+      displayName: profile.displayName,
+      businessName: profile.businessName,
+      contactPhone: profile.contactPhone,
+      bio: profile.bio,
+      maxDetourKmDefault: profile.maxDetourKmDefault,
+      verificationStatus: profile.verificationStatus,
+    };
   }
 }
