@@ -20,6 +20,13 @@ enum AccountStatus {
   DISABLED
 }
 
+enum TransporterVerificationStatus {
+  INCOMPLETE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 model Account {
   id                 String              @id @default(cuid())
   email              String              @unique
@@ -63,6 +70,7 @@ model TransporterProfile {
   businessName       String?
   contactPhone       String?
   bio                String?
+  verificationStatus TransporterVerificationStatus @default(INCOMPLETE)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 

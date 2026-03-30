@@ -4,6 +4,7 @@ export {
   AccountRole,
   AccountStatus,
   Prisma,
+  TransporterVerificationStatus,
   type Account,
   type Session,
   type TransporterProfile,
