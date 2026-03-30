@@ -21,6 +21,8 @@ describe('TransporterProfileService', () => {
       id: 'profile-id',
       accountId: 'account-id',
       displayName: 'Acme Transportes',
+      contactPhone: null,
+      verificationStatus: 'INCOMPLETE',
     });
     transporterProfileRepository.updateByAccountId.mockResolvedValue({
       id: 'profile-id',
@@ -64,6 +66,7 @@ describe('TransporterProfileService', () => {
         contactPhone: '+54 9 11 1234 5678',
         bio: 'Traslados de equinos.',
         maxDetourKmDefault: 120,
+        verificationStatus: 'PENDING',
       },
     );
   });
@@ -87,6 +90,7 @@ describe('TransporterProfileService', () => {
       id: 'profile-id',
       accountId: 'account-id',
       displayName: 'Acme Transportes',
+      contactPhone: '+54 9 11 1234 5678',
       verificationStatus: 'PENDING',
     });
     transporterProfileRepository.updateByAccountId.mockResolvedValue({
@@ -117,4 +121,94 @@ describe('TransporterProfileService', () => {
       },
     );
   });
+
+  it('does not transition to pending when the resulting profile is still incomplete', async () => {
+    transporterProfileRepository.findByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      contactPhone: null,
+      verificationStatus: 'INCOMPLETE',
+    });
+    transporterProfileRepository.updateByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      contactPhone: null,
+      bio: 'Cobertura nacional.',
+      verificationStatus: 'INCOMPLETE',
+    });
+
+    await transporterProfileService.updateOwnProfile('account-id', {
+      bio: ' Cobertura nacional. ',
+    });
+
+    expect(transporterProfileRepository.updateByAccountId).toHaveBeenCalledWith(
+      'account-id',
+      {
+        bio: 'Cobertura nacional.',
+      },
+    );
+  });
+
+  it('transitions to pending when the profile is already complete in storage and the update changes an irrelevant field', async () => {
+    transporterProfileRepository.findByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      contactPhone: '+54 9 11 1234 5678',
+      verificationStatus: 'INCOMPLETE',
+    });
+    transporterProfileRepository.updateByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados premium.',
+      verificationStatus: 'PENDING',
+    });
+
+    await transporterProfileService.updateOwnProfile('account-id', {
+      bio: ' Traslados premium. ',
+    });
+
+    expect(transporterProfileRepository.updateByAccountId).toHaveBeenCalledWith(
+      'account-id',
+      {
+        bio: 'Traslados premium.',
+        verificationStatus: 'PENDING',
+      },
+    );
+  });
+
+  it.each(['VERIFIED', 'REJECTED'] as const)(
+    'keeps verification status unchanged when the profile is %s',
+    async (verificationStatus) => {
+      transporterProfileRepository.findByAccountId.mockResolvedValue({
+        id: 'profile-id',
+        accountId: 'account-id',
+        displayName: 'Acme Transportes',
+        contactPhone: '+54 9 11 1234 5678',
+        verificationStatus,
+      });
+      transporterProfileRepository.updateByAccountId.mockResolvedValue({
+        id: 'profile-id',
+        accountId: 'account-id',
+        displayName: 'Acme Transportes',
+        contactPhone: '+54 9 11 1234 5678',
+        bio: 'Traslados premium.',
+        verificationStatus,
+      });
+
+      await transporterProfileService.updateOwnProfile('account-id', {
+        bio: ' Traslados premium. ',
+      });
+
+      expect(
+        transporterProfileRepository.updateByAccountId,
+      ).toHaveBeenCalledWith('account-id', {
+        bio: 'Traslados premium.',
+      });
+    },
+  );
 });

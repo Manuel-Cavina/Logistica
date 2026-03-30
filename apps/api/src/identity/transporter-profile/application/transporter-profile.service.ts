@@ -25,9 +25,15 @@ export class TransporterProfileService {
       );
     }
 
+    const normalizedInput = this.normalizeInput(input);
+    const finalInput = this.applyVerificationTransition(
+      existingProfile,
+      normalizedInput,
+    );
+
     return this.transporterProfileRepository.updateByAccountId(
       accountId,
-      this.normalizeInput(input),
+      finalInput,
     );
   }
 
