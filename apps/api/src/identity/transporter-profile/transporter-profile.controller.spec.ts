@@ -173,4 +173,37 @@ describe('TransporterProfileController', () => {
 
     await app.close();
   });
+
+  it('returns 400 on patch when the payload is empty', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({})
+      .expect(400);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 on patch when the payload includes forbidden fields', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        displayName: 'Acme Transportes',
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(400);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
 });
