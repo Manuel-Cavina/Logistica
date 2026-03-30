@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { Roles } from '../identity/authentication/decorators/roles.decorator';
 import { JwtAuthGuard } from '../identity/authentication/guards/jwt-auth.guard';
@@ -12,6 +20,10 @@ import {
   type GetAdminTransporterParamsDto,
   type GetAdminTransportersQueryDto,
 } from './dto/get-admin-transporters.query.dto';
+import {
+  UpdateAdminTransporterVerificationStatusSchema,
+  type UpdateAdminTransporterVerificationStatusDto,
+} from './dto/update-admin-transporter-verification-status.dto';
 
 @Controller('admin/transporters')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,5 +45,18 @@ export class AdminController {
     params: GetAdminTransporterParamsDto,
   ): Promise<AdminTransporterDetailResponseDto> {
     return this.adminService.getTransporterDetail(params.id);
+  }
+
+  @Patch(':id/verification-status')
+  async updateTransporterVerificationStatus(
+    @Param(new ZodValidationPipe(GetAdminTransporterParamsSchema))
+    params: GetAdminTransporterParamsDto,
+    @Body(new ZodValidationPipe(UpdateAdminTransporterVerificationStatusSchema))
+    body: UpdateAdminTransporterVerificationStatusDto,
+  ): Promise<AdminTransporterDetailResponseDto> {
+    return this.adminService.updateTransporterVerificationStatus(
+      params.id,
+      body,
+    );
   }
 }

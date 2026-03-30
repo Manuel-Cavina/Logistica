@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@logistica/database';
+import {
+  PrismaService,
+  type TransporterVerificationStatus,
+} from '@logistica/database';
 import {
   adminTransporterDetailSelect,
   adminTransporterListSelect,
@@ -29,6 +32,17 @@ export class AdminTransporterRepository {
   async findById(id: string): Promise<AdminTransporterDetailRecord | null> {
     return this.prisma.transporterProfile.findUnique({
       where: { id },
+      select: adminTransporterDetailSelect,
+    });
+  }
+
+  async updateVerificationStatus(
+    id: string,
+    verificationStatus: TransporterVerificationStatus,
+  ): Promise<AdminTransporterDetailRecord> {
+    return this.prisma.transporterProfile.update({
+      where: { id },
+      data: { verificationStatus },
       select: adminTransporterDetailSelect,
     });
   }
