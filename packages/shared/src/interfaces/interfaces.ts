@@ -45,10 +45,22 @@ export type IUserProfileView = z.infer<typeof UserProfileViewSchema>;
 export const TransporterProfileViewSchema = z.object({
   id: cuidSchema,
   displayName: z.string().trim().min(1).max(160),
+  businessName: z.string().trim().min(1).max(160).nullable(),
+  contactPhone: z.string().trim().min(1).max(32).nullable(),
+  bio: z.string().trim().min(1).max(1000).nullable(),
+  maxDetourKmDefault: z.number().int().min(0).max(1000).nullable(),
 });
 export type ITransporterProfileView = z.infer<
   typeof TransporterProfileViewSchema
 >;
+
+export type IUpdateTransporterProfileDto = {
+  displayName?: string;
+  businessName?: string | null;
+  contactPhone?: string | null;
+  bio?: string | null;
+  maxDetourKmDefault?: number | null;
+};
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])

@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AccountsModule } from './identity/accounts/accounts.module';
 import { AuthenticationModule } from './identity/authentication/authentication.module';
+import { TransporterProfileModule } from './identity/transporter-profile/transporter-profile.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AuthenticationModule } from './identity/authentication/authentication.m
     }),
     AccountsModule,
     AuthenticationModule,
+    TransporterProfileModule,
   ],
   controllers: [],
   providers: [],

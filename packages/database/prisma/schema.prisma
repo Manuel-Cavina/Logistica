@@ -70,6 +70,7 @@ model TransporterProfile {
   businessName       String?
   contactPhone       String?
   bio                String?
+  maxDetourKmDefault Int?
   verificationStatus TransporterVerificationStatus @default(INCOMPLETE)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
