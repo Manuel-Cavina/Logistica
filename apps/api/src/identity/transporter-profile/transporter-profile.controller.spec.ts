@@ -206,4 +206,33 @@ describe('TransporterProfileController', () => {
 
     await app.close();
   });
+
+  it('returns 401 on patch when the access token is missing', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .send({ bio: 'Traslados de equinos.' })
+      .expect(401);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 403 on patch when the authenticated role is not TRANSPORTER', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer CLIENT')
+      .send({ bio: 'Traslados de equinos.' })
+      .expect(403);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
 });
