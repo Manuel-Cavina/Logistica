@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AdminModule } from './admin/admin.module';
 import { AccountsModule } from './identity/accounts/accounts.module';
 import { AuthenticationModule } from './identity/authentication/authentication.module';
 import { TransporterProfileModule } from './identity/transporter-profile/transporter-profile.module';
@@ -30,6 +31,7 @@ import { TransporterProfileModule } from './identity/transporter-profile/transpo
         return config;
       },
     }),
+    AdminModule,
     AccountsModule,
     AuthenticationModule,
     TransporterProfileModule,
