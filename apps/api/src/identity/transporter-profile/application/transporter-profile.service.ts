@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   TransporterProfileRecord,
+  TransporterProfileUpdateData,
   UpdateTransporterProfileInput,
 } from '../types/transporter-profile.types';
 import { TransporterProfileRepository } from '../repositories/transporter-profile.repository';
@@ -24,10 +25,41 @@ export class TransporterProfileService {
       );
     }
 
+    const normalizedInput = this.normalizeInput(input);
+    const finalInput = this.applyVerificationTransition(
+      existingProfile,
+      normalizedInput,
+    );
+
     return this.transporterProfileRepository.updateByAccountId(
       accountId,
-      this.normalizeInput(input),
+      finalInput,
     );
+  }
+
+  private applyVerificationTransition(
+    existingProfile: TransporterProfileRecord,
+    normalizedInput: UpdateTransporterProfileInput,
+  ): TransporterProfileUpdateData {
+    const resultingProfile = {
+      displayName: normalizedInput.displayName ?? existingProfile.displayName,
+      contactPhone:
+        normalizedInput.contactPhone !== undefined
+          ? normalizedInput.contactPhone
+          : existingProfile.contactPhone,
+    };
+
+    if (
+      existingProfile.verificationStatus === 'INCOMPLETE' &&
+      this.isProfileComplete(resultingProfile)
+    ) {
+      return {
+        ...normalizedInput,
+        verificationStatus: 'PENDING',
+      };
+    }
+
+    return normalizedInput;
   }
 
   private normalizeInput(
@@ -52,6 +84,15 @@ export class TransporterProfileService {
     };
   }
 
+  private isProfileComplete(profile: {
+    displayName?: string | null;
+    contactPhone?: string | null;
+  }): boolean {
+    return (
+      this.hasText(profile.displayName) && this.hasText(profile.contactPhone)
+    );
+  }
+
   private normalizeNullableText(value: string | null): string | null {
     if (value === null) {
       return null;
@@ -60,5 +101,9 @@ export class TransporterProfileService {
     const normalizedValue = value.trim();
 
     return normalizedValue.length === 0 ? null : normalizedValue;
+  }
+
+  private hasText(value: string | null | undefined): boolean {
+    return Boolean(value?.trim());
   }
 }
