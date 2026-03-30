@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
   type ExecutionContext,
@@ -43,6 +44,7 @@ describe('AdminController', () => {
   const adminService = {
     listTransporters: jest.fn(),
     getTransporterDetail: jest.fn(),
+    updateTransporterVerificationStatus: jest.fn(),
   };
 
   beforeEach(() => {
@@ -220,6 +222,195 @@ describe('AdminController', () => {
       .get('/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1')
       .set('Authorization', 'Bearer ADMIN')
       .expect(404);
+
+    await app.close();
+  });
+
+  it('updates the transporter verification status for an admin token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    adminService.updateTransporterVerificationStatus.mockResolvedValue({
+      id: 'cm8w8x2p70000wqz5oy7k8ph1',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'VERIFIED',
+    });
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(200)
+      .expect({
+        id: 'cm8w8x2p70000wqz5oy7k8ph1',
+        displayName: 'Acme Transportes',
+        businessName: 'Acme Transportes SA',
+        contactPhone: '+54 9 11 1234 5678',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+        verificationStatus: 'VERIFIED',
+      });
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).toHaveBeenCalledWith('cm8w8x2p70000wqz5oy7k8ph1', {
+      verificationStatus: 'VERIFIED',
+    });
+
+    await app.close();
+  });
+
+  it('returns 400 when the verification status payload is invalid', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'PENDING',
+      })
+      .expect(400);
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when the transporter id is invalid in the update endpoint', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/admin/transporters/not-a-cuid/verification-status')
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(400);
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when the verification status payload contains extra fields', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'VERIFIED',
+        reason: 'approved',
+      })
+      .expect(400);
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 401 when the admin update token is missing', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .send({
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(401);
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 403 when the authenticated role is not ADMIN in the update endpoint', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(403);
+
+    expect(
+      adminService.updateTransporterVerificationStatus,
+    ).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 404 when updating the verification status of a missing transporter profile', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    adminService.updateTransporterVerificationStatus.mockRejectedValue(
+      new NotFoundException('Transporter profile not found.'),
+    );
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(404);
+
+    await app.close();
+  });
+
+  it('returns 409 when the verification status transition is invalid', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    adminService.updateTransporterVerificationStatus.mockRejectedValue(
+      new ConflictException(
+        'Invalid transporter verification transition from VERIFIED to REJECTED.',
+      ),
+    );
+
+    await request(server)
+      .patch(
+        '/admin/transporters/cm8w8x2p70000wqz5oy7k8ph1/verification-status',
+      )
+      .set('Authorization', 'Bearer ADMIN')
+      .send({
+        verificationStatus: 'REJECTED',
+      })
+      .expect(409);
 
     await app.close();
   });
