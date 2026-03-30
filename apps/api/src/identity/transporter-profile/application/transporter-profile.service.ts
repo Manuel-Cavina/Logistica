@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   TransporterProfileRecord,
+  TransporterProfileUpdateData,
   UpdateTransporterProfileInput,
 } from '../types/transporter-profile.types';
 import { TransporterProfileRepository } from '../repositories/transporter-profile.repository';
@@ -28,6 +29,31 @@ export class TransporterProfileService {
       accountId,
       this.normalizeInput(input),
     );
+  }
+
+  private applyVerificationTransition(
+    existingProfile: TransporterProfileRecord,
+    normalizedInput: UpdateTransporterProfileInput,
+  ): TransporterProfileUpdateData {
+    const resultingProfile = {
+      displayName: normalizedInput.displayName ?? existingProfile.displayName,
+      contactPhone:
+        normalizedInput.contactPhone !== undefined
+          ? normalizedInput.contactPhone
+          : existingProfile.contactPhone,
+    };
+
+    if (
+      existingProfile.verificationStatus === 'INCOMPLETE' &&
+      this.isProfileComplete(resultingProfile)
+    ) {
+      return {
+        ...normalizedInput,
+        verificationStatus: 'PENDING',
+      };
+    }
+
+    return normalizedInput;
   }
 
   private normalizeInput(

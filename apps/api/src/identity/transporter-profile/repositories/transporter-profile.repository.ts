@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService, type Prisma } from '@logistica/database';
+import { PrismaService } from '@logistica/database';
 import type {
   TransporterProfileRecord,
-  UpdateTransporterProfileInput,
+  TransporterProfileUpdateData,
 } from '../types/transporter-profile.types';
 
 @Injectable()
@@ -19,11 +19,11 @@ export class TransporterProfileRepository {
 
   async updateByAccountId(
     accountId: string,
-    input: UpdateTransporterProfileInput,
+    input: TransporterProfileUpdateData,
   ): Promise<TransporterProfileRecord> {
     return this.prisma.transporterProfile.update({
       where: { accountId },
-      data: input as Prisma.TransporterProfileUpdateInput,
+      data: input,
     });
   }
 }
