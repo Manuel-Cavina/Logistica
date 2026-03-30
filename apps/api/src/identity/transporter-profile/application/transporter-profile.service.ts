@@ -52,6 +52,15 @@ export class TransporterProfileService {
     };
   }
 
+  private isProfileComplete(profile: {
+    displayName?: string | null;
+    contactPhone?: string | null;
+  }): boolean {
+    return (
+      this.hasText(profile.displayName) && this.hasText(profile.contactPhone)
+    );
+  }
+
   private normalizeNullableText(value: string | null): string | null {
     if (value === null) {
       return null;
@@ -60,5 +69,9 @@ export class TransporterProfileService {
     const normalizedValue = value.trim();
 
     return normalizedValue.length === 0 ? null : normalizedValue;
+  }
+
+  private hasText(value: string | null | undefined): boolean {
+    return Boolean(value?.trim());
   }
 }
