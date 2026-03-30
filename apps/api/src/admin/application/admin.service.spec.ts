@@ -1,10 +1,11 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 
 describe('AdminService', () => {
   const adminTransporterRepository = {
     findMany: jest.fn(),
     findById: jest.fn(),
+    updateVerificationStatus: jest.fn(),
   };
 
   let adminService: AdminService;
@@ -79,4 +80,91 @@ describe('AdminService', () => {
       adminService.getTransporterDetail('missing-transporter-profile-id'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('updates the transporter verification status when the transition is valid', async () => {
+    adminTransporterRepository.findById.mockResolvedValue({
+      id: 'transporter-profile-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+    });
+    adminTransporterRepository.updateVerificationStatus.mockResolvedValue({
+      id: 'transporter-profile-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'VERIFIED',
+    });
+
+    await expect(
+      adminService.updateTransporterVerificationStatus(
+        'transporter-profile-id',
+        {
+          verificationStatus: 'VERIFIED',
+        },
+      ),
+    ).resolves.toEqual({
+      id: 'transporter-profile-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'VERIFIED',
+    });
+
+    expect(
+      adminTransporterRepository.updateVerificationStatus,
+    ).toHaveBeenCalledWith('transporter-profile-id', 'VERIFIED');
+  });
+
+  it('throws NotFoundException when updating a missing transporter profile', async () => {
+    adminTransporterRepository.findById.mockResolvedValue(null);
+
+    await expect(
+      adminService.updateTransporterVerificationStatus(
+        'missing-transporter-profile-id',
+        {
+          verificationStatus: 'VERIFIED',
+        },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(
+      adminTransporterRepository.updateVerificationStatus,
+    ).not.toHaveBeenCalled();
+  });
+
+  it.each(['INCOMPLETE', 'VERIFIED', 'REJECTED'] as const)(
+    'throws ConflictException when the current verification status is %s',
+    async (verificationStatus) => {
+      adminTransporterRepository.findById.mockResolvedValue({
+        id: 'transporter-profile-id',
+        displayName: 'Acme Transportes',
+        businessName: 'Acme Transportes SA',
+        contactPhone: '+54 9 11 1234 5678',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+        verificationStatus,
+      });
+
+      await expect(
+        adminService.updateTransporterVerificationStatus(
+          'transporter-profile-id',
+          {
+            verificationStatus: 'REJECTED',
+          },
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(
+        adminTransporterRepository.updateVerificationStatus,
+      ).not.toHaveBeenCalled();
+    },
+  );
 });
