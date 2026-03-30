@@ -81,17 +81,14 @@ describe('TransporterProfileService', () => {
         bio: ' Traslados de equinos. ',
         maxDetourKmDefault: 120,
       }),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        id: 'profile-id',
-        accountId: 'account-id',
+    ).resolves.toEqual({
         displayName: 'Acme Transportes SA',
         businessName: 'Acme Transportes SA',
         contactPhone: '+54 9 11 1234 5678',
         bio: 'Traslados de equinos.',
         maxDetourKmDefault: 120,
-      }),
-    );
+        verificationStatus: 'INCOMPLETE',
+      });
 
     expect(transporterProfileRepository.findByAccountId).toHaveBeenCalledWith(
       'account-id',
@@ -158,6 +155,43 @@ describe('TransporterProfileService', () => {
         maxDetourKmDefault: null,
       },
     );
+  });
+
+  it('returns the updated profile with the same public shape used by the get endpoint', async () => {
+    transporterProfileRepository.findByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      contactPhone: '+54 9 11 1234 5678',
+      verificationStatus: 'PENDING',
+    });
+    transporterProfileRepository.updateByAccountId.mockResolvedValue({
+      id: 'profile-id',
+      accountId: 'account-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados premium.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+      createdAt: new Date('2026-03-30T00:00:00.000Z'),
+      updatedAt: new Date('2026-03-30T00:00:00.000Z'),
+    });
+
+    await expect(
+      transporterProfileService.updateOwnProfile('account-id', {
+        businessName: ' Acme Transportes SA ',
+        bio: ' Traslados premium. ',
+        maxDetourKmDefault: 120,
+      }),
+    ).resolves.toEqual({
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados premium.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+    });
   });
 
   it('does not transition to pending when the resulting profile is still incomplete', async () => {

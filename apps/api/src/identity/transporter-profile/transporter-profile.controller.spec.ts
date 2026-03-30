@@ -45,6 +45,7 @@ class TestJwtAuthGuard {
 describe('TransporterProfileController', () => {
   const transporterProfileService = {
     getOwnProfile: jest.fn(),
+    updateOwnProfile: jest.fn(),
   };
 
   beforeEach(() => {
@@ -126,6 +127,111 @@ describe('TransporterProfileController', () => {
       .expect(403);
 
     expect(transporterProfileService.getOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('updates the authenticated transporter profile for a transporter token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    transporterProfileService.updateOwnProfile.mockResolvedValue({
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'PENDING',
+    });
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        businessName: 'Acme Transportes SA',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+      })
+      .expect(200)
+      .expect({
+        displayName: 'Acme Transportes',
+        businessName: 'Acme Transportes SA',
+        contactPhone: '+54 9 11 1234 5678',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+        verificationStatus: 'PENDING',
+      });
+
+    expect(transporterProfileService.updateOwnProfile).toHaveBeenCalledWith(
+      'transporter-account-id',
+      {
+        businessName: 'Acme Transportes SA',
+        bio: 'Traslados de equinos.',
+        maxDetourKmDefault: 120,
+      },
+    );
+
+    await app.close();
+  });
+
+  it('returns 400 on patch when the payload is empty', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({})
+      .expect(400);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 on patch when the payload includes forbidden fields', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        displayName: 'Acme Transportes',
+        verificationStatus: 'VERIFIED',
+      })
+      .expect(400);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 401 on patch when the access token is missing', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .send({ bio: 'Traslados de equinos.' })
+      .expect(401);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 403 on patch when the authenticated role is not TRANSPORTER', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/transporter/profile')
+      .set('Authorization', 'Bearer CLIENT')
+      .send({ bio: 'Traslados de equinos.' })
+      .expect(403);
+
+    expect(transporterProfileService.updateOwnProfile).not.toHaveBeenCalled();
 
     await app.close();
   });

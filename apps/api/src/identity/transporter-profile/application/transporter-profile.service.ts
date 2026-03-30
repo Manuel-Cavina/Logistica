@@ -31,7 +31,7 @@ export class TransporterProfileService {
   async updateOwnProfile(
     accountId: string,
     input: UpdateTransporterProfileInput,
-  ): Promise<TransporterProfileRecord> {
+  ): Promise<GetOwnTransporterProfileResponseDto> {
     const existingProfile =
       await this.transporterProfileRepository.findByAccountId(accountId);
 
@@ -47,10 +47,12 @@ export class TransporterProfileService {
       normalizedInput,
     );
 
-    return this.transporterProfileRepository.updateByAccountId(
+    const updatedProfile = await this.transporterProfileRepository.updateByAccountId(
       accountId,
       finalInput,
     );
+
+    return this.toOwnProfileResponse(updatedProfile);
   }
 
   private applyVerificationTransition(
