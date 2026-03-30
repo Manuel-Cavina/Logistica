@@ -1,8 +1,10 @@
+import { NotFoundException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 
 describe('AdminService', () => {
   const adminTransporterRepository = {
     findMany: jest.fn(),
+    findById: jest.fn(),
   };
 
   let adminService: AdminService;
@@ -44,5 +46,37 @@ describe('AdminService', () => {
     expect(adminTransporterRepository.findMany).toHaveBeenCalledWith({
       status: 'VERIFIED',
     });
+  });
+
+  it('returns the transporter detail with only the allowed public fields', async () => {
+    adminTransporterRepository.findById.mockResolvedValue({
+      id: 'transporter-profile-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'VERIFIED',
+    });
+
+    await expect(
+      adminService.getTransporterDetail('transporter-profile-id'),
+    ).resolves.toEqual({
+      id: 'transporter-profile-id',
+      displayName: 'Acme Transportes',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'VERIFIED',
+    });
+  });
+
+  it('throws NotFoundException when the transporter profile does not exist', async () => {
+    adminTransporterRepository.findById.mockResolvedValue(null);
+
+    await expect(
+      adminService.getTransporterDetail('missing-transporter-profile-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

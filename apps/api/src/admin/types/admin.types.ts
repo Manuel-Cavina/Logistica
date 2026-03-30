@@ -18,3 +18,18 @@ export const adminTransporterListSelect =
 export type AdminTransporterListRecord = Prisma.TransporterProfileGetPayload<{
   select: typeof adminTransporterListSelect;
 }>;
+
+export const adminTransporterDetailSelect =
+  Prisma.validator<Prisma.TransporterProfileSelect>()({
+    id: true,
+    displayName: true,
+    businessName: true,
+    contactPhone: true,
+    bio: true,
+    maxDetourKmDefault: true,
+    verificationStatus: true,
+  });
+
+export type AdminTransporterDetailRecord = Prisma.TransporterProfileGetPayload<{
+  select: typeof adminTransporterDetailSelect;
+}>;
