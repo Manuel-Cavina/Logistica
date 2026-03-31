@@ -15,7 +15,6 @@ function buildProfile(
     businessName: "Transportes del Prado",
     contactPhone: "1155550000",
     displayName: "Transportes del Prado",
-    id: "cm9abcdefghijklmnopqrst",
     maxDetourKmDefault: 120,
     verificationStatus,
   };

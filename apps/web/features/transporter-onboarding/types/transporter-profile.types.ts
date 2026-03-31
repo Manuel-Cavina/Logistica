@@ -4,7 +4,9 @@ import {
 } from "@logistica/shared";
 import { z } from "zod";
 
-export const TransporterProfileSchema = TransporterProfileViewSchema.extend({
+export const TransporterProfileSchema = TransporterProfileViewSchema.omit({
+  id: true,
+}).extend({
   verificationStatus: TransporterVerificationStatusSchema,
 });
 
