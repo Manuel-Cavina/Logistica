@@ -1,3 +1,4 @@
+import { DashboardNavigation } from "../components/dashboard-navigation";
 import { LogoutButton } from "@/features/auth/components/feedback/logout-button";
 
 export default function DashboardPageView() {
@@ -14,6 +15,7 @@ export default function DashboardPageView() {
           El flujo base ya restaura la sesion con bootstrap global. La proteccion
           de rutas privadas y guest-only ahora se resuelve desde layouts del App Router.
         </p>
+        <DashboardNavigation />
         <LogoutButton />
       </div>
     </main>
