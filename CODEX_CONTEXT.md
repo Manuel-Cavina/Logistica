@@ -1,431 +1,589 @@
 # CODEX_CONTEXT.md
+<!-- version: 2.0 | última actualización: 2026-04 -->
+<!-- Este archivo es el mapa de contexto técnico del proyecto.        -->
+<!-- Claude Code lo lee para orientarse en tareas largas o complejas. -->
+<!-- ACTUALIZAR cuando cambien entidades, estados o arquitectura.     -->
 
-## Qué es este proyecto
+---
 
-Este proyecto construye una plataforma de logística para publicar, descubrir y reservar **cupos y retornos de transporte**.
+## Qué es este producto
 
-La vertical inicial del MVP es **Equinos**, pero el sistema debe quedar preparado desde el inicio para soportar otros rubros sin rehacer el core.
+Una **plataforma de cupos y retornos para transporte**, vertical inicial **Equinos**.
 
-La idea principal del producto es reducir viajes vacíos, mejorar la ocupación de capacidad disponible y darle a transportistas y clientes una forma simple de operar reservas con pago protegido, trazabilidad mínima y reputación.
+Problema real: los transportistas hacen viajes con cupos vacíos (milla libre / empty miles).
+La plataforma permite publicar esos cupos, que clientes los reserven, y que todo el flujo
+(pago, trazabilidad, reputación) ocurra dentro del sistema.
 
-## Objetivo del MVP
-
-Validar un producto vendible que permita:
+> "Reducimos viajes vacíos y bajamos costos asegurando cupos, pagos protegidos y trazabilidad."
 
-* que un transportista publique un viaje con cupos disponibles
-* que un cliente encuentre una oferta adecuada
-* que reserve capacidad
-* que pague una seña mediante PSP
-* que el viaje se opere con evidencia básica
-* que ambas partes cierren la operación con comprobante y reputación
+El MVP es **vendible**, no experimental. Cada feature existe porque mueve el flujo central:
+buscar → reservar → pagar → transportar → confirmar → cobrar.
 
-No estamos construyendo un sistema logístico total ni un TMS completo.
-Estamos construyendo un MVP enfocado, operable y comercializable.
+---
 
-## Vertical inicial y diseño futuro
+## Estado actual del schema (Sprint 0 / Sprint 1)
 
-### Vertical activa en el MVP
+Entidades **ya implementadas**:
 
-* Equinos
+```
+Account             ← identidad, roles, estado de cuenta
+UserProfile         ← datos personales del cliente
+TransporterProfile  ← datos del transportista + estado de verificación
+Session             ← refresh token con rotación por familia
+```
 
-### Diseño requerido del core
+Entidades **pendientes** (se agregan en el sprint que las requiere, no antes):
 
-Aunque la UI del MVP esté centrada en Equinos, el dominio debe quedar preparado para soportar luego otros tipos de carga, por ejemplo:
+```
+Trailer             ← E2
+TripOffer           ← E3
+Booking             ← E5
+Payment             ← E6
+Proof               ← E7
+Review              ← E9
+Dispute             ← E9
+```
 
-* FOOD
-* PEOPLE
-* GENERAL_CARGO
-* MOTO
-* VEHICLE
+**Regla**: no anticipar entidades futuras en el schema actual.
 
-Por eso no se debe modelar el negocio de forma rígida alrededor de equinos solamente.
+---
 
-Desde el inicio debe existir una base extensible con conceptos como:
+## Schema implementado — referencia exacta
 
-* `cargoType`
-* `capacityUnit`
-* atributos específicos por rubro
+### Enums actuales
 
-## Qué sí entra en el MVP
+```prisma
+enum AccountRole {
+  CLIENT
+  TRANSPORTER    ← es TRANSPORTER, no DRIVER
+  ADMIN
+}
 
-* auth con roles base
-* perfil de transportista
-* verificación manual inicial
-* carga de trailer / vehículo
-* creación de oferta de viaje
-* búsqueda de ofertas
-* detalle de oferta
-* reserva de cupos
-* control anti-overbooking
-* seña con PSP
-* webhooks idempotentes
-* check-in / check-out con evidencia
-* confirmación de entrega
-* comprobante digital
-* reputación básica
-* panel básico de pagos y estado de operación
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
 
-## Qué no entra en el MVP
-
-* tracking GPS complejo
-* optimización automática de rutas avanzada
-* KYC automatizado complejo
-* subastas complejas
-* multi-rubro visible en UI
-* billetera propia
-* marketplace financiero
-* tokenización / cripto
-* automatizaciones no esenciales
-
-## Entidades núcleo
-
-Las entidades base del dominio son:
-
-* `User`
-* `TransportistaProfile`
-* `Vehicle`
-* `Trailer`
-* `TripOffer`
-* `Booking`
-* `Payment`
-* `Proof`
-* `Review`
-* `Dispute`
-* `CargoType`
-* `CapacityUnit`
-
-Puede haber ajustes de naming, pero el dominio no debe perder estas piezas.
-
-## Flujo base del negocio
-
-1. un transportista crea su perfil
-2. carga vehículo / trailer
-3. publica una oferta de viaje con origen, destino, fecha, capacidad y condiciones
-4. un cliente busca ofertas
-5. ve detalle y reserva cupos
-6. paga una seña mediante PSP
-7. si el pago se confirma, la reserva pasa a confirmada
-8. se habilita la operación del viaje
-9. se registran evidencias de check-in y check-out
-10. se confirma entrega
-11. se genera comprobante
-12. ambas partes pueden dejar reputación
-
-## Reglas críticas del negocio
-
-### 1. No billetera propia
-
-La plataforma no debe custodiar dinero como billetera interna.
-Los estados monetarios dependen del PSP y de la lógica de negocio asociada.
-
-### 2. Webhooks idempotentes
-
-El backend debe asumir que un webhook puede llegar más de una vez.
-Nunca debe producir doble aplicación de efectos.
-
-### 3. No sobreventa
-
-**Por qué existe:** si dos usuarios reservan el último cupo al mismo tiempo
-sin control transaccional, ambas reservas pueden quedar confirmadas
-con capacidad inexistente. Eso rompe la confianza del producto y genera
-disputas manuales difíciles de resolver.
-
-**Implementación requerida:** el decremento de `availableSlots` y la
-verificación de disponibilidad deben ocurrir dentro de la misma transacción
-de base de datos. Un check a nivel aplicación antes de la transacción
-no es suficiente
-
-### 4. Contacto restringido antes de la seña
-
-El acceso libre al contacto entre partes debe estar restringido hasta que exista señal operativa suficiente, idealmente luego de una seña confirmada.
-
-### 5. Evidencia mínima operativa
-
-La operación debe dejar trazabilidad mínima mediante pruebas de carga/entrega o estados equivalentes.
-
-### 6. Multi-rubro preparado
-
-Aunque Equinos sea la vertical activa, el core no debe quedar atado a campos rígidos exclusivos de esa vertical.
-
-## Estados base
-
-### `TripOffer.status`
-
-* `DRAFT`
-* `PUBLISHED`
-* `FULL`
-* `CLOSED`
-* `IN_PROGRESS`
-* `COMPLETED`
-* `CANCELLED`
-
-### `Booking.status`
-
-* `PENDING_PAYMENT`
-* `CONFIRMED`
-* `IN_PROGRESS`
-* `DELIVERED_PENDING_CONFIRMATION`
-* `COMPLETED`
-* `CANCELLED`
-* `DISPUTED`
-
-### `Payment.status`
-
-* `INITIATED`
-* `HELD`
-* `RELEASED`
-* `REFUNDED`
-* `DISPUTED`
-* `FAILED`
-
-## Transiciones de estado válidas
-
-### TripOffer
-DRAFT → PUBLISHED
-PUBLISHED → FULL (automático cuando availableSlots = 0)
-PUBLISHED → CLOSED (manual por transportista)
-PUBLISHED → IN_PROGRESS (cuando inicia el viaje)
-IN_PROGRESS → COMPLETED
-PUBLISHED → CANCELLED
-FULL → PUBLISHED (si se libera un cupo por cancelación)
-
-### Booking
-PENDING_PAYMENT → CONFIRMED (webhook de seña exitosa)
-PENDING_PAYMENT → CANCELLED (timeout o pago fallido)
-CONFIRMED → IN_PROGRESS (check-in)
-IN_PROGRESS → DELIVERED_PENDING_CONFIRMATION (check-out)
-DELIVERED_PENDING_CONFIRMATION → COMPLETED (confirmación cliente)
-DELIVERED_PENDING_CONFIRMATION → DISPUTED (reporte de problema)
-CONFIRMED → CANCELLED (cancelación antes de inicio)
-DISPUTED → COMPLETED (resolución a favor de transportista)
-DISPUTED → REFUNDED (resolución a favor de cliente)
-
-### Payment
-INITIATED → HELD (seña capturada por PSP)
-HELD → RELEASED (entrega confirmada)
-HELD → REFUNDED (cancelación o disputa resuelta a favor cliente)
-HELD → DISPUTED (reporte de problema)
-INITIATED → FAILED (fallo PSP)
-
-## Arquitectura esperada
-
-### Frontend
-
-* `apps/web` con Next.js
-* UI clara, simple y orientada al flujo principal
-* formularios y estados visibles
-
-### Backend
-
-* `apps/api` con NestJS
-* reglas de negocio en servicios
-* validación server-side
-* endpoints consistentes
-
-### Datos
-
-* PostgreSQL con Prisma
-* modelo preparado para crecimiento multi-rubro
-
-### Storage
-
-* R2 o S3 compatible para evidencias y comprobantes
-
-### Observabilidad
-
-* logs estructurados
-* Sentry en módulos importantes
-
-### Jobs
-
-* BullMQ + Redis cuando realmente haga falta
-* no introducir colas antes de tiempo si complica el MVP
-
-## Módulos iniciales esperados
-
-Los primeros módulos razonables del sistema son:
-
-* auth
-* users / profiles
-* vehicles / trailers
-* trip-offers
-* search
-* bookings
-* payments
-* proofs
-* reviews
-* disputes
-
-## Responsabilidad de cada módulo
-
-| Módulo | Responsabilidad principal |
-|---|---|
-| `auth` | registro, login, sesión, guards de acceso |
-| `users/profiles` | datos del usuario, rol, estado de verificación |
-| `vehicles/trailers` | CRUD de vehículos y trailers del transportista |
-| `trip-offers` | publicación, edición, estado y búsqueda de ofertas |
-| `search` | lógica de filtrado y ranking de ofertas para el cliente |
-| `bookings` | reserva de cupos, control anti-overbooking, estados |
-| `payments` | integración PSP, webhook idempotente, estados de pago |
-| `proofs` | upload de evidencias, check-in/out, timeline |
-| `reviews` | calificaciones de ambas partes al cerrar operación |
-| `disputes` | reporte de problema, congelamiento de pago, resolución manual |
-
-## Contratos entre módulos
-
-* `bookings` consume `trip-offers` para verificar disponibilidad,
-  pero no debe implementar lógica de oferta dentro de sí mismo
-* `payments` es notificado por webhooks externos y actualiza
-  su propio estado; luego `bookings` reacciona al estado del pago,
-  no al revés
-* `proofs` pertenece a un `booking` específico y no debe
-  tener lógica de negocio de reserva
-* `reviews` solo se habilitan cuando el `booking` está en COMPLETED
-* `disputes` congela el `payment` asociado al `booking`; la resolución
-  es siempre manual en el MVP
-* `search` no debe modificar estado de ninguna entidad;
-  es read-only sobre `trip-offers`
-
-## Orden sugerido de implementación
-
-1. foundations
-2. auth
-3. perfil transportista
-4. vehículos / trailers
-5. crear oferta
-6. buscar ofertas
-7. booking con anti-overbooking
-8. pagos
-9. operación del viaje
-10. comprobante / reputación / disputas
-11. módulo green
-
-## Restricciones que Codex debe respetar
-
-Codex no debe:
-
-* inventar features fuera del MVP
-* endurecer el modelo solo para Equinos
-* tocar pagos sin aprobación explícita
-* modificar auth o permisos sensibles sin aprobación
-* crear abstracciones grandes sin necesidad
-* introducir complejidad arquitectónica innecesaria
-
-## Convenciones de API
-
-### Formato de respuesta exitosa
-```json
-{
-  "data": { ... },
-  "meta": { "timestamp": "..." }
+enum TransporterVerificationStatus {
+  INCOMPLETE    ← estado inicial, sin documentos
+  PENDING       ← documentos cargados, esperando revisión admin
+  VERIFIED      ← aprobado, puede publicar ofertas
+  REJECTED      ← rechazado con motivo
 }
 ```
 
-### Formato de error
-```json
-{
-  "error": {
-    "code": "BOOKING_SLOTS_UNAVAILABLE",
-    "message": "No hay cupos disponibles para esta oferta",
-    "statusCode": 409
+### Account — tabla: `accounts`
+
+```prisma
+model Account {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String
+  role            AccountRole
+  status          AccountStatus @default(ACTIVE)
+  isEmailVerified Boolean       @default(false)
+  lastLoginAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  userProfile        UserProfile?
+  transporterProfile TransporterProfile?
+  sessions           Session[]
+}
+```
+
+Notas:
+- Un `Account` tiene **uno** de los perfiles: `UserProfile` (CLIENT) o `TransporterProfile` (TRANSPORTER)
+- `status` controla acceso: `SUSPENDED` y `DISABLED` bloquean operación aunque el JWT sea válido
+- `lastLoginAt` se actualiza en cada login exitoso
+- `isEmailVerified` se registra pero no bloquea operación en MVP
+
+### UserProfile — tabla: `user_profiles`
+
+```prisma
+model UserProfile {
+  id        String   @id @default(cuid())
+  accountId String   @unique
+  firstName String
+  lastName  String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+```
+
+Notas:
+- Se crea junto al `Account` en el registro de cliente (una sola transacción)
+- `phone` es opcional en MVP, recomendado completar antes de hacer una reserva
+- Cascade delete: si se borra el `Account`, se borra el perfil
+
+### TransporterProfile — tabla: `transporter_profiles`
+
+```prisma
+model TransporterProfile {
+  id                  String                        @id @default(cuid())
+  accountId           String                        @unique
+  displayName         String
+  businessName        String?
+  contactPhone        String?
+  bio                 String?
+  maxDetourKmDefault  Int?
+  verificationStatus  TransporterVerificationStatus @default(INCOMPLETE)
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
+
+  account             Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+```
+
+Notas:
+- `verificationStatus` comienza en `INCOMPLETE` al registrarse
+- Solo pasa a `PENDING` cuando el transportista carga todos los documentos requeridos
+- Solo pasa a `VERIFIED` cuando un admin aprueba manualmente
+- Solo los transportistas `VERIFIED` pueden publicar `TripOffer`
+- `maxDetourKmDefault` es el desvío por defecto al crear nuevas ofertas
+- `displayName` es el nombre público visible en los listados de ofertas
+- `contactPhone` se expone al cliente **solo** cuando `Payment.status === 'HELD'` (E6)
+- Los documentos (DNI, licencia, patente, seguro) se agregan en E2 como `TransporterDocument`
+
+### Session — tabla: `sessions`
+
+```prisma
+model Session {
+  id          String    @id @default(cuid())
+  accountId   String
+  tokenHash   String    ← hash del refresh token, nunca el token en texto plano
+  tokenFamily String    ← UUID de la familia (para detectar robo por reuso)
+  userAgent   String?
+  ipAddress   String?
+  expiresAt   DateTime
+  revokedAt   DateTime? ← null = activa | DateTime = revocada
+  createdAt   DateTime  @default(now())
+
+  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+```
+
+Notas — **este módulo es zona protegida**:
+- El refresh token **nunca** se guarda en texto plano. Solo el hash (bcrypt o sha256)
+- `tokenFamily` agrupa todos los tokens de una misma cadena de rotación
+- Si se detecta reuso de un token de una familia revocada → revocar **toda la familia** (posible robo)
+- `revokedAt` marca la sesión inválida sin borrarla (auditoría)
+- Las sesiones expiradas se limpian por job en background, no en el request
+
+---
+
+## Decisión de naming — Account, no User
+
+El modelo de identidad se llama `Account`. Esto es intencional y debe respetarse en todo el código.
+
+`Account` = identidad del sistema (email + password + rol + estado de cuenta).
+`UserProfile` y `TransporterProfile` = extensiones de negocio de esa identidad.
+
+**Consecuencias prácticas**:
+- En guards y JWT: `accountId`, `accountRole`, `accountStatus`
+- En lógica de booking, review, etc.: el campo se llama `clientId` o `transporterId`
+  pero su valor **es** un `accountId`
+- **Nunca** usar `userId` para referirse a un `accountId`
+
+```typescript
+// ✅ correcto
+const account = await this.accountRepository.findById(accountId);
+guard → verifica account.status === AccountStatus.ACTIVE
+
+// ❌ incorrecto — no existe "User" en el schema
+const user = await this.userRepository.findById(userId);
+```
+
+---
+
+## Flujo de autenticación implementado
+
+```
+REGISTRO
+  POST /auth/register
+  → body: { email, password, role, firstName, lastName } (CLIENT)
+       o: { email, password, role, displayName }         (TRANSPORTER)
+  → crea Account + perfil correspondiente en una $transaction
+  → devuelve accessToken (JWT 15min) + refreshToken (opaco 7d)
+  → guarda Session { tokenHash, tokenFamily: uuid() }
+
+LOGIN
+  POST /auth/login
+  → valida email + passwordHash
+  → actualiza Account.lastLoginAt
+  → crea nueva Session
+  → devuelve accessToken + refreshToken
+
+REFRESH
+  POST /auth/refresh
+  → busca Session por hash del token recibido
+  → valida: no expirada, no revocada
+  → rota: revoca Session actual, crea Session nueva con mismo tokenFamily
+  → si token ya revocado → revocar TODA la tokenFamily (detecta robo)
+  → devuelve nuevo accessToken + nuevo refreshToken
+
+LOGOUT
+  POST /auth/logout
+  → setea Session.revokedAt = now()
+
+LOGOUT ALL DEVICES
+  POST /auth/logout-all
+  → setea revokedAt en todas las Sessions del accountId
+```
+
+---
+
+## Flujo completo del producto (end-to-end)
+
+```
+[TRANSPORTER — E1/E2]
+  1. Registro → Account (TRANSPORTER) + TransporterProfile (INCOMPLETE)
+  2. Carga documentos → TransporterProfile (PENDING)
+  3. Admin aprueba → TransporterProfile (VERIFIED)
+  4. Carga Trailer (capacidad en SLOTS)
+  5. Publica TripOffer (ruta, fecha, cupos, precio, desvío)
+
+[CLIENT — E1/E4]
+  6. Registro → Account (CLIENT) + UserProfile
+  7. Busca traslado (origen, destino, fecha, cupos requeridos)
+  8. Ve resultados filtrados (verificados, precio, rating)
+  9. Selecciona oferta → ve detalle
+ 10. Reserva N cupos → crea Booking (PENDING_PAYMENT)
+ 11. Paga seña 20–30% → Mercado Pago
+ 12. MP confirma → webhook → Payment (HELD) → Booking (CONFIRMED)
+ 13. contactPhone de TransporterProfile y chat habilitados
+
+[OPERACIÓN — E7]
+ 14. Transporter hace check-in con foto → Proof → Booking (IN_PROGRESS)
+ 15. Transporter hace check-out con foto → Proof → Booking (DELIVERED_PENDING_CONFIRMATION)
+ 16. Client confirma entrega → Booking (COMPLETED) → Payment (RELEASED)
+ 17. Ambas partes se califican → Review
+
+[DISPUTAS — E9]
+  X. Client reporta problema → Booking (DISPUTED) → Payment se mantiene HELD
+  X. Admin interviene → resuelve → Payment (RELEASED o REFUNDED)
+```
+
+---
+
+## Estados de negocio
+
+### TransporterVerificationStatus ← IMPLEMENTADO
+| Estado | Descripción | Transición |
+|---|---|---|
+| `INCOMPLETE` | Sin documentos | → PENDING |
+| `PENDING` | Docs cargados, esperando admin | → VERIFIED, REJECTED |
+| `VERIFIED` | Aprobado, puede publicar | estable |
+| `REJECTED` | Rechazado con motivo | → INCOMPLETE (puede reintentar) |
+
+### AccountStatus ← IMPLEMENTADO
+| Estado | Descripción |
+|---|---|
+| `ACTIVE` | Operando normalmente |
+| `SUSPENDED` | Bloqueado temporalmente |
+| `DISABLED` | Baja definitiva |
+
+### OfferStatus ← PRÓXIMO (E3)
+| Estado | Transiciones permitidas |
+|---|---|
+| `DRAFT` | → PUBLISHED |
+| `PUBLISHED` | → FULL (auto), CLOSED, IN_PROGRESS, CANCELLED |
+| `FULL` | → IN_PROGRESS, CANCELLED |
+| `CLOSED` | → CANCELLED |
+| `IN_PROGRESS` | → COMPLETED, CANCELLED |
+| `COMPLETED` | terminal |
+| `CANCELLED` | terminal |
+
+### BookingStatus ← PRÓXIMO (E5)
+| Estado | Transiciones permitidas |
+|---|---|
+| `PENDING_PAYMENT` | → CONFIRMED, CANCELLED |
+| `CONFIRMED` | → IN_PROGRESS, CANCELLED |
+| `IN_PROGRESS` | → DELIVERED_PENDING_CONFIRMATION |
+| `DELIVERED_PENDING_CONFIRMATION` | → COMPLETED, DISPUTED |
+| `COMPLETED` | terminal |
+| `CANCELLED` | terminal |
+| `DISPUTED` | → COMPLETED, CANCELLED (post-resolución admin) |
+
+### PaymentStatus ← PRÓXIMO (E6)
+| Estado | Transiciones permitidas |
+|---|---|
+| `INITIATED` | → HELD, FAILED |
+| `HELD` | → RELEASED, REFUNDED, DISPUTED |
+| `RELEASED` | terminal |
+| `REFUNDED` | terminal |
+| `DISPUTED` | → RELEASED, REFUNDED |
+| `FAILED` | terminal |
+
+**Regla para todos los estados**: nunca transicionar sin validar el estado previo.
+Lanzar `ConflictException` si la transición no está permitida.
+
+---
+
+## Reglas de negocio críticas
+
+### Sesiones y tokens
+- Refresh token guardado **solo como hash** en `Session.tokenHash`
+- Reuso de token revocado → revocar toda la `tokenFamily`
+- `Account.status !== ACTIVE` → denegar acceso en el guard, aunque el JWT sea válido
+
+### Acceso por rol
+- `CLIENT` → buscar, reservar, pagar, confirmar entrega, calificar
+- `TRANSPORTER` → publicar ofertas, operar viajes, cobrar
+- `ADMIN` → verificar transportistas, resolver disputas
+- Un `Account` tiene un solo rol. No hay multi-rol en MVP.
+
+### Verificación de transportistas
+- `TransporterProfile.verificationStatus !== VERIFIED` → no puede publicar `TripOffer`
+- Validación en el service de TripOffer (no solo en frontend)
+- Verificación manual por admin en MVP
+
+### Anti-overbooking (E5)
+- Decremento de `availableSlots` dentro de `prisma.$transaction`
+- `availableSlots < quantity` → `ConflictException`
+- `availableSlots === 0` → `Offer.status → FULL` en la misma transacción
+
+### Webhooks Mercado Pago (E6)
+- Validar firma HMAC antes de procesar
+- Deduplicar por `externalPaymentId`
+- Si ya está en estado destino → 200 OK sin hacer nada
+
+### Contacto restringido (E6)
+- `TransporterProfile.contactPhone` visible para el cliente **solo** cuando `Payment.status === 'HELD'`
+- Chat completo habilitado solo tras seña confirmada
+- Validación en backend, no solo en UI
+
+### Uploads de fotos (E7)
+- Las fotos **no pasan por el backend**
+- Flujo: presigned URL → upload directo a R2 → confirmar URL al backend
+- Comprimir antes de subir: WebP/AVIF, max 1920px
+
+---
+
+## Arquitectura de módulos NestJS
+
+```
+apps/api/src/
+├─ auth/                ← JWT, login, registro, refresh, logout   [IMPLEMENTADO]
+├─ account/             ← Account CRUD                            [IMPLEMENTADO]
+├─ user-profile/        ← perfil del cliente                      [IMPLEMENTADO]
+├─ transporter-profile/ ← perfil + verificación                   [IMPLEMENTADO]
+├─ session/             ← gestión de sesiones y rotación          [IMPLEMENTADO]
+│
+├─ trailer/             ← vehículo / trailer CRUD                 [E2]
+├─ trip-offer/          ← crear, publicar, listar, filtrar        [E3]
+├─ booking/             ← reservar cupos, anti-overbooking        [E5]
+├─ payment/             ← estados de pago, MP                     [E6]
+├─ webhook/             ← endpoint MP idempotente                 [E6]
+├─ proof/               ← presigned URLs, evidencias              [E7]
+├─ review/              ← calificaciones post-viaje               [E9]
+├─ dispute/             ← reportes y resolución                   [E9]
+├─ chat/                ← mensajería anti-puenteo                 [E8]
+├─ notification/        ← emails y alertas (jobs)                 [E7+]
+├─ green/               ← métricas ocupación / empty miles        [E10]
+├─ admin/               ← verificación y disputas                 [E2+]
+├─ common/              ← guards, decoradores, pipes, interceptors
+└─ prisma/              ← PrismaService singleton
+```
+
+Estructura interna de cada módulo:
+```
+modulo/
+├─ modulo.module.ts
+├─ modulo.controller.ts
+├─ modulo.service.ts
+├─ modulo.repository.ts     ← encapsula Prisma, nunca Prisma directo en el service
+├─ dto/
+│  ├─ create-modulo.dto.ts
+│  └─ update-modulo.dto.ts
+├─ entities/
+│  └─ modulo.entity.ts
+└─ __tests__/
+   ├─ modulo.service.spec.ts
+   └─ modulo.repository.spec.ts
+```
+
+---
+
+## Arquitectura frontend Next.js App Router
+
+```
+apps/web/src/
+├─ app/
+│  ├─ (auth)/
+│  │  ├─ login/page.tsx
+│  │  └─ register/page.tsx
+│  ├─ (cliente)/
+│  │  ├─ buscar/page.tsx
+│  │  ├─ resultados/page.tsx
+│  │  ├─ oferta/[id]/page.tsx
+│  │  ├─ traslados/page.tsx
+│  │  └─ traslados/[id]/page.tsx
+│  ├─ (transportista)/
+│  │  ├─ dashboard/page.tsx
+│  │  ├─ ofertas/page.tsx
+│  │  ├─ ofertas/nueva/page.tsx
+│  │  ├─ reservas/page.tsx
+│  │  ├─ viaje/[id]/page.tsx
+│  │  ├─ pagos/page.tsx
+│  │  └─ perfil/page.tsx
+│  └─ (admin)/
+│     ├─ verificacion/page.tsx
+│     └─ disputas/page.tsx
+├─ components/
+├─ lib/
+│  ├─ api.ts      ← cliente HTTP hacia apps/api
+│  └─ auth.ts
+└─ types/
+   └─ index.ts    ← re-exports de @equinos/types
+```
+
+Reglas de Next.js:
+- App Router siempre. No mezclar con Pages Router.
+- Server Components por defecto. `'use client'` solo cuando sea necesario.
+- Server Actions para mutaciones de formularios.
+- Rutas de API (`app/api/`) solo para webhooks externos.
+
+---
+
+## Patrones que se usan — seguir siempre
+
+### Guards con AccountRole y AccountStatus
+```typescript
+// ✅ correcto
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AccountRole.TRANSPORTER)
+@Post('offers')
+async create(@Body() dto: CreateTripOfferDto, @CurrentAccount() account: Account) {
+  return this.tripOfferService.create(dto, account.id);
+}
+
+// ✅ el guard verifica status además del JWT
+if (account.status !== AccountStatus.ACTIVE) {
+  throw new ForbiddenException('Account is not active');
+}
+```
+
+### Repository con Prisma
+```typescript
+// ✅ service llama al repository
+class AuthService {
+  async refresh(token: string) {
+    const session = await this.sessionRepository.findByTokenHash(hash(token));
+    if (!session || session.revokedAt) {
+      await this.sessionRepository.revokeFamily(session.tokenFamily);
+      throw new UnauthorizedException();
+    }
+    // rotación...
+  }
+}
+
+// ✅ repository encapsula Prisma
+class SessionRepository {
+  async revokeFamily(tokenFamily: string) {
+    await this.prisma.session.updateMany({
+      where: { tokenFamily },
+      data: { revokedAt: new Date() },
+    });
   }
 }
 ```
 
-### Reglas
-* errores de negocio con código semántico, no solo HTTP status
-* nunca exponer stack traces en producción
-* paginación consistente cuando aplique: `{ data, total, page, limit }`
-* campos nulos preferidos sobre campos ausentes en respuestas
+---
 
-## Qué priorizar al implementar
+## Patrones prohibidos
 
-Codex debe priorizar:
+| Patrón | Alternativa |
+|---|---|
+| `userId` para referirse a `accountId` | Usar siempre `accountId` |
+| Refresh token en texto plano | Solo hash en `Session.tokenHash` |
+| Lógica de negocio en controllers | Mover al service |
+| Prisma directo en el service | Encapsular en repository |
+| `any` en TypeScript | Tipado explícito o `unknown` |
+| Polling activo para estados | Webhooks + invalidación de cache |
+| Fotos pasando por el backend | Presigned URL directo a R2 |
+| Billetera propia / saldo interno | Mercado Pago como PSP |
+| Token cripto / NFT | Green score interno |
+| `cargoType === 'EQUINE'` hardcodeado en backend | Valor dinámico del modelo |
+| Anticipar entidades de sprints futuros | Agregar solo cuando el sprint lo requiere |
+| PRs gigantes | 1 PR = 1 propósito |
 
-* claridad
-* coherencia de negocio
-* extensibilidad razonable
-* PRs chicos
-* tests en booking / payments / webhooks
-* documentación alineada con cambios importantes
+---
 
-## Patrones a evitar
+## Green Software (E10)
 
-Evitar especialmente:
-
-* lógica de negocio crítica en componentes UI
-* controladores gordos
-* acoplamiento fuerte entre UI y esquema interno de DB
-* enums o campos cerrados que bloqueen multi-rubro
-* side effects no idempotentes en pagos
-* features “nice to have” antes del flujo principal
-
-## Organización interna del backend (apps/api)
-
-Cada módulo sigue esta estructura:
+### Métricas a calcular
 ```
-/módulo
-  módulo.module.ts
-  módulo.controller.ts   ← solo recibe y responde, sin lógica
-  módulo.service.ts      ← lógica de negocio
-  módulo.repository.ts   ← acceso a DB (cuando justifica separación)
-  dto/
-    create-X.dto.ts
-    update-X.dto.ts
-  entities/
-    X.entity.ts
-  tests/
-    módulo.service.spec.ts
+empty_miles_avoided = estimatedKm × (1 - occupancyRate) por viaje completado
+co2_avoided_kg      = empty_miles_avoided × 0.21
+occupancy_rate      = cuposVendidos / totalSlots
+green_score         = f(occupancyRate, retornosPublicados, tasaCancelacion)
+                      → Bronze / Silver / Gold
 ```
 
-Regla: la lógica de negocio vive en el service.
-El controller no toma decisiones de negocio.
-El repository no tiene lógica de negocio.
+### Principios aplicados desde ahora
+- Geocoding solo al confirmar (no en cada keystroke)
+- Paginación y filtros server-side
+- Debounce en búsquedas (mínimo 300ms)
+- Imágenes comprimidas en cliente (WebP/AVIF, max 1920px)
+- Background jobs para PDF, emails y cálculos
+- No polling — webhooks cuando aplique
 
-## Roles y permisos base
+---
 
-| Rol | Puede hacer |
-|---|---|
-| `CLIENT` | buscar ofertas, reservar, pagar, confirmar entrega, calificar |
-| `DRIVER` | publicar ofertas, gestionar reservas, hacer check-in/out, ver pagos |
-| `ADMIN` | verificar transportistas, resolver disputas, ver todo |
+## Integración Mercado Pago (E6)
 
-### Reglas de acceso
-* un usuario no puede acceder a recursos de otro usuario del mismo rol
-* un DRIVER no puede reservar en su propia oferta
-* un CLIENT no puede hacer check-in/out
-* ADMIN tiene acceso de solo lectura a operaciones en curso salvo en disputas
+SDK backend: `mercadopago` (Node.js oficial)
+SDK frontend: `@mercadopago/sdk-js` (Checkout Bricks)
 
-## Glosario de dominio
+```
+MP_ACCESS_TOKEN    ← token test/producción
+MP_PUBLIC_KEY      ← clave pública para frontend
+MP_WEBHOOK_SECRET  ← validación firma HMAC del webhook
+```
 
-| Término | Definición en este sistema |
-|---|---|
-| **Cupo** | unidad de capacidad reservable en una oferta (ej: 1 caballo) |
-| **Oferta** | viaje publicado por un transportista con capacidad disponible |
-| **Retorno** | oferta publicada para el viaje de regreso de un transportista |
-| **Seña** | pago parcial inicial (20-30%) que confirma la reserva |
-| **Saldo** | monto restante a pagar, generalmente antes de la salida |
-| **Check-in** | registro de carga con evidencia al inicio del viaje |
-| **Check-out** | registro de entrega con evidencia al final del viaje |
-| **Milla libre** | tramo de viaje realizado sin carga (lo que este producto evita) |
-| **Disputa** | conflicto abierto que congela el pago hasta resolución manual |
-| **Comprobante** | PDF generado al cerrar la operación con todos los datos |
+Flujo: backend crea Preference con `external_reference = bookingId` →
+frontend redirige a MP → MP llama webhook → backend valida firma →
+actualiza `Payment.status` → actualiza `Booking.status`.
 
-## Definición práctica del éxito inicial
+---
 
-El MVP está bien encaminado si permite completar este flujo de punta a punta:
+## Variables de entorno requeridas
 
-* transportista publica oferta
-* cliente encuentra oferta con filtros básicos
-* cliente reserva cupos
-* cliente paga seña
-* reserva queda confirmada **sin posibilidad de sobreventa**
-* viaje registra evidencia mínima
-* operación cierra con comprobante y reputación
+```
+DATABASE_URL=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+MP_ACCESS_TOKEN=
+MP_PUBLIC_KEY=
+MP_WEBHOOK_SECRET=
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+R2_PUBLIC_URL=
+SENTRY_DSN=
+NEXT_PUBLIC_API_URL=
+NODE_ENV=development
+```
 
-### Criterios de calidad mínimos para considerar el flujo válido
+---
 
-* el flujo funciona con dos usuarios simultáneos intentando el último cupo
-* un webhook duplicado no produce doble confirmación
-* un pago fallido no deja el booking en estado inconsistente
-* el comprobante se genera correctamente con los datos del booking cerrado
+## Restricciones que el agente debe respetar siempre
+
+1. Usar `accountId` y `AccountRole` — nunca `userId` ni `Role` a secas
+2. Nunca guardar tokens en texto plano — solo hashes en `Session.tokenHash`
+3. Verificar `Account.status` en los guards, no solo el JWT
+4. No anticipar entidades futuras en el schema — cada entidad va en su sprint
+5. No tocar pagos, sesiones ni anti-overbooking sin aprobación explícita
+6. No hardcodear `cargoType` en backend
+7. No custodiar dinero internamente — siempre PSP externo
+8. No subir fotos a través del backend — presigned URL directo a R2
+9. No usar polling activo — webhooks
+10. Ante ambigüedad de negocio: parar y preguntar, nunca asumir
