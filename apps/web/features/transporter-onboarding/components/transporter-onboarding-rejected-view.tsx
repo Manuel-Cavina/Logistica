@@ -1,15 +1,17 @@
 import { getTransporterVerificationStatusConfig } from "../config/transporter-verification-status.config";
 import { TransporterOnboardingShell } from "./transporter-onboarding-shell";
-import { TransporterProfileFormPlaceholder } from "./transporter-profile-form-placeholder";
+import { TransporterProfileForm } from "./transporter-profile-form";
 import { TransporterProfileSummary } from "./transporter-profile-summary";
 import { TransporterVerificationSummaryCard } from "./transporter-verification-summary-card";
 import type { TransporterProfile } from "../types/transporter-profile.types";
 
 type TransporterOnboardingRejectedViewProps = {
+  onSuccess: () => void;
   profile: TransporterProfile;
 };
 
 export function TransporterOnboardingRejectedView({
+  onSuccess,
   profile,
 }: TransporterOnboardingRejectedViewProps) {
   const statusConfig = getTransporterVerificationStatusConfig("REJECTED");
@@ -24,7 +26,7 @@ export function TransporterOnboardingRejectedView({
     >
       <TransporterVerificationSummaryCard status="REJECTED" />
       <TransporterProfileSummary profile={profile} />
-      <TransporterProfileFormPlaceholder />
+      <TransporterProfileForm defaultProfile={profile} onSuccess={onSuccess} />
     </TransporterOnboardingShell>
   );
 }
