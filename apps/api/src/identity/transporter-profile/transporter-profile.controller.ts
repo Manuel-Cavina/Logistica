@@ -27,9 +27,7 @@ export class TransporterProfileController {
   async getOwnProfile(
     @Req() request: AuthenticatedHttpRequest,
   ): Promise<GetOwnTransporterProfileResponseDto> {
-    return this.transporterProfileService.getOwnProfile(
-      request.user.accountId,
-    );
+    return this.transporterProfileService.getOwnProfile(request.user.accountId);
   }
 
   @Patch('profile')

@@ -1,0 +1,44 @@
+name: Feature
+description: Agregar una nueva funcionalidad
+title: "[FEAT] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+      description: ¿Qué debe hacer esta feature? ¿Por qué es necesaria?
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Condiciones concretas que deben cumplirse para marcarla como done
+      placeholder: |
+        - [ ] El usuario puede hacer X
+        - [ ] Si Y falla, se muestra Z
+        - [ ] Pasa tests de...
+    validations:
+      required: true
+
+  - type: textarea
+    id: como_testear
+    attributes:
+      label: Cómo testear
+      description: Pasos para verificar el comportamiento manualmente
+    validations:
+      required: true
+
+  - type: input
+    id: epica
+    attributes:
+      label: Épica relacionada
+      placeholder: "E3 — Ofertas de viaje"
+
+  - type: textarea
+    id: notas
+    attributes:
+      label: Notas técnicas / decisiones
+      description: Restricciones, edge cases o decisiones de arquitectura a tener en cuenta

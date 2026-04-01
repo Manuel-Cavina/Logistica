@@ -5,8 +5,7 @@ import { AppModule } from './app.module';
 const DEFAULT_ALLOWED_CORS_ORIGINS = ['http://localhost:3000'];
 
 function resolveAllowedCorsOrigins(): string[] {
-  const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS
-  ?.split(',')
+  const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',')
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);
 

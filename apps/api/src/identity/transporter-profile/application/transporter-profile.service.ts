@@ -47,10 +47,11 @@ export class TransporterProfileService {
       normalizedInput,
     );
 
-    const updatedProfile = await this.transporterProfileRepository.updateByAccountId(
-      accountId,
-      finalInput,
-    );
+    const updatedProfile =
+      await this.transporterProfileRepository.updateByAccountId(
+        accountId,
+        finalInput,
+      );
 
     return this.toOwnProfileResponse(updatedProfile);
   }

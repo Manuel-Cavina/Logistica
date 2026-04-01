@@ -123,7 +123,9 @@ export class AuthSessionService {
     try {
       const payload =
         await this.authTokenService.verifyRefreshToken(refreshToken);
-      const session = await this.sessionsRepository.findSessionById(payload.sid);
+      const session = await this.sessionsRepository.findSessionById(
+        payload.sid,
+      );
 
       if (!session) {
         return;
