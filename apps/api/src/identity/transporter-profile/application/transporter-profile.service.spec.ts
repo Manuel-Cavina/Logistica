@@ -82,13 +82,13 @@ describe('TransporterProfileService', () => {
         maxDetourKmDefault: 120,
       }),
     ).resolves.toEqual({
-        displayName: 'Acme Transportes SA',
-        businessName: 'Acme Transportes SA',
-        contactPhone: '+54 9 11 1234 5678',
-        bio: 'Traslados de equinos.',
-        maxDetourKmDefault: 120,
-        verificationStatus: 'INCOMPLETE',
-      });
+      displayName: 'Acme Transportes SA',
+      businessName: 'Acme Transportes SA',
+      contactPhone: '+54 9 11 1234 5678',
+      bio: 'Traslados de equinos.',
+      maxDetourKmDefault: 120,
+      verificationStatus: 'INCOMPLETE',
+    });
 
     expect(transporterProfileRepository.findByAccountId).toHaveBeenCalledWith(
       'account-id',

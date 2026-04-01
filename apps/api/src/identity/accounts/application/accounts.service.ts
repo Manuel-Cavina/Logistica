@@ -28,7 +28,8 @@ export class AccountsService {
   async createTransporterAccount(
     input: CreateTransporterAccountInput,
   ): Promise<AccountWithProfiles> {
-    const account = await this.accountsRepository.createTransporterAccount(input);
+    const account =
+      await this.accountsRepository.createTransporterAccount(input);
 
     if (
       account.role !== AccountRole.TRANSPORTER ||

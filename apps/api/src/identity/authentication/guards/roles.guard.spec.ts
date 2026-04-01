@@ -1,7 +1,4 @@
-import {
-  type ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
+import { type ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Roles } from '../decorators/roles.decorator';
 import { RolesGuard } from './roles.guard';
@@ -38,7 +35,10 @@ function createExecutionContext(
 ): ExecutionContext {
   return {
     getClass: () => controller,
-    getHandler: () => controller.prototype[handlerName as keyof typeof controller.prototype],
+    getHandler: () =>
+      (controller.prototype as Record<string, unknown>)[
+        handlerName
+      ] as () => unknown,
     switchToHttp: () =>
       ({
         getRequest: () => ({ user }),
@@ -103,14 +103,10 @@ describe('RolesGuard', () => {
   });
 
   it('denies access when the authenticated role does not match', () => {
-    const context = createExecutionContext(
-      ClassRestrictedController,
-      'open',
-      {
-        accountId: 'account-id',
-        role: 'ADMIN',
-      },
-    );
+    const context = createExecutionContext(ClassRestrictedController, 'open', {
+      accountId: 'account-id',
+      role: 'ADMIN',
+    });
 
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });

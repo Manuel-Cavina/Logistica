@@ -92,12 +92,12 @@ export class AuthTokenService {
   ): payload is RefreshTokenPayload {
     return Boolean(
       payload &&
-        typeof payload.sub === 'string' &&
-        payload.sub.length > 0 &&
-        typeof payload.sid === 'string' &&
-        payload.sid.length > 0 &&
-        typeof payload.family === 'string' &&
-        payload.family.length > 0,
+      typeof payload.sub === 'string' &&
+      payload.sub.length > 0 &&
+      typeof payload.sid === 'string' &&
+      payload.sid.length > 0 &&
+      typeof payload.family === 'string' &&
+      payload.family.length > 0,
     );
   }
 

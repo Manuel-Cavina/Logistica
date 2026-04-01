@@ -50,11 +50,7 @@ class TestJwtAuthGuard {
 
     const [, role] = authorizationHeader.split(' ');
 
-    if (
-      role !== 'CLIENT' &&
-      role !== 'TRANSPORTER' &&
-      role !== 'ADMIN'
-    ) {
+    if (role !== 'CLIENT' && role !== 'TRANSPORTER' && role !== 'ADMIN') {
       throw new UnauthorizedException();
     }
 
