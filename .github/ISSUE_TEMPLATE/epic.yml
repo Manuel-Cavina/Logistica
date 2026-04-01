@@ -1,0 +1,49 @@
+name: Épica
+description: Agregar una nueva épica al backlog
+title: "[EPIC] "
+labels: ["epic"]
+body:
+  - type: input
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: ¿Qué habilita esta épica en el producto?
+    validations:
+      required: true
+
+  - type: textarea
+    id: incluye
+    attributes:
+      label: Incluye
+      description: Lista de features o módulos que forman parte de esta épica
+      placeholder: |
+        - Feature A
+        - Feature B
+    validations:
+      required: true
+
+  - type: textarea
+    id: entregable
+    attributes:
+      label: Entregable
+      description: ¿Cómo se ve esto terminado? ¿Qué puede hacer el usuario al finalizar?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complejidad
+    attributes:
+      label: Complejidad estimada
+      options:
+        - S (1-3 issues)
+        - M (4-8 issues)
+        - L (9+ issues)
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencias
+    attributes:
+      label: Dependencias
+      description: ¿Qué otras épicas o features deben estar completas antes?
+      placeholder: "Ninguna / E1 Auth / etc."

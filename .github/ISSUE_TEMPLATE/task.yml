@@ -1,0 +1,36 @@
+name: Tarea técnica
+description: Tarea de infraestructura, refactor, docs o deuda técnica
+title: "[TASK] "
+labels: ["task"]
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+      description: ¿Qué hay que hacer y por qué?
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Definition of Done
+      placeholder: |
+        - [ ] X está hecho
+        - [ ] Tests pasan
+        - [ ] Documentación actualizada si aplica
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options:
+        - Infraestructura
+        - Refactor
+        - Documentación
+        - Deuda técnica
+        - Configuración
+    validations:
+      required: true
