@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTransporterVerificationStatusConfig } from "../config/transporter-verification-status.config";
 import { TransporterOnboardingShell } from "./transporter-onboarding-shell";
 import { TransporterProfileFormPlaceholder } from "./transporter-profile-form-placeholder";
 import { TransporterProfileSummary } from "./transporter-profile-summary";
+import { TransporterVerificationSummaryCard } from "./transporter-verification-summary-card";
 import type { TransporterProfile } from "../types/transporter-profile.types";
 
 type TransporterOnboardingIncompleteViewProps = {
@@ -17,13 +19,17 @@ const minimumRequirements = [
 export function TransporterOnboardingIncompleteView({
   profile,
 }: TransporterOnboardingIncompleteViewProps) {
+  const statusConfig = getTransporterVerificationStatusConfig("INCOMPLETE");
+
   return (
     <TransporterOnboardingShell
       description="Esta etapa prepara la informacion minima del perfil para que la verificacion manual pueda arrancar sin friccion."
       eyebrow="Perfil inicial"
-      statusLabel="Estado: incompleto"
+      statusLabel={`Estado: ${statusConfig.label.toLowerCase()}`}
       title="Completa tu onboarding para empezar a operar como transportista"
     >
+      <TransporterVerificationSummaryCard status="INCOMPLETE" />
+
       <Card className="p-6 sm:p-8">
         <CardHeader>
           <CardTitle>Tu perfil todavia necesita informacion base</CardTitle>
@@ -44,13 +50,6 @@ export function TransporterOnboardingIncompleteView({
               </div>
             ))}
           </div>
-
-          <a
-            className="inline-flex h-14 items-center justify-center rounded-[1.4rem] bg-primary px-5 text-[15px] font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(27,67,50,0.18)] transition hover:bg-[#143428]"
-            href="#profile-form-placeholder"
-          >
-            Ver espacio del formulario
-          </a>
         </CardContent>
       </Card>
 

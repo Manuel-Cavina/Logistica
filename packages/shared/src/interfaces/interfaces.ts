@@ -42,6 +42,16 @@ export const UserProfileViewSchema = z.object({
 });
 export type IUserProfileView = z.infer<typeof UserProfileViewSchema>;
 
+export const TransporterVerificationStatusSchema = z.enum([
+  "INCOMPLETE",
+  "PENDING",
+  "VERIFIED",
+  "REJECTED",
+]);
+export type ITransporterVerificationStatus = z.infer<
+  typeof TransporterVerificationStatusSchema
+>;
+
 export const TransporterProfileViewSchema = z.object({
   id: cuidSchema,
   displayName: z.string().trim().min(1).max(160),

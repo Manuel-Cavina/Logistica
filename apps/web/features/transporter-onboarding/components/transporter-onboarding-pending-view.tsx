@@ -1,6 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTransporterVerificationStatusConfig } from "../config/transporter-verification-status.config";
 import { TransporterOnboardingShell } from "./transporter-onboarding-shell";
 import { TransporterProfileSummary } from "./transporter-profile-summary";
+import { TransporterVerificationSummaryCard } from "./transporter-verification-summary-card";
 import type { TransporterProfile } from "../types/transporter-profile.types";
 
 type TransporterOnboardingPendingViewProps = {
@@ -10,30 +11,17 @@ type TransporterOnboardingPendingViewProps = {
 export function TransporterOnboardingPendingView({
   profile,
 }: TransporterOnboardingPendingViewProps) {
+  const statusConfig = getTransporterVerificationStatusConfig("PENDING");
+
   return (
     <TransporterOnboardingShell
       description="Tu informacion ya fue enviada y esta en revision. Evitamos mostrar acciones de onboarding que induzcan a editar o reenviar algo fuera de este estado."
       eyebrow="Revision manual"
-      statusLabel="Estado: en revision"
+      statusLabel={`Estado: ${statusConfig.label.toLowerCase()}`}
       title="Estamos verificando tu perfil de transportista"
       tone="success"
     >
-      <Card className="p-6 sm:p-8">
-        <CardHeader>
-          <CardTitle>Perfil recibido correctamente</CardTitle>
-          <CardDescription>
-            Nuestro equipo esta validando la informacion. Cuando el backend marque tu
-            perfil como verificado, el onboarding dejara de mostrarse.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="rounded-[1.4rem] border border-[#cfe3d5] bg-[#eef8f0] px-4 py-4 text-sm leading-6 text-[#1f5136]">
-            No necesitas volver a cargar la informacion en este momento.
-          </div>
-        </CardContent>
-      </Card>
-
+      <TransporterVerificationSummaryCard status="PENDING" />
       <TransporterProfileSummary profile={profile} />
     </TransporterOnboardingShell>
   );

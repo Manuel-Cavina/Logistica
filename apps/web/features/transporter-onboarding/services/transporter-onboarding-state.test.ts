@@ -9,7 +9,6 @@ function buildProfile(
     businessName: null,
     contactPhone: "1155550000",
     displayName: "Transporte Norte",
-    id: "cm9abcdefghijklmnopqrst",
     maxDetourKmDefault: 120,
     verificationStatus,
   };
