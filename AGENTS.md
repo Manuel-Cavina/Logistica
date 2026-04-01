@@ -91,25 +91,27 @@ src/
 └─ trip-offer/
    ├─ trip-offer.module.ts
    ├─ trip-offer.controller.ts
-   ├─ trip-offer.service.ts
-   ├─ trip-offer.repository.ts      ← encapsula acceso a Prisma
+   ├─ trip-offer.controller.spec.ts      ← test de integración HTTP (Test.createTestingModule + supertest)
+   ├─ application/
+   │  ├─ trip-offer.service.ts           ← reglas de negocio
+   │  └─ trip-offer.service.spec.ts      ← unit tests con jest.fn()
    ├─ dto/
    │  ├─ create-trip-offer.dto.ts
    │  └─ update-trip-offer.dto.ts
-   ├─ entities/
-   │  └─ trip-offer.entity.ts       ← tipo de dominio (no el modelo Prisma directo)
-   └─ __tests__/
-      ├─ trip-offer.service.spec.ts
-      └─ trip-offer.repository.spec.ts
+   ├─ repositories/
+   │  └─ trip-offer.repository.ts        ← único punto de acceso a PrismaService
+   └─ types/
+      └─ trip-offer.types.ts             ← Prisma selects tipados + tipos internos
 ```
 
 ### Reglas del módulo NestJS
 
-- Los **controladores** solo reciben request, validan con `class-validator` y delegan al service. Sin lógica de negocio.
-- Los **services** contienen las reglas de negocio. Llaman al repository, no a Prisma directo.
-- Los **repositories** encapsulan todas las queries de Prisma para ese módulo. Reciben y devuelven tipos del dominio, no tipos Prisma crudos.
-- Los **DTOs** usan decoradores de `class-validator` y `class-transformer`. Siempre tipados con TypeScript estricto.
-- Las **entities** son tipos o clases del dominio, separadas del modelo Prisma. Usarlas en la firma de los services.
+- Los **controladores** solo reciben request, validan con `ZodValidationPipe` y delegan al service. Sin lógica de negocio.
+- Los **services** (en `application/`) contienen las reglas de negocio. Llaman al repository, no a Prisma directo.
+- Los **repositories** (en `repositories/`) encapsulan todas las queries de Prisma. Usan selects tipados.
+- Los **DTOs** usan schemas Zod de `@logistica/shared` validados con `ZodValidationPipe`. Siempre tipados con TypeScript estricto.
+- Los **tipos** (en `types/`) definen los Prisma selects tipados con `Prisma.validator` y los tipos de retorno con `Prisma.ModelGetPayload`.
+- **Tests colocados**: `.spec.ts` junto al archivo, nunca en `__tests__/`. Sin barrel files `index.ts` dentro de módulos.
 
 ### Ejemplo de repository con Prisma
 
