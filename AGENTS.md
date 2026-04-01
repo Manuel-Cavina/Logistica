@@ -60,10 +60,10 @@ Propuesta de valor:
 │  ├─ web/          ← Next.js App Router
 │  └─ api/          ← NestJS monolito modular
 ├─ packages/
-│  ├─ config/       ← tsconfig, eslint, prettier compartidos
-│  ├─ types/        ← tipos compartidos entre apps
-│  ├─ ui/           ← componentes React reutilizables (shadcn/ui base)
-│  └─ shared/       ← utils, constants, validaciones compartidas
+│  ├─ database/          ← PrismaService + PrismaModule (@logistica/database)
+│  ├─ shared/            ← schemas Zod + interfaces (@logistica/shared)
+│  ├─ eslint-config/     ← configuración ESLint compartida
+│  └─ typescript-config/ ← configuración TypeScript compartida
 └─ docs/
    ├─ PRD.md
    ├─ backlog.md
