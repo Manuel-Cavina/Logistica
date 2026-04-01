@@ -162,47 +162,52 @@ async reserveSlots(bookingDto: CreateBookingDto): Promise<Booking> {
 
 ```
 apps/web/
+├─ app/
+│  ├─ layout.tsx                     ← RootLayout + AuthProvider
+│  ├─ page.tsx                       ← home
+│  ├─ (guest)/                       ← rutas públicas (login, register)
+│  │  ├─ layout.tsx                  ← <AuthRouteGuard mode="guest-only">
+│  │  ├─ login/page.tsx
+│  │  └─ register/page.tsx
+│  └─ (protected)/                   ← rutas autenticadas
+│     ├─ layout.tsx                  ← <AuthRouteGuard mode="protected">
+│     ├─ dashboard/page.tsx
+│     └─ onboarding/transporter/
+│        ├─ layout.tsx               ← <AuthRouteGuard allowedRoles={["TRANSPORTER"]}>
+│        └─ page.tsx
+├─ components/
+│  └─ ui/                            ← Button, Card, Input, Textarea (custom, estilo shadcn)
+├─ features/                         ← lógica por feature (auth, transporter-onboarding, etc.)
+│  └─ feature-name/
+│     ├─ components/                 ← componentes "use client"
+│     ├─ hooks/                      ← hooks "use client"
+│     ├─ pages/                      ← componentes de página "use client"
+│     ├─ services/                   ← llamadas a la API
+│     ├─ types/                      ← tipos + schemas Zod del feature
+│     └─ config/                     ← configuración (mapas de estado, etc.)
 └─ src/
-   ├─ app/
-   │  ├─ layout.tsx            ← layout raíz
-   │  ├─ page.tsx              ← home
-   │  ├─ (auth)/               ← route group sin segmento en URL
-   │  │  ├─ login/page.tsx
-   │  │  └─ register/page.tsx
-   │  ├─ (cliente)/
-   │  │  ├─ buscar/page.tsx
-   │  │  ├─ traslados/page.tsx
-   │  │  └─ traslados/[id]/page.tsx
-   │  └─ (transportista)/
-   │     ├─ dashboard/page.tsx
-   │     ├─ ofertas/page.tsx
-   │     └─ ofertas/nueva/page.tsx
-   ├─ components/              ← componentes de esta app
-   │  ├─ offer-card.tsx
-   │  └─ booking-timeline.tsx
-   ├─ lib/
-   │  ├─ api.ts                ← cliente HTTP hacia apps/api
-   │  └─ auth.ts               ← helpers de sesión
-   └─ types/
-      └─ index.ts              ← re-exports desde packages/types
+   └─ lib/
+      ├─ api/                        ← apiClient, errores, tipos de respuesta
+      └─ forms/                      ← useFormSubmit, schemas de formularios
 ```
 
 ### Reglas de Next.js
 
 - Usar **App Router** siempre. No mezclar con Pages Router.
-- Los **Server Components** son el default. Usar `'use client'` solo cuando necesitás interactividad (state, eventos, hooks).
-- Las **Server Actions** se usan para mutaciones desde formularios. No crear endpoints REST en Next.js para mutaciones propias.
-- El **fetching de datos** en Server Components usa `fetch` con cache control o llama directo al service de NestJS via HTTP.
-- Los **layouts** agrupan auth, loading y error boundaries por segmento.
-- Las **rutas de API** (`app/api/`) se usan solo para webhooks externos (ej: Mercado Pago) o callbacks de OAuth. No para lógica de negocio.
+- Los **Server Components** son el default (`app/page.tsx`). Solo importan y pasan props al componente de feature.
+- `'use client'` obligatorio en: hooks, forms, componentes con useState/useEffect/onClick, providers.
+- El **fetching de datos** es client-side con hooks custom (ej: `useTransporterProfile`). No se usa `fetch()` en Server Components actualmente.
+- Los **layouts** agrupan auth guards por segmento con `<AuthRouteGuard>`.
+- Las **rutas de API** (`app/api/`) se usan solo para proxies o callbacks externos. No para lógica de negocio.
+- **No se usan Server Actions** — las mutaciones van via `apiClient.patch/post/etc.` desde client hooks.
 
 ### Client vs Server Component — criterio de decisión
 
 ```
 ¿Necesita useState, useEffect, onClick, onChange?  → 'use client'
-¿Es solo UI que muestra datos del servidor?         → Server Component (default)
-¿Es un formulario con submit?                       → Server Action (no 'use client')
-¿Necesita acceso a localStorage o window?           → 'use client'
+¿Es solo UI que muestra datos?                     → Server Component (default)
+¿Es un page.tsx en app/?                           → Server Component mínimo, delega a feature component
+¿Necesita acceso a localStorage o window?          → 'use client'
 ```
 
 ---
