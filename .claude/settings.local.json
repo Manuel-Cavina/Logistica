@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git commit -m 'docs: corregir estructura de apps/web con route groups y features reales:*)",
+      "Bash(git commit -m 'docs: corregir paths de importacion de @equinos a @logistica en AGENTS.md:*)",
+      "Bash(git mv:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git commit -m 'fix: agregar workflow de CI con lint, typecheck, tests y build:*)",
+      "Bash(git commit -m 'docs: agregar templates de issues para epic, feature, bug y task:*)",
+      "Bash(git commit:*)",
+      "Bash(pnpm --filter @logistica/api lint)",
+      "Bash(pnpm --filter @logistica/api lint --fix)",
+      "Bash(pnpm lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(gh pr create --title 'doc: documentación base — ADR 001, deuda técnica, glosario y contratos API' --body ':*)",
+      "Bash(git stash:*)"
+    ]
+  }
+}

@@ -23,7 +23,7 @@ describe("resolveTransporterOnboardingView", () => {
     ["INCOMPLETE", "incomplete"],
     ["PENDING", "pending"],
     ["REJECTED", "rejected"],
-    ["VERIFIED", "verified-redirect"],
+    ["VERIFIED", "verified-once"],
   ] as const)(
     "maps %s correctly",
     (verificationStatus, expectedView) => {
@@ -32,4 +32,12 @@ describe("resolveTransporterOnboardingView", () => {
       ).toBe(expectedView);
     },
   );
+
+  it("redirects verified transporters immediately after the confirmation was already shown", () => {
+    expect(
+      resolveTransporterOnboardingView(buildProfile("VERIFIED"), {
+        hasSeenVerifiedView: true,
+      }),
+    ).toBe("verified-redirect");
+  });
 });

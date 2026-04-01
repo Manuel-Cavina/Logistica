@@ -14,7 +14,7 @@ type TransporterOnboardingIncompleteViewProps = {
 const minimumRequirements = [
   "Nombre visible del transportista",
   "Telefono de contacto operativo",
-  "Datos consistentes para pasar de INCOMPLETE a PENDING desde backend",
+  "Informacion base lista para enviar tu perfil a revision",
 ];
 
 export function TransporterOnboardingIncompleteView({
@@ -36,8 +36,8 @@ export function TransporterOnboardingIncompleteView({
         <CardHeader>
           <CardTitle>Tu perfil todavia necesita informacion base</CardTitle>
           <CardDescription>
-            El backend decide el cambio a revision cuando el perfil queda completo.
-            Esta pantalla solo organiza la experiencia y deja listo el lugar del formulario.
+            Completa estos datos para dejar tu perfil listo para revision y evitar
+            demoras en la validacion.
           </CardDescription>
         </CardHeader>
 

@@ -18,7 +18,7 @@ export function TransporterOnboardingRejectedView({
 
   return (
     <TransporterOnboardingShell
-      description="El perfil fue rechazado por backend, pero la UI no inventa razones ni reescribe ese criterio. Solo habilita una experiencia clara para revisar y corregir."
+      description="Tu perfil necesita correcciones antes de volver a revision. Revisa la informacion, ajusta lo necesario y vuelve a intentarlo."
       eyebrow="Correccion requerida"
       statusLabel={`Estado: ${statusConfig.label.toLowerCase()}`}
       title="Tu perfil necesita ajustes antes de volver a revision"

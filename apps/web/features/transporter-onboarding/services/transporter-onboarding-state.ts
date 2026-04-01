@@ -4,10 +4,16 @@ export type TransporterOnboardingView =
   | "incomplete"
   | "pending"
   | "rejected"
+  | "verified-once"
   | "verified-redirect";
+
+type ResolveTransporterOnboardingViewOptions = {
+  hasSeenVerifiedView?: boolean;
+};
 
 export function resolveTransporterOnboardingView(
   profile: TransporterProfile | null,
+  options: ResolveTransporterOnboardingViewOptions = {},
 ): TransporterOnboardingView {
   if (!profile) {
     return "incomplete";
@@ -21,6 +27,6 @@ export function resolveTransporterOnboardingView(
     case "REJECTED":
       return "rejected";
     case "VERIFIED":
-      return "verified-redirect";
+      return options.hasSeenVerifiedView ? "verified-redirect" : "verified-once";
   }
 }
