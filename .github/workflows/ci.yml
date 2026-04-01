@@ -10,6 +10,8 @@ jobs:
   ci:
     name: Lint, typecheck, tests y build
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@ci-placeholder.invalid:5432/logistica_ci
 
     steps:
       - uses: actions/checkout@v4

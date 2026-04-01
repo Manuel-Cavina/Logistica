@@ -7,6 +7,7 @@
     "dev": "next dev",
     "prebuild": "pnpm --filter @logistica/shared build",
     "build": "next build",
+    "prelint": "pnpm --filter @logistica/shared build",
     "lint": "next lint",
     "pretypecheck": "pnpm --filter @logistica/shared build",
     "typecheck": "tsc --noEmit",
