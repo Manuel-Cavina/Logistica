@@ -11,13 +11,15 @@ interface SessionInputAssertion {
 }
 
 describe('AuthSessionService', () => {
+  const suiteReferenceTime = new Date('2026-03-20T12:00:00.000Z');
+  const activeSessionExpiration = new Date('2026-03-25T12:00:00.000Z');
   const activeSession = {
     id: 'current-session-id',
     accountId: 'client-account-id',
     tokenFamily: 'token-family',
     tokenHash:
       '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b',
-    expiresAt: new Date('2026-03-25T12:00:00.000Z'),
+    expiresAt: activeSessionExpiration,
     revokedAt: null,
     account: {
       id: 'client-account-id',
@@ -47,6 +49,7 @@ describe('AuthSessionService', () => {
   let authSessionService: AuthSessionService;
 
   beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(suiteReferenceTime);
     jest.clearAllMocks();
     authTokenService.createSessionId
       .mockReturnValueOnce('session-id')
