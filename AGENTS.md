@@ -214,38 +214,49 @@ apps/web/
 
 ## Imports y paths de TypeScript
 
-Los aliases de TypeScript están configurados en `packages/config/tsconfig.base.json`:
+### Alias configurados
 
+**Frontend (`apps/web/tsconfig.json`):**
 ```json
-{
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./src/*"],
-      "@equinos/types": ["../../packages/types/src"],
-      "@equinos/ui": ["../../packages/ui/src"],
-      "@equinos/shared": ["../../packages/shared/src"]
-    }
-  }
-}
+{ "paths": { "@/*": ["./*"] } }
 ```
+`@/` resuelve a la raíz de `apps/web/`.
+
+**Backend (`apps/api/`):** sin aliases locales. Solo `baseUrl: "./"` para imports relativos.
+
+**Workspace packages:** disponibles como `@logistica/shared` y `@logistica/database`.
 
 ### Reglas de imports
 
-- Usar `@/` para imports dentro de la misma app.
-- Usar `@equinos/types`, `@equinos/ui`, `@equinos/shared` para imports entre packages.
-- **Nunca** usar rutas relativas que suban más de 2 niveles (`../../..`).
-- **Nunca** importar desde `apps/api` en `apps/web` o viceversa directamente. El contrato entre apps es HTTP + tipos compartidos en `packages/types`.
+**Backend (apps/api/):**
+- Workspace: `import { X } from '@logistica/shared'` / `'@logistica/database'`
+- Módulo actual: relativo → `'./application/trip-offer.service'`
+- Otros módulos: relativo con `../../` según profundidad
+- **Sin alias `@/` en el backend**
+
+**Frontend (apps/web/):**
+- UI components: `@/components/ui/button`
+- Lib: `@/src/lib/api`, `@/src/lib/forms/hooks/useFormSubmit`
+- Cross-feature: `@/features/auth/hooks/use-auth`
+- Dentro de un feature: relativo → `'../hooks/use-transporter-profile'`
+- Shared: `@logistica/shared` para tipos y schemas compartidos
 
 ```typescript
-// ✅ correcto
-import { TripOffer } from '@equinos/types';
-import { OfferCard } from '@equinos/ui';
-import { formatCurrency } from '@equinos/shared';
-import { TripOfferService } from '@/trip-offer/trip-offer.service';
+// ✅ correcto — frontend
+import { Button } from '@/components/ui/button';
+import { apiClient } from '@/src/lib/api';
+import type { UpdateTransporterProfileDto } from '@logistica/shared';
+import { useTransporterProfile } from '../hooks/use-transporter-profile';
+
+// ✅ correcto — backend
+import { UpdateTransporterProfileSchema } from '@logistica/shared';
+import { PrismaService } from '@logistica/database';
+import { TripOfferService } from './application/trip-offer.service';
 
 // ❌ incorrecto
-import { TripOffer } from '../../../packages/types/src/trip-offer';
-import { TripOfferService } from '../../api/src/trip-offer/trip-offer.service';
+import { TripOffer } from '@equinos/types';          // no existe
+import { OfferCard } from '@equinos/ui';             // no existe
+import { X } from '../../../packages/shared/src/x'; // ruta relativa fuera de la app
 ```
 
 ---
