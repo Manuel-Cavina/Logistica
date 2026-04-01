@@ -21,17 +21,24 @@ function buildProfile(
 }
 
 describe("Transporter onboarding status views", () => {
+  const onSuccess = jest.fn();
+
   it("shows the reusable incomplete verification card and the form placeholder", () => {
-    render(<TransporterOnboardingIncompleteView profile={buildProfile("INCOMPLETE")} />);
+    render(
+      <TransporterOnboardingIncompleteView
+        onSuccess={onSuccess}
+        profile={buildProfile("INCOMPLETE")}
+      />,
+    );
 
     expect(
       screen.getByText(/Completa tu perfil para avanzar con la verificacion/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Completar perfil/i }),
-    ).toHaveAttribute("href", "#profile-form-placeholder");
+    ).toHaveAttribute("href", "#profile-form");
     expect(
-      screen.getByText(/Espacio listo para integrar el formulario del perfil/i),
+      screen.getByText(/Edita tu perfil de transportista/i),
     ).toBeInTheDocument();
   });
 
@@ -43,12 +50,17 @@ describe("Transporter onboarding status views", () => {
   });
 
   it("shows the reusable rejected verification card without inventing reasons", () => {
-    render(<TransporterOnboardingRejectedView profile={buildProfile("REJECTED")} />);
+    render(
+      <TransporterOnboardingRejectedView
+        onSuccess={onSuccess}
+        profile={buildProfile("REJECTED")}
+      />,
+    );
 
     expect(screen.getByText("Requiere correcciones")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Revisar datos del perfil/i }),
-    ).toHaveAttribute("href", "#profile-form-placeholder");
+    ).toHaveAttribute("href", "#profile-form");
     expect(screen.queryByText(/motivo/i)).not.toBeInTheDocument();
   });
 });

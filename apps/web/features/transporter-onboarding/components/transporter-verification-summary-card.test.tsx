@@ -23,7 +23,7 @@ describe("TransporterVerificationSummaryCard", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Completar perfil/i }),
-    ).toHaveAttribute("href", "#profile-form-placeholder");
+    ).toHaveAttribute("href", "#profile-form");
   });
 
   it("hides the CTA for pending profiles", () => {
@@ -40,5 +40,13 @@ describe("TransporterVerificationSummaryCard", () => {
       screen.getByText(/tu perfil necesita correcciones antes de volver a revision/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/motivo/i)).not.toBeInTheDocument();
+  });
+
+  it("renders verified status without exposing technical values or actions", () => {
+    render(<TransporterVerificationSummaryCard status="VERIFIED" />);
+
+    expect(screen.getByText("Verificado")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByText("VERIFIED")).not.toBeInTheDocument();
   });
 });

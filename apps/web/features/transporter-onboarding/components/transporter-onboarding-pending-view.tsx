@@ -15,11 +15,11 @@ export function TransporterOnboardingPendingView({
 
   return (
     <TransporterOnboardingShell
-      description="Tu informacion ya fue enviada y esta en revision. Evitamos mostrar acciones de onboarding que induzcan a editar o reenviar algo fuera de este estado."
+      description="Ya recibimos tu informacion y la estamos revisando. Mientras tanto no hace falta volver a enviarla."
       eyebrow="Revision manual"
       statusLabel={`Estado: ${statusConfig.label.toLowerCase()}`}
       title="Estamos verificando tu perfil de transportista"
-      tone="success"
+      tone="warning"
     >
       <TransporterVerificationSummaryCard status="PENDING" />
       <TransporterProfileSummary profile={profile} />

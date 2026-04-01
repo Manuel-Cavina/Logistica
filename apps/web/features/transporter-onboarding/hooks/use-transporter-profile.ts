@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "@/src/lib/api";
 import { fetchTransporterProfile } from "../services/transporter-profile-api";
-import {
-  resolveTransporterOnboardingView,
-  type TransporterOnboardingView,
-} from "../services/transporter-onboarding-state";
 import type { TransporterProfile } from "../types/transporter-profile.types";
 
 type TransporterProfileRequestStatus = "loading" | "success" | "error";
@@ -16,7 +12,6 @@ type UseTransporterProfileResult = {
   profile: TransporterProfile | null;
   refetch: () => void;
   requestStatus: TransporterProfileRequestStatus;
-  resolvedView: TransporterOnboardingView | "loading" | "error";
 };
 
 type TransporterProfileState = {
@@ -92,9 +87,5 @@ export function useTransporterProfile(): UseTransporterProfileResult {
       setRequestVersion((currentVersion) => currentVersion + 1);
     },
     requestStatus: state.requestStatus,
-    resolvedView:
-      state.requestStatus === "success"
-        ? resolveTransporterOnboardingView(state.profile)
-        : state.requestStatus,
   };
 }

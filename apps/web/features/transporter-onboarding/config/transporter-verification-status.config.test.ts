@@ -6,7 +6,7 @@ import {
 describe("transporterVerificationStatusConfig", () => {
   it.each([
     ["INCOMPLETE", "Perfil incompleto", "neutral"],
-    ["PENDING", "En revision", "success"],
+    ["PENDING", "En revision", "warning"],
     ["VERIFIED", "Verificado", "success"],
     ["REJECTED", "Requiere correcciones", "danger"],
   ] as const)(
@@ -23,18 +23,18 @@ describe("transporterVerificationStatusConfig", () => {
 
   it("defines CTA only for actionable statuses", () => {
     expect(getTransporterVerificationStatusConfig("INCOMPLETE").cta).toEqual({
-      href: "#profile-form-placeholder",
+      href: "#profile-form",
       label: "Completar perfil",
     });
     expect(getTransporterVerificationStatusConfig("REJECTED").cta).toEqual({
-      href: "#profile-form-placeholder",
+      href: "#profile-form",
       label: "Revisar datos del perfil",
     });
     expect(getTransporterVerificationStatusConfig("PENDING").cta).toBeUndefined();
     expect(getTransporterVerificationStatusConfig("VERIFIED").cta).toBeUndefined();
   });
 
-  it.each(["neutral", "success", "warning", "danger"] as const)(
+  it.each(["neutral", "warning", "success", "danger"] as const)(
     "returns tone styles for %s",
     (tone) => {
       const styles = getTransporterVerificationToneStyles(tone);

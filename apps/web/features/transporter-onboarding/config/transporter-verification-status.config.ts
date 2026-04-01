@@ -24,11 +24,11 @@ type TransporterVerificationToneStyles = {
 const transporterVerificationStatusConfig = {
   INCOMPLETE: {
     cta: {
-      href: "#profile-form-placeholder",
+      href: "#profile-form",
       label: "Completar perfil",
     },
     description:
-      "Todavia faltan datos base para enviar tu perfil a revision y destrabar la verificacion manual.",
+      "Todavia faltan datos base para dejar tu perfil listo para revision.",
     label: "Perfil incompleto",
     title: "Completa tu perfil para avanzar con la verificacion",
     tone: "neutral",
@@ -38,11 +38,11 @@ const transporterVerificationStatusConfig = {
       "Tu informacion ya fue enviada y nuestro equipo la esta revisando. No necesitas reenviar nada por ahora.",
     label: "En revision",
     title: "Estamos verificando tu perfil de transportista",
-    tone: "success",
+    tone: "warning",
   },
   REJECTED: {
     cta: {
-      href: "#profile-form-placeholder",
+      href: "#profile-form",
       label: "Revisar datos del perfil",
     },
     description:

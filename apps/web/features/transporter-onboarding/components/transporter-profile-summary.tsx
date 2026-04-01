@@ -36,10 +36,10 @@ export function TransporterProfileSummary({
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
           Perfil actual
         </p>
-        <CardTitle>Datos recibidos desde backend</CardTitle>
+        <CardTitle>Resumen de tu perfil</CardTitle>
         <CardDescription>
-          Esta vista lee el perfil real del transportista para evitar reglas duplicadas
-          en frontend.
+          Te mostramos la informacion disponible de tu perfil para que puedas revisarla
+          antes de continuar.
         </CardDescription>
       </CardHeader>
 
