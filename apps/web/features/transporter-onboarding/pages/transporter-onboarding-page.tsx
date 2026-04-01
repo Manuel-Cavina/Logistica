@@ -50,8 +50,10 @@ export function TransporterOnboardingPage() {
   }
 
   if (resolvedView === "rejected" && profile) {
-    return <TransporterOnboardingRejectedView profile={profile} />;
+    return (
+      <TransporterOnboardingRejectedView onSuccess={refetch} profile={profile} />
+    );
   }
 
-  return <TransporterOnboardingIncompleteView profile={profile} />;
+  return <TransporterOnboardingIncompleteView onSuccess={refetch} profile={profile} />;
 }
