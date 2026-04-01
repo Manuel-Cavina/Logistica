@@ -20,7 +20,7 @@ Propuesta de valor:
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Next.js 14 App Router + Tailwind CSS + shadcn/ui |
+| Frontend | Next.js 15 App Router + Tailwind CSS + componentes UI propios (`apps/web/components/ui/`) |
 | Backend | NestJS (monolito modular) + Prisma ORM |
 | Base de datos | PostgreSQL (Neon / Supabase / Render) |
 | Storage | Cloudflare R2 + presigned upload directo |
