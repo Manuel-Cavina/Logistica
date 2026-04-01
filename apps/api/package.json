@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@nestjs/cli": "^11.0.17",
     "@nestjs/testing": "^11.1.17",
     "@types/cookie-parser": "^1.4.10",
     "@types/jest": "^30.0.0",
