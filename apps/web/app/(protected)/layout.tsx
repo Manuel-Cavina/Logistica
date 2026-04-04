@@ -1,9 +1,9 @@
-import { AuthRouteGuard } from "@/features/auth/components/guards/auth-route-guard";
+import { ProtectedAppGuard } from "@/features/auth/components/protected-app-guard";
 
 type ProtectedLayoutProps = {
   children: React.ReactNode;
 };
 
 export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
-  return <AuthRouteGuard mode="protected">{children}</AuthRouteGuard>;
+  return <ProtectedAppGuard>{children}</ProtectedAppGuard>;
 }
