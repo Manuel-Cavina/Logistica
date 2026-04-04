@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AdminTransporterDetailCard } from "../components/admin-transporter-detail-card";
+import { AdminTransporterReviewActions } from "../components/admin-transporter-review-actions";
 import { AdminShell } from "../components/admin-shell";
 import { AdminStatePanel } from "../components/admin-state-panel";
 import { useAdminTransporterDetail } from "../hooks/use-admin-transporter-detail";
+import { useUpdateAdminTransporterStatus } from "../hooks/use-update-admin-transporter-status";
+import type { AdminTransporterDetail } from "../types/admin-transporter.types";
 
 type AdminTransporterDetailPageProps = {
   transporterId: string;
@@ -14,6 +18,36 @@ export function AdminTransporterDetailPage({
 }: AdminTransporterDetailPageProps) {
   const { error, refetch, requestStatus, transporter } =
     useAdminTransporterDetail(transporterId);
+  const [resolvedTransporter, setResolvedTransporter] =
+    useState<AdminTransporterDetail | null>(null);
+  const {
+    error: reviewError,
+    isSubmitting,
+    lastSubmittedStatus,
+    resetFeedback,
+    submitStatus,
+    successMessage,
+  } = useUpdateAdminTransporterStatus(transporterId);
+
+  useEffect(() => {
+    if (!transporter) {
+      setResolvedTransporter(null);
+      return;
+    }
+
+    setResolvedTransporter(transporter);
+  }, [transporter]);
+
+  async function handleStatusUpdate(nextStatus: "VERIFIED" | "REJECTED") {
+    const updatedTransporter = await submitStatus(nextStatus);
+
+    if (!updatedTransporter) {
+      return;
+    }
+
+    setResolvedTransporter(updatedTransporter);
+    refetch();
+  }
 
   return (
     <AdminShell
@@ -44,8 +78,25 @@ export function AdminTransporterDetailPage({
         />
       ) : null}
 
-      {requestStatus === "success" && transporter ? (
-        <AdminTransporterDetailCard transporter={transporter} />
+      {requestStatus === "success" && resolvedTransporter ? (
+        <>
+          <AdminTransporterDetailCard transporter={resolvedTransporter} />
+          <AdminTransporterReviewActions
+            error={reviewError}
+            isSubmitting={isSubmitting}
+            lastSubmittedStatus={lastSubmittedStatus}
+            onApprove={() => {
+              resetFeedback();
+              void handleStatusUpdate("VERIFIED");
+            }}
+            onReject={() => {
+              resetFeedback();
+              void handleStatusUpdate("REJECTED");
+            }}
+            successMessage={successMessage}
+            transporter={resolvedTransporter}
+          />
+        </>
       ) : null}
     </AdminShell>
   );
