@@ -20,10 +20,19 @@ export const AdminTransporterDetailSchema = z.object({
   verificationStatus: TransporterVerificationStatusSchema,
 });
 
+export const AdminTransporterVerificationDecisionSchema = z.enum([
+  "VERIFIED",
+  "REJECTED",
+]);
+
 export type AdminTransporterListItem = z.infer<
   typeof AdminTransporterListItemSchema
 >;
 
 export type AdminTransporterDetail = z.infer<
   typeof AdminTransporterDetailSchema
+>;
+
+export type AdminTransporterVerificationDecision = z.infer<
+  typeof AdminTransporterVerificationDecisionSchema
 >;
