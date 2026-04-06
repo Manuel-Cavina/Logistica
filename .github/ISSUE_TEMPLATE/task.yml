@@ -1,13 +1,24 @@
-name: Tarea técnica
-description: Tarea de infraestructura, refactor, docs o deuda técnica
+name: Tarea tecnica
+description: Tarea de infraestructura, refactor, docs o deuda tecnica
 title: "[TASK] "
 labels: ["task"]
 body:
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Carril responsable
+      options:
+        - backend-e3
+        - frontend-e2-redesign
+        - shared-support
+    validations:
+      required: true
+
   - type: textarea
     id: descripcion
     attributes:
-      label: Descripción
-      description: ¿Qué hay que hacer y por qué?
+      label: Descripcion
+      description: Que hay que hacer y por que
     validations:
       required: true
 
@@ -16,11 +27,25 @@ body:
     attributes:
       label: Definition of Done
       placeholder: |
-        - [ ] X está hecho
+        - [ ] X esta hecho
         - [ ] Tests pasan
-        - [ ] Documentación actualizada si aplica
+        - [ ] Documentacion actualizada si aplica
     validations:
       required: true
+
+  - type: input
+    id: depends_on
+    attributes:
+      label: Dependencias
+      placeholder: "#123, #124 o N/A"
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: No hacer
+      placeholder: |
+        - No tocar contratos o modulos fuera del alcance
+        - No tocar zonas protegidas sin aprobacion
 
   - type: dropdown
     id: tipo
@@ -29,8 +54,8 @@ body:
       options:
         - Infraestructura
         - Refactor
-        - Documentación
-        - Deuda técnica
-        - Configuración
+        - Documentacion
+        - Deuda tecnica
+        - Configuracion
     validations:
       required: true
