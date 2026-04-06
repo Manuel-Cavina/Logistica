@@ -54,7 +54,7 @@ function slugify(value) {
 
 function printUsage() {
   console.log(`Usage:
-  pnpm agent:branch --lane backend-e3 --issue-number 123 --issue-title "Implementar alta de vehicle" [--type feature]
+  pnpm agent:branch --issue-number 123 --issue-title "Implementar alta de vehicle" [--slug e3-schema] [--type feature]
   pnpm agent:pr --lane frontend-e2-redesign --issue-number 456 --issue-title "Redisenar onboarding" [--acceptance "..."] [--test "..."] [--risk "..."] [--notes "..."]`);
 }
 
@@ -79,12 +79,13 @@ function getLaneLabel(lane) {
 }
 
 function buildBranchName(args) {
-  const lane = requireArg(args, "lane");
   const issueNumber = requireArg(args, "issue-number");
-  const issueTitle = requireArg(args, "issue-title");
+  const branchSlug = args.slug
+    ? slugify(args.slug)
+    : slugify(requireArg(args, "issue-title"));
   const branchType = args.type ?? "feature";
 
-  return `${branchType}/${issueNumber}-${slugify(lane)}-${slugify(issueTitle)}`;
+  return `${branchType}/${issueNumber}-${branchSlug}`;
 }
 
 function buildChecklist(items, fallback) {
