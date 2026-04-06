@@ -31,7 +31,13 @@ export function TransporterVerificationSummaryCard({
   const resolvedCtaHref = ctaHref ?? statusConfig.cta?.href;
 
   return (
-    <Card className={cn("border p-6 sm:p-8", toneStyles.card, className)}>
+    <Card
+      className={cn(
+        "border-white/70 bg-white/85 p-6 shadow-[0_16px_40px_rgba(21,40,33,0.08)] sm:p-8",
+        toneStyles.card,
+        className,
+      )}
+    >
       <CardHeader className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
@@ -49,7 +55,7 @@ export function TransporterVerificationSummaryCard({
       {showCta && statusConfig.cta && resolvedCtaHref ? (
         <CardContent>
           <a
-            className="inline-flex h-14 items-center justify-center rounded-[1.4rem] bg-primary px-5 text-[15px] font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(27,67,50,0.18)] transition hover:bg-[#143428]"
+            className="inline-flex h-14 items-center justify-center rounded-[1.4rem] bg-primary px-5 text-[15px] font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(27,67,50,0.18)] transition hover:bg-[#143428] hover:shadow-[0_20px_40px_rgba(27,67,50,0.2)]"
             href={resolvedCtaHref}
           >
             {statusConfig.cta.label}
