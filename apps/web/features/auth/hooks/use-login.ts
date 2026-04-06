@@ -7,6 +7,7 @@ import {
   loginRequest,
   toAuthUser,
 } from "@/features/auth/services/api/auth-api";
+import { getDefaultAuthorizedPath } from "@/features/auth/services/authorization";
 import type {
   LoginFormValues,
   LoginResponse,
@@ -59,7 +60,7 @@ export function useLogin() {
       });
 
       startTransition(() => {
-        router.push("/dashboard");
+        router.push(getDefaultAuthorizedPath(result.account.role));
       });
 
       return result;

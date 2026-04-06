@@ -26,9 +26,7 @@ describe("authorization helpers", () => {
     expect(getDefaultAuthorizedPath("TRANSPORTER")).toBe(
       DEFAULT_AUTHENTICATED_REDIRECT_PATH,
     );
-    expect(getDefaultAuthorizedPath("ADMIN")).toBe(
-      DEFAULT_AUTHENTICATED_REDIRECT_PATH,
-    );
+    expect(getDefaultAuthorizedPath("ADMIN")).toBe("/admin/users");
   });
 
   it("falls back to the generic authenticated path when the role is missing", () => {

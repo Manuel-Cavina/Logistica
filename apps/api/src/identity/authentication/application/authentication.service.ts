@@ -4,14 +4,21 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@logistica/database';
 import type { IMeResponse, IRegisterResponse } from '@logistica/shared';
 import { AccountsService } from '../../accounts/application/accounts.service';
-import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import {
+  DEVELOPMENT_ADMIN_ACCOUNT_ID,
+  getDevelopmentAdminAuthConfiguration,
+  type DevelopmentAdminAuthConfiguration,
+} from '../development-admin-auth.config';
 import type { LoginDto } from '../dto/login.dto';
 import type { RegisterDto } from '../dto/register.dto';
 import type {
+  AuthenticatedAccount,
   AuthRequestContext,
+  AuthSessionAccount,
   LoginResult,
   RefreshResult,
 } from '../types/authentication.types';
@@ -21,12 +28,17 @@ import { PasswordService } from './password.service';
 @Injectable()
 export class AuthenticationService {
   private readonly logger = new Logger(AuthenticationService.name);
+  private readonly developmentAdminAuth: DevelopmentAdminAuthConfiguration;
 
   constructor(
     private readonly accountsService: AccountsService,
     private readonly passwordService: PasswordService,
     private readonly authSessionService: AuthSessionService,
-  ) {}
+    configService: ConfigService,
+  ) {
+    this.developmentAdminAuth =
+      getDevelopmentAdminAuthConfiguration(configService);
+  }
 
   async register(registerDto: RegisterDto): Promise<IRegisterResponse> {
     const normalizedEmail = this.normalizeEmail(registerDto.email);
@@ -87,6 +99,33 @@ export class AuthenticationService {
     context: AuthRequestContext,
   ): Promise<LoginResult> {
     const normalizedEmail = this.normalizeEmail(loginDto.email);
+    const developmentAdminAccount = this.getDevelopmentAdminAccount(
+      normalizedEmail,
+      loginDto.password,
+    );
+
+    if (developmentAdminAccount) {
+      const sessionTokens = await this.authSessionService.createLoginSession(
+        developmentAdminAccount,
+        context,
+      );
+
+      this.logInfo('login_success', {
+        accountId: developmentAdminAccount.id,
+        email: normalizedEmail,
+        ipAddress: context.ipAddress ?? null,
+        userAgent: context.userAgent ?? null,
+      });
+
+      return {
+        response: {
+          account: this.toAuthAccount(developmentAdminAccount),
+          accessToken: sessionTokens.accessToken,
+        },
+        refreshToken: sessionTokens.refreshToken,
+      };
+    }
+
     const account = await this.accountsService.findByEmail(normalizedEmail);
 
     if (!account) {
@@ -156,8 +195,24 @@ export class AuthenticationService {
     await this.authSessionService.logoutSession(refreshToken);
   }
 
-  async getCurrentAccount(accountId: string): Promise<IMeResponse> {
-    const account = await this.accountsService.findById(accountId);
+  async getCurrentAccount(
+    authenticatedAccount: AuthenticatedAccount,
+  ): Promise<IMeResponse> {
+    if (authenticatedAccount.isMockAdmin) {
+      const developmentAdminAccount = this.getDevelopmentAdminAccountById(
+        authenticatedAccount.accountId,
+      );
+
+      if (!developmentAdminAccount) {
+        throw this.invalidAuthAttempt();
+      }
+
+      return this.toMeResponse(developmentAdminAccount);
+    }
+
+    const account = await this.accountsService.findById(
+      authenticatedAccount.accountId,
+    );
 
     if (!account) {
       throw this.invalidAuthAttempt();
@@ -182,13 +237,13 @@ export class AuthenticationService {
     return `${visibleLocalPart}***@${domainPart}`;
   }
 
-  private toRegisterResponse(account: AccountWithProfiles): IRegisterResponse {
+  private toRegisterResponse(account: AuthSessionAccount): IRegisterResponse {
     return {
       account: this.toAuthAccount(account),
     };
   }
 
-  private toAuthAccount(account: AccountWithProfiles) {
+  private toAuthAccount(account: AuthSessionAccount) {
     return {
       id: account.id,
       email: account.email,
@@ -197,7 +252,7 @@ export class AuthenticationService {
     };
   }
 
-  private toMeResponse(account: AccountWithProfiles): IMeResponse {
+  private toMeResponse(account: AuthSessionAccount): IMeResponse {
     return {
       id: account.id,
       email: account.email,
@@ -244,5 +299,39 @@ export class AuthenticationService {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === 'P2002'
     );
+  }
+
+  private getDevelopmentAdminAccount(
+    email: string,
+    password: string,
+  ): AuthSessionAccount | null {
+    if (
+      !this.developmentAdminAuth.enabled ||
+      email !== this.developmentAdminAuth.email ||
+      password !== this.developmentAdminAuth.password
+    ) {
+      return null;
+    }
+
+    return this.getDevelopmentAdminAccountById(DEVELOPMENT_ADMIN_ACCOUNT_ID);
+  }
+
+  private getDevelopmentAdminAccountById(
+    accountId: string,
+  ): AuthSessionAccount | null {
+    if (
+      !this.developmentAdminAuth.enabled ||
+      accountId !== DEVELOPMENT_ADMIN_ACCOUNT_ID
+    ) {
+      return null;
+    }
+
+    return {
+      id: DEVELOPMENT_ADMIN_ACCOUNT_ID,
+      email: this.developmentAdminAuth.email,
+      role: 'ADMIN',
+      isEmailVerified: true,
+      isMockAdmin: true,
+    };
   }
 }

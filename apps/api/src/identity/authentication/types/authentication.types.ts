@@ -15,6 +15,7 @@ export interface RefreshTokenPayload {
   sub: string;
   sid: string;
   family: string;
+  mockAdmin?: boolean;
   iat?: number;
   exp?: number;
 }
@@ -22,6 +23,7 @@ export interface RefreshTokenPayload {
 export interface AccessTokenPayload {
   sub: string;
   role: AccountRole;
+  mockAdmin?: boolean;
   iat?: number;
   exp?: number;
 }
@@ -29,6 +31,15 @@ export interface AccessTokenPayload {
 export interface AuthenticatedAccount {
   accountId: string;
   role: AccountRole;
+  isMockAdmin?: boolean;
+}
+
+export interface AuthSessionAccount {
+  id: string;
+  email: string;
+  role: AccountRole;
+  isEmailVerified: boolean;
+  isMockAdmin?: boolean;
 }
 
 export interface LoginResult {

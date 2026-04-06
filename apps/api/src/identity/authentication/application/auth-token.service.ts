@@ -2,10 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
-import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
 import { getAuthenticationConfiguration } from '../cookies/authentication-cookie.config';
 import type {
+  AccessTokenPayload,
   AuthenticationConfiguration,
+  AuthSessionAccount,
   RefreshTokenPayload,
 } from '../types/authentication.types';
 
@@ -48,17 +49,17 @@ export class AuthTokenService {
     return timingSafeEqual(storedHashBuffer, presentedHashBuffer);
   }
 
-  async signAccessToken(account: AccountWithProfiles): Promise<string> {
-    return this.jwtService.signAsync(
-      {
-        sub: account.id,
-        role: account.role,
-      },
-      {
-        secret: this.authConfig.accessTokenSecret,
-        expiresIn: this.authConfig.accessTokenTtlSeconds,
-      },
-    );
+  async signAccessToken(account: AuthSessionAccount): Promise<string> {
+    const payload: AccessTokenPayload = {
+      sub: account.id,
+      role: account.role,
+      ...(account.isMockAdmin ? { mockAdmin: true } : {}),
+    };
+
+    return this.jwtService.signAsync(payload, {
+      secret: this.authConfig.accessTokenSecret,
+      expiresIn: this.authConfig.accessTokenTtlSeconds,
+    });
   }
 
   async signRefreshToken(payload: RefreshTokenPayload): Promise<string> {
@@ -97,7 +98,9 @@ export class AuthTokenService {
       typeof payload.sid === 'string' &&
       payload.sid.length > 0 &&
       typeof payload.family === 'string' &&
-      payload.family.length > 0,
+      payload.family.length > 0 &&
+      (payload.mockAdmin === undefined ||
+        typeof payload.mockAdmin === 'boolean'),
     );
   }
 

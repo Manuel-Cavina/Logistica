@@ -74,6 +74,32 @@ describe('AuthTokenService', () => {
     );
   });
 
+  it('tags mock admin access tokens so auth/me can resolve them without database state', async () => {
+    jwtService.signAsync.mockResolvedValue('mock-admin-access-token');
+
+    await expect(
+      authTokenService.signAccessToken({
+        id: 'cm9adminmock0000wqz5oy7k8ph1',
+        email: 'admin@example.com',
+        role: 'ADMIN',
+        isEmailVerified: true,
+        isMockAdmin: true,
+      }),
+    ).resolves.toBe('mock-admin-access-token');
+
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      {
+        sub: 'cm9adminmock0000wqz5oy7k8ph1',
+        role: 'ADMIN',
+        mockAdmin: true,
+      },
+      {
+        secret: 'access-secret',
+        expiresIn: 900,
+      },
+    );
+  });
+
   it('verifies refresh tokens with the configured secret', async () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 'client-account-id',
@@ -87,6 +113,24 @@ describe('AuthTokenService', () => {
       sub: 'client-account-id',
       sid: 'session-id',
       family: 'token-family',
+    });
+  });
+
+  it('accepts mock admin refresh payloads', async () => {
+    jwtService.verifyAsync.mockResolvedValue({
+      sub: 'cm9adminmock0000wqz5oy7k8ph1',
+      sid: 'session-id',
+      family: 'token-family',
+      mockAdmin: true,
+    });
+
+    await expect(
+      authTokenService.verifyRefreshToken('mock-admin-refresh-token'),
+    ).resolves.toEqual({
+      sub: 'cm9adminmock0000wqz5oy7k8ph1',
+      sid: 'session-id',
+      family: 'token-family',
+      mockAdmin: true,
     });
   });
 
