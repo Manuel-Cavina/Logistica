@@ -3,6 +3,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
 import { Prisma } from '@logistica/database';
 import { AuthenticationService } from './authentication.service';
 
@@ -22,6 +23,9 @@ describe('AuthenticationService', () => {
     refreshSession: jest.fn(),
     logoutSession: jest.fn(),
   };
+  const configService = {
+    get: jest.fn(),
+  };
 
   let authenticationService: AuthenticationService;
   let loggerLogSpy: jest.SpyInstance;
@@ -31,10 +35,25 @@ describe('AuthenticationService', () => {
     jest.clearAllMocks();
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'test';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return undefined;
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return undefined;
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return undefined;
+        default:
+          return undefined;
+      }
+    });
     authenticationService = new AuthenticationService(
       accountsService as never,
       passwordService as never,
       authSessionService as never,
+      configService as unknown as ConfigService,
     );
   });
 
@@ -213,6 +232,73 @@ describe('AuthenticationService', () => {
     );
   });
 
+  it('logs in with the development admin credentials without querying accounts', async () => {
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'development';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return 'true';
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return 'admin@example.com';
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return 'secret123';
+        default:
+          return undefined;
+      }
+    });
+    authenticationService = new AuthenticationService(
+      accountsService as never,
+      passwordService as never,
+      authSessionService as never,
+      configService as unknown as ConfigService,
+    );
+    authSessionService.createLoginSession.mockResolvedValue({
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-refresh-token',
+    });
+
+    await expect(
+      authenticationService.login(
+        {
+          email: 'admin@example.com',
+          password: 'secret123',
+        },
+        {
+          ipAddress: '127.0.0.1',
+          userAgent: 'jest',
+        },
+      ),
+    ).resolves.toEqual({
+      response: {
+        account: {
+          id: 'cm9adminmock0000wqz5oy7k8ph1',
+          email: 'admin@example.com',
+          role: 'ADMIN',
+          isEmailVerified: true,
+        },
+        accessToken: 'mock-access-token',
+      },
+      refreshToken: 'mock-refresh-token',
+    });
+
+    expect(accountsService.findByEmail).not.toHaveBeenCalled();
+    expect(passwordService.verify).not.toHaveBeenCalled();
+    expect(authSessionService.createLoginSession).toHaveBeenCalledWith(
+      {
+        id: 'cm9adminmock0000wqz5oy7k8ph1',
+        email: 'admin@example.com',
+        role: 'ADMIN',
+        isEmailVerified: true,
+        isMockAdmin: true,
+      },
+      {
+        ipAddress: '127.0.0.1',
+        userAgent: 'jest',
+      },
+    );
+  });
+
   it('delegates refresh to the session service', async () => {
     authSessionService.refreshSession.mockResolvedValue({
       accessToken: 'rotated-access-token',
@@ -341,7 +427,10 @@ describe('AuthenticationService', () => {
     });
 
     await expect(
-      authenticationService.getCurrentAccount('client-account-id'),
+      authenticationService.getCurrentAccount({
+        accountId: 'client-account-id',
+        role: 'CLIENT',
+      }),
     ).resolves.toEqual({
       id: 'client-account-id',
       email: 'client@example.com',
@@ -355,7 +444,47 @@ describe('AuthenticationService', () => {
     accountsService.findById.mockResolvedValue(null);
 
     await expect(
-      authenticationService.getCurrentAccount('missing-account-id'),
+      authenticationService.getCurrentAccount({
+        accountId: 'missing-account-id',
+        role: 'CLIENT',
+      }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('returns the development admin identity for auth/me when the token is marked as mock admin', async () => {
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'development';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return 'true';
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return 'admin@example.com';
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return 'secret123';
+        default:
+          return undefined;
+      }
+    });
+    authenticationService = new AuthenticationService(
+      accountsService as never,
+      passwordService as never,
+      authSessionService as never,
+      configService as unknown as ConfigService,
+    );
+
+    await expect(
+      authenticationService.getCurrentAccount({
+        accountId: 'cm9adminmock0000wqz5oy7k8ph1',
+        role: 'ADMIN',
+        isMockAdmin: true,
+      }),
+    ).resolves.toEqual({
+      id: 'cm9adminmock0000wqz5oy7k8ph1',
+      email: 'admin@example.com',
+      role: 'ADMIN',
+    });
+
+    expect(accountsService.findById).not.toHaveBeenCalled();
   });
 });

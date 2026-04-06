@@ -44,6 +44,21 @@ describe('JwtAccessStrategy', () => {
     ).toEqual({
       accountId: 'client-account-id',
       role: 'CLIENT',
+      isMockAdmin: false,
+    });
+  });
+
+  it('preserves the mock admin marker in the authenticated account context', () => {
+    expect(
+      strategy.validate({
+        sub: 'cm9adminmock0000wqz5oy7k8ph1',
+        role: 'ADMIN',
+        mockAdmin: true,
+      }),
+    ).toEqual({
+      accountId: 'cm9adminmock0000wqz5oy7k8ph1',
+      role: 'ADMIN',
+      isMockAdmin: true,
     });
   });
 

@@ -116,7 +116,7 @@ describe('AuthenticationController', () => {
       canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest<{
           headers: Record<string, string | string[] | undefined>;
-          user?: { accountId: string };
+          user?: { accountId: string; role: string; isMockAdmin?: boolean };
         }>();
         const authorizationHeader = request.headers.authorization;
 
@@ -129,6 +129,7 @@ describe('AuthenticationController', () => {
 
         request.user = {
           accountId: authenticatedAccountId,
+          role: 'CLIENT',
         };
 
         return true;
@@ -481,9 +482,10 @@ describe('AuthenticationController', () => {
         role: 'CLIENT',
       });
 
-    expect(authenticationService.getCurrentAccount).toHaveBeenCalledWith(
-      'client-account-id',
-    );
+    expect(authenticationService.getCurrentAccount).toHaveBeenCalledWith({
+      accountId: 'client-account-id',
+      role: 'CLIENT',
+    });
 
     await app.close();
   });

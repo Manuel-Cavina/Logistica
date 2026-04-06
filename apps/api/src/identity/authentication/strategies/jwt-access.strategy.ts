@@ -27,6 +27,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy) {
     return {
       accountId: payload.sub,
       role: payload.role,
+      isMockAdmin: payload.mockAdmin === true,
     };
   }
 }

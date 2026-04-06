@@ -99,7 +99,7 @@ export class AuthenticationController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@Req() request: AuthenticatedHttpRequest): Promise<IMeResponse> {
-    return this.authenticationService.getCurrentAccount(request.user.accountId);
+    return this.authenticationService.getCurrentAccount(request.user);
   }
 
   @Post('refresh')

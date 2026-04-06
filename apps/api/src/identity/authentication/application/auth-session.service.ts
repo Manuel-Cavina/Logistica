@@ -1,23 +1,39 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import { ConfigService } from '@nestjs/config';
 import { SessionsRepository } from '../repositories/sessions.repository';
+import {
+  DEVELOPMENT_ADMIN_ACCOUNT_ID,
+  getDevelopmentAdminAuthConfiguration,
+  type DevelopmentAdminAuthConfiguration,
+} from '../development-admin-auth.config';
 import type {
   AuthRequestContext,
+  AuthSessionAccount,
   CreateSessionInput,
 } from '../types/authentication.types';
 import { AuthTokenService } from './auth-token.service';
 
 @Injectable()
 export class AuthSessionService {
+  private readonly developmentAdminAuth: DevelopmentAdminAuthConfiguration;
+
   constructor(
     private readonly sessionsRepository: SessionsRepository,
     private readonly authTokenService: AuthTokenService,
-  ) {}
+    configService: ConfigService,
+  ) {
+    this.developmentAdminAuth =
+      getDevelopmentAdminAuthConfiguration(configService);
+  }
 
   async createLoginSession(
-    account: AccountWithProfiles,
+    account: AuthSessionAccount,
     context: AuthRequestContext,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    if (this.isDevelopmentAdminAccount(account)) {
+      return this.createDevelopmentAdminSession(account);
+    }
+
     const sessionId = this.authTokenService.createSessionId();
     const tokenFamily = this.authTokenService.createTokenFamily();
     const refreshToken = await this.authTokenService.signRefreshToken({
@@ -53,6 +69,11 @@ export class AuthSessionService {
 
     const payload =
       await this.authTokenService.verifyRefreshToken(refreshToken);
+
+    if (payload.mockAdmin) {
+      return this.refreshDevelopmentAdminSession(payload.family);
+    }
+
     const session = await this.sessionsRepository.findSessionById(payload.sid);
 
     if (!session) {
@@ -123,6 +144,11 @@ export class AuthSessionService {
     try {
       const payload =
         await this.authTokenService.verifyRefreshToken(refreshToken);
+
+      if (payload.mockAdmin) {
+        return;
+      }
+
       const session = await this.sessionsRepository.findSessionById(
         payload.sid,
       );
@@ -173,5 +199,69 @@ export class AuthSessionService {
 
   private invalidAuthAttempt(): UnauthorizedException {
     return new UnauthorizedException('Invalid credentials.');
+  }
+
+  private async createDevelopmentAdminSession(
+    account: AuthSessionAccount,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const sessionId = this.authTokenService.createSessionId();
+    const tokenFamily = this.authTokenService.createTokenFamily();
+    const refreshToken = await this.authTokenService.signRefreshToken({
+      sub: account.id,
+      sid: sessionId,
+      family: tokenFamily,
+      mockAdmin: true,
+    });
+    const accessToken = await this.authTokenService.signAccessToken(account);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  private async refreshDevelopmentAdminSession(
+    tokenFamily: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const account = this.getDevelopmentAdminAccount();
+
+    if (!account) {
+      throw this.invalidAuthAttempt();
+    }
+
+    const successorSessionId = this.authTokenService.createSessionId();
+    const successorRefreshToken = await this.authTokenService.signRefreshToken({
+      sub: account.id,
+      sid: successorSessionId,
+      family: tokenFamily,
+      mockAdmin: true,
+    });
+
+    return {
+      accessToken: await this.authTokenService.signAccessToken(account),
+      refreshToken: successorRefreshToken,
+    };
+  }
+
+  private getDevelopmentAdminAccount(): AuthSessionAccount | null {
+    if (!this.developmentAdminAuth.enabled) {
+      return null;
+    }
+
+    return {
+      id: DEVELOPMENT_ADMIN_ACCOUNT_ID,
+      email: this.developmentAdminAuth.email,
+      role: 'ADMIN',
+      isEmailVerified: true,
+      isMockAdmin: true,
+    };
+  }
+
+  private isDevelopmentAdminAccount(account: AuthSessionAccount): boolean {
+    return (
+      account.isMockAdmin === true &&
+      account.id === DEVELOPMENT_ADMIN_ACCOUNT_ID &&
+      account.role === 'ADMIN'
+    );
   }
 }

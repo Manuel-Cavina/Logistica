@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
 import { AuthSessionService } from './auth-session.service';
 
 interface SessionInputAssertion {
@@ -45,6 +46,9 @@ describe('AuthSessionService', () => {
     signRefreshToken: jest.fn(),
     verifyRefreshToken: jest.fn(),
   };
+  const configService = {
+    get: jest.fn(),
+  };
 
   let authSessionService: AuthSessionService;
 
@@ -52,19 +56,42 @@ describe('AuthSessionService', () => {
     jest.useFakeTimers().setSystemTime(suiteReferenceTime);
     jest.clearAllMocks();
     authTokenService.createSessionId
+      .mockReset()
       .mockReturnValueOnce('session-id')
       .mockReturnValueOnce('next-session-id');
-    authTokenService.createTokenFamily.mockReturnValue('token-family');
-    authTokenService.getRefreshTokenExpirationDate.mockReturnValue(
-      new Date('2026-03-25T12:00:00.000Z'),
-    );
-    authTokenService.hashRefreshToken.mockReturnValue(
-      '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b',
-    );
-    authTokenService.matchesRefreshTokenHash.mockReturnValue(true);
+    authTokenService.createTokenFamily
+      .mockReset()
+      .mockReturnValue('token-family');
+    authTokenService.getRefreshTokenExpirationDate
+      .mockReset()
+      .mockReturnValue(new Date('2026-03-25T12:00:00.000Z'));
+    authTokenService.hashRefreshToken
+      .mockReset()
+      .mockReturnValue(
+        '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b',
+      );
+    authTokenService.matchesRefreshTokenHash.mockReset().mockReturnValue(true);
+    authTokenService.signAccessToken.mockReset();
+    authTokenService.signRefreshToken.mockReset();
+    authTokenService.verifyRefreshToken.mockReset();
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'development';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return undefined;
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return undefined;
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return undefined;
+        default:
+          return undefined;
+      }
+    });
     authSessionService = new AuthSessionService(
       sessionsRepository as never,
       authTokenService as never,
+      configService as unknown as ConfigService,
     );
   });
 
@@ -110,6 +137,58 @@ describe('AuthSessionService', () => {
     expect(createSessionInput?.ipAddress).toBe('127.0.0.1');
   });
 
+  it('creates a stateless session for the development mock admin', async () => {
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'development';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return 'true';
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return 'admin@example.com';
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return 'secret123';
+        default:
+          return undefined;
+      }
+    });
+    authSessionService = new AuthSessionService(
+      sessionsRepository as never,
+      authTokenService as never,
+      configService as unknown as ConfigService,
+    );
+    authTokenService.signRefreshToken.mockResolvedValue('mock-refresh-token');
+    authTokenService.signAccessToken.mockResolvedValue('mock-access-token');
+
+    await expect(
+      authSessionService.createLoginSession(
+        {
+          id: 'cm9adminmock0000wqz5oy7k8ph1',
+          email: 'admin@example.com',
+          role: 'ADMIN',
+          isEmailVerified: true,
+          isMockAdmin: true,
+        },
+        {
+          ipAddress: '127.0.0.1',
+          userAgent: 'jest',
+        },
+      ),
+    ).resolves.toEqual({
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-refresh-token',
+    });
+
+    expect(sessionsRepository.createSession).not.toHaveBeenCalled();
+    expect(authTokenService.signRefreshToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sub: 'cm9adminmock0000wqz5oy7k8ph1',
+        family: 'token-family',
+        mockAdmin: true,
+      }),
+    );
+  });
+
   it('refreshes an active session and rotates the refresh token', async () => {
     authTokenService.verifyRefreshToken.mockResolvedValue({
       sub: 'client-account-id',
@@ -146,6 +225,51 @@ describe('AuthSessionService', () => {
       }),
     );
     expect(sessionsRepository.revokeSessionFamily).not.toHaveBeenCalled();
+  });
+
+  it('refreshes the development mock admin without touching the session repository', async () => {
+    configService.get.mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'development';
+        case 'AUTH_MOCK_ADMIN_ENABLED':
+          return 'true';
+        case 'AUTH_MOCK_ADMIN_EMAIL':
+          return 'admin@example.com';
+        case 'AUTH_MOCK_ADMIN_PASSWORD':
+          return 'secret123';
+        default:
+          return undefined;
+      }
+    });
+    authSessionService = new AuthSessionService(
+      sessionsRepository as never,
+      authTokenService as never,
+      configService as unknown as ConfigService,
+    );
+    authTokenService.verifyRefreshToken.mockResolvedValue({
+      sub: 'cm9adminmock0000wqz5oy7k8ph1',
+      sid: 'current-session-id',
+      family: 'token-family',
+      mockAdmin: true,
+    });
+    authTokenService.signRefreshToken.mockResolvedValue(
+      'mock-rotated-refresh-token',
+    );
+    authTokenService.signAccessToken.mockResolvedValue('mock-access-token');
+
+    await expect(
+      authSessionService.refreshSession('secret', {
+        ipAddress: '127.0.0.1',
+        userAgent: 'jest',
+      }),
+    ).resolves.toEqual({
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-rotated-refresh-token',
+    });
+
+    expect(sessionsRepository.findSessionById).not.toHaveBeenCalled();
+    expect(sessionsRepository.rotateSession).not.toHaveBeenCalled();
   });
 
   it('revokes the family when a rotated refresh token is reused', async () => {
@@ -217,6 +341,22 @@ describe('AuthSessionService', () => {
 
     await expect(
       authSessionService.logoutSession('invalid-token'),
+    ).resolves.toBeUndefined();
+
+    expect(sessionsRepository.findSessionById).not.toHaveBeenCalled();
+    expect(sessionsRepository.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps mock admin logout stateless and idempotent', async () => {
+    authTokenService.verifyRefreshToken.mockResolvedValue({
+      sub: 'cm9adminmock0000wqz5oy7k8ph1',
+      sid: 'current-session-id',
+      family: 'token-family',
+      mockAdmin: true,
+    });
+
+    await expect(
+      authSessionService.logoutSession('mock-admin-token'),
     ).resolves.toBeUndefined();
 
     expect(sessionsRepository.findSessionById).not.toHaveBeenCalled();
