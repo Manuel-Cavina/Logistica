@@ -1,45 +1,71 @@
 # Contratos de la API
 
-Endpoints implementados al cierre de E1 (Auth) y E2 (Transporter Onboarding).
-Base URL: `http://localhost:3001` en desarrollo.
+Estado documentado en este archivo:
+
+- implementado hasta E1 Auth y E2 Transporter Onboarding
+- sin document upload todavia
+- sin `verificationNote` todavia
+
+Base URL de desarrollo: `http://localhost:3001`
 
 ---
 
-## Autenticación
+## Autenticacion
 
 ### `POST /auth/register`
 
-Registra una nueva cuenta. Rol permitido: público.
+Registro publico. Solo admite `CLIENT` y `TRANSPORTER`.
 
-**Body**
+**Body CLIENT**
+
 ```json
 {
+  "role": "CLIENT",
   "email": "string",
   "password": "string",
-  "role": "CLIENT" | "TRANSPORTER"
+  "firstName": "string",
+  "lastName": "string",
+  "phone": "string (opcional)"
+}
+```
+
+**Body TRANSPORTER**
+
+```json
+{
+  "role": "TRANSPORTER",
+  "email": "string",
+  "password": "string",
+  "displayName": "string"
 }
 ```
 
 **Respuesta 201**
+
 ```json
 {
-  "accountId": "string",
-  "email": "string",
-  "role": "CLIENT" | "TRANSPORTER"
+  "account": {
+    "id": "string",
+    "email": "string",
+    "role": "CLIENT | TRANSPORTER",
+    "isEmailVerified": false
+  }
 }
 ```
 
 **Errores**
-- `409` — email ya registrado
+
+- `400` registro invalido o no se pudo completar
 
 ---
 
 ### `POST /auth/login`
 
-Inicia sesión. Devuelve `accessToken` en el body y `refreshToken` en cookie
-HttpOnly. Rol permitido: público.
+Inicia sesion y devuelve `accessToken` en el body. El `refreshToken` se devuelve
+en cookie HttpOnly.
 
 **Body**
+
 ```json
 {
   "email": "string",
@@ -48,47 +74,60 @@ HttpOnly. Rol permitido: público.
 ```
 
 **Respuesta 200**
+
 ```json
 {
+  "account": {
+    "id": "string",
+    "email": "string",
+    "role": "CLIENT | TRANSPORTER | ADMIN",
+    "isEmailVerified": true
+  },
   "accessToken": "string"
 }
 ```
 
-**Cookie** `refresh_token` — HttpOnly, SameSite=Lax
+**Cookie**
+
+- `refresh_token` por defecto
+- el nombre real puede cambiar via `AUTH_REFRESH_COOKIE_NAME`
 
 **Errores**
-- `401` — credenciales inválidas
+
+- `401` credenciales invalidas
 
 ---
 
 ### `GET /auth/me`
 
-Devuelve los datos de la cuenta autenticada. Requiere bearer token.
+Devuelve la cuenta autenticada. Requiere bearer token.
 
-**Headers** `Authorization: Bearer <accessToken>`
+**Headers**
+
+- `Authorization: Bearer <accessToken>`
 
 **Respuesta 200**
+
 ```json
 {
-  "accountId": "string",
+  "id": "string",
   "email": "string",
-  "role": "CLIENT" | "TRANSPORTER" | "ADMIN"
+  "role": "CLIENT | TRANSPORTER | ADMIN"
 }
 ```
 
 **Errores**
-- `401` — token inválido o expirado
+
+- `401` token invalido o expirado
 
 ---
 
 ### `POST /auth/refresh`
 
-Renueva el access token usando el refresh token de la cookie. Rota el refresh
-token. Rol permitido: público (requiere cookie válida).
-
-**Cookie** `refresh_token` — enviada automáticamente por el browser
+Rota el refresh token y devuelve un nuevo access token.
 
 **Respuesta 200**
+
 ```json
 {
   "accessToken": "string"
@@ -96,102 +135,113 @@ token. Rol permitido: público (requiere cookie válida).
 ```
 
 **Errores**
-- `401` — refresh token inválido, expirado o ya rotado
+
+- `401` refresh token invalido, expirado o revocado
 
 ---
 
 ### `POST /auth/logout`
 
-Revoca la sesión activa. Limpia la cookie de refresh. Rol permitido: público
-(requiere cookie válida).
+Revoca la sesion actual y limpia la cookie de refresh.
 
-**Respuesta 204** — sin body
+**Respuesta 204**
+
+Sin body.
 
 ---
 
 ## Perfil del transportista
 
+Todos los endpoints de esta seccion requieren:
+
+- bearer token valido
+- rol `TRANSPORTER`
+
 ### `GET /transporter/profile`
 
-Devuelve el perfil del transportista autenticado. Requiere rol `TRANSPORTER`.
-
-**Headers** `Authorization: Bearer <accessToken>`
+Devuelve el perfil del transportista autenticado.
 
 **Respuesta 200**
+
 ```json
 {
-  "id": "string",
-  "accountId": "string",
-  "displayName": "string | null",
+  "displayName": "string",
   "businessName": "string | null",
   "contactPhone": "string | null",
   "bio": "string | null",
   "maxDetourKmDefault": "number | null",
-  "verificationStatus": "INCOMPLETE" | "PENDING" | "VERIFIED" | "REJECTED",
-  "verificationNote": "string | null",
-  "ratingAvg": "number | null",
-  "ratingCount": "number"
+  "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
 }
 ```
 
 **Errores**
-- `401` — no autenticado
-- `403` — rol incorrecto
+
+- `401` no autenticado
+- `403` rol incorrecto
+- `404` no existe perfil asociado a la cuenta
 
 ---
 
 ### `PATCH /transporter/profile`
 
-Actualiza el perfil del transportista autenticado. Todos los campos son
-opcionales. Si el perfil queda completo, transiciona a `PENDING`
-automáticamente. Requiere rol `TRANSPORTER`.
+Actualiza el perfil del transportista autenticado.
 
-**Headers** `Authorization: Bearer <accessToken>`
+Todos los campos son opcionales, pero el payload debe incluir al menos uno.
 
-**Body** (todos opcionales)
+**Body**
+
 ```json
 {
   "displayName": "string",
-  "businessName": "string",
-  "contactPhone": "string",
-  "bio": "string",
-  "maxDetourKmDefault": "number"
+  "businessName": "string | null",
+  "contactPhone": "string | null",
+  "bio": "string | null",
+  "maxDetourKmDefault": "number | null"
 }
 ```
 
-**Respuesta 200** — mismo shape que `GET /transporter/profile`
+Regla actual:
+
+- si el perfil esta en `INCOMPLETE`
+- y despues del update tiene `displayName` y `contactPhone`
+- entonces pasa automaticamente a `PENDING`
+
+**Respuesta 200**
+
+Mismo shape que `GET /transporter/profile`.
 
 **Errores**
-- `401` — no autenticado
-- `403` — rol incorrecto
+
+- `401` no autenticado
+- `403` rol incorrecto
+- `404` no existe perfil asociado a la cuenta
 
 ---
 
-## Admin — Transportistas
+## Admin - transportistas
 
-Todos los endpoints de admin requieren rol `ADMIN` y bearer token.
+Todos los endpoints de esta seccion requieren:
+
+- bearer token valido
+- rol `ADMIN`
 
 ### `GET /admin/transporters`
 
-Lista los perfiles de transportistas con filtro opcional por estado de
-verificación.
+Lista perfiles de transportistas.
 
 **Query params**
-- `verificationStatus` (opcional) — `INCOMPLETE | PENDING | VERIFIED | REJECTED`
+
+- `status` (opcional): `INCOMPLETE | PENDING | VERIFIED | REJECTED`
 
 **Respuesta 200**
+
 ```json
 [
   {
     "id": "string",
-    "accountId": "string",
-    "email": "string",
-    "displayName": "string | null",
-    "businessName": "string | null",
+    "displayName": "string",
     "contactPhone": "string | null",
-    "verificationStatus": "string",
-    "verificationNote": "string | null",
-    "createdAt": "string (ISO 8601)"
+    "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
   }
 ]
 ```
@@ -200,53 +250,66 @@ verificación.
 
 ### `GET /admin/transporters/:id`
 
-Devuelve el detalle completo de un perfil de transportista.
+Devuelve el detalle de un perfil transportista.
 
 **Path params**
-- `id` — UUID del `TransporterProfile`
+
+- `id`: `cuid` del `TransporterProfile`
 
 **Respuesta 200**
+
 ```json
 {
   "id": "string",
-  "accountId": "string",
-  "email": "string",
-  "displayName": "string | null",
+  "displayName": "string",
   "businessName": "string | null",
   "contactPhone": "string | null",
   "bio": "string | null",
   "maxDetourKmDefault": "number | null",
-  "verificationStatus": "string",
-  "verificationNote": "string | null",
-  "ratingAvg": "number | null",
-  "ratingCount": "number",
-  "createdAt": "string (ISO 8601)"
+  "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
 }
 ```
 
 **Errores**
-- `404` — perfil no encontrado
+
+- `404` perfil no encontrado
 
 ---
 
 ### `PATCH /admin/transporters/:id/verification-status`
 
-Cambia el estado de verificación de un transportista. Puede aprobar, rechazar
-o marcar como pendiente.
-
-**Path params**
-- `id` — UUID del `TransporterProfile`
+Actualiza manualmente el estado de verificacion.
 
 **Body**
+
 ```json
 {
-  "verificationStatus": "PENDING" | "VERIFIED" | "REJECTED",
-  "verificationNote": "string (requerido si REJECTED)"
+  "verificationStatus": "VERIFIED | REJECTED"
 }
 ```
 
-**Respuesta 200** — mismo shape que `GET /admin/transporters/:id`
+Reglas actuales:
+
+- solo admite `VERIFIED` o `REJECTED`
+- solo es valido si el perfil estaba en `PENDING`
+
+**Respuesta 200**
+
+Mismo shape que `GET /admin/transporters/:id`.
 
 **Errores**
-- `404` — perfil no encontrado
-- `422` — transición de estado inválida
+
+- `404` perfil no encontrado
+- `409` transicion de estado invalida
+
+---
+
+## Fuera de alcance por ahora
+
+Todavia no existen en la API:
+
+- endpoints de documentos de transportista
+- `verificationNote`
+- endpoints de `Vehicle`
+- endpoints de `Trailer`
+- endpoints de `TripOffer`
