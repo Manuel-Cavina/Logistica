@@ -78,23 +78,35 @@ Use one branch per issue.
 Format:
 
 ```bash
-feature/<issue-number>-<lane>-<slug>
-fix/<issue-number>-<lane>-<slug>
-docs/<issue-number>-<lane>-<slug>
+feature/<issue-number>-<slug>
+fix/<issue-number>-<slug>
+docs/<issue-number>-<slug>
 ```
 
 Examples:
 
 ```bash
-feature/123-backend-e3-implementar-alta-de-vehicle
-feature/124-frontend-e2-redesign-redisenar-onboarding-transporter
-fix/125-frontend-e2-redesign-corregir-estado-de-carga
+feature/123-e3-schema
+feature/124-e2-onboarding
+fix/125-onboarding-loading-state
 ```
+
+The lane does not live in the branch name. The lane is identified by:
+
+- the `lane` field on the issue
+- the `Lane:` field in the PR body
+- the work order defined by the user
 
 Helper command:
 
 ```bash
-pnpm agent:branch --lane backend-e3 --issue-number 123 --issue-title "Implementar alta de vehicle"
+pnpm agent:branch --issue-number 123 --issue-title "Extender schema base E3"
+```
+
+Optional short slug:
+
+```bash
+pnpm agent:branch --issue-number 123 --slug e3-schema
 ```
 
 ## Pull request standard
@@ -134,7 +146,7 @@ Optional repeated flags:
 3. Implement only the assigned issue scope.
 4. Run the relevant tests and checks.
 5. Push the branch.
-6. Open the PR with the standard template.
+6. Codex opens the PR automatically with the standard template after the push.
 7. Wait for human review and merge.
 8. After the user confirms merge, return to `develop`, pull the latest changes, create the next branch, and start the next ready issue in the same lane.
 
@@ -165,6 +177,7 @@ Before starting an issue, the agent should verify:
 - the issue does not require a blocked backend contract
 - the issue does not modify a protected zone without approval
 - the issue stays small enough for a focused PR
+- the short branch slug is clear enough to recognize the issue quickly
 
 ## Suggested operating rhythm
 
