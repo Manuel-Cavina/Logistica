@@ -1,147 +1,167 @@
-  - key: E2-BE
-    title: Onboarding y perfil de transportista backend
-    milestone: Sprint 2
-    labels: [backend, transporter, feature]
+
+
+  - key: E3-BE
+    title: Vehiculos y trailers backend
+    milestone: Sprint 3
+    labels: [backend, feature,vehiculos-trailers, mvp]
     issues:
-      - title: Extender modelo TransporterProfile con verificationStatus
-        objective: Preparar el perfil del transportista para soportar el flujo de onboarding y verificación manual.
+      - title: Extender schema con Vehicle, Trailer, CargoType y CapacityUnit
+        objective: Incorporar las entidades operativas del transportista con base multi-rubro lista para E3.
         implementation:
-          - Agregar enum TransporterVerificationStatus
-          - Agregar campo verificationStatus a TransporterProfile
-          - Definir estado inicial INCOMPLETE
-          - Ejecutar migración y generar Prisma Client
+          - Agregar modelo Vehicle relacionado a TransporterProfile
+          - Agregar modelo Trailer relacionado a TransporterProfile y opcionalmente a Vehicle
+          - Agregar enums CargoType y CapacityUnit
+          - Ejecutar migracion y regenerar Prisma Client
         acceptance:
-          - Existe enum TransporterVerificationStatus
-          - TransporterProfile tiene verificationStatus
-          - El estado inicial es INCOMPLETE
-          - La migración corre sin errores
+          - Existe el modelo Vehicle
+          - Existe el modelo Trailer
+          - Existen CargoType y CapacityUnit
+          - La migracion corre sin errores
 
-      - title: Implementar actualización de perfil de transportista
-        objective: Permitir que un transportista complete sus datos básicos de perfil y operación.
+      - title: Implementar alta de vehicle para el transportista autenticado
+        objective: Permitir que un transportista registre su unidad principal con datos minimos validos.
         implementation:
-          - Crear método de servicio para actualizar TransporterProfile
-          - Permitir actualizar displayName, businessName, contactPhone, bio y maxDetourKmDefault
-          - Validar que solo el propio transportista pueda actualizar su perfil
+          - Crear servicio de alta de Vehicle
+          - Validar patente, marca y modelo
+          - Restringir la creacion al transportista autenticado
         acceptance:
-          - Transportista puede actualizar su perfil
-          - Solo el dueño del perfil puede modificarlo
-          - Los datos quedan persistidos correctamente
+          - Transportista puede crear un vehicle
+          - La patente, marca y modelo quedan persistidos
+          - Otro usuario no puede crear vehicles en nombre ajeno
 
-      - title: Implementar transición de INCOMPLETE a PENDING
-        objective: Marcar el perfil como pendiente de verificación cuando el transportista completa los campos requeridos.
+      - title: Implementar actualizacion y desactivacion de vehicle
+        objective: Permitir mantener actualizado el vehicle sin borrar historial operativo.
         implementation:
-          - Definir qué campos son obligatorios para considerar perfil completo
-          - Agregar lógica de transición a PENDING
-          - Evitar transición si faltan datos mínimos
+          - Crear endpoint de actualizacion de Vehicle
+          - Permitir desactivar sin hard delete
+          - Validar que solo el dueno del recurso pueda editarlo
         acceptance:
-          - Un perfil incompleto no pasa a PENDING
-          - Un perfil completo pasa a PENDING
-          - La transición ocurre de forma consistente
+          - Transportista puede editar su vehicle
+          - Transportista puede desactivar su vehicle
+          - Un vehicle desactivado no aparece como operativo
 
-      - title: Implementar endpoint de perfil del transportista autenticado
-        objective: Permitir que el transportista consulte su perfil y su estado de verificación.
+      - title: Implementar alta de trailer con capacidad operativa
+        objective: Permitir que un transportista registre trailers con capacidad valida para el MVP.
         implementation:
-          - Crear endpoint protegido para obtener el TransporterProfile actual
-          - Devolver datos públicos del perfil y verificationStatus
+          - Crear servicio de alta de Trailer
+          - Persistir totalCapacity, cargoType y capacityUnit
+          - Validar que la capacidad sea positiva y consistente
         acceptance:
-          - El endpoint existe
-          - Devuelve el perfil del transportista autenticado
-          - Incluye verificationStatus
-          - No expone datos sensibles
+          - Transportista puede crear un trailer
+          - El trailer guarda totalCapacity, cargoType y capacityUnit
+          - No se aceptan capacidades invalidas
 
-      - title: Implementar endpoint de actualización del perfil del transportista
-        objective: Permitir que el transportista complete y edite su perfil desde frontend.
+      - title: Implementar actualizacion y desactivacion de trailer
+        objective: Permitir administrar el ciclo de vida del trailer sin eliminar datos historicos.
         implementation:
-          - Crear endpoint protegido de update de TransporterProfile
-          - Validar payload
-          - Reusar lógica de servicio
+          - Crear endpoint de actualizacion de Trailer
+          - Permitir desactivar sin hard delete
+          - Validar ownership del recurso
         acceptance:
-          - El endpoint existe
-          - Actualiza correctamente los datos permitidos
-          - Respeta permisos del usuario autenticado
+          - Transportista puede editar su trailer
+          - Transportista puede desactivar su trailer
+          - Un trailer desactivado no aparece como operativo
 
-      - title: Implementar vista admin mínima de perfiles transportistas
-        objective: Permitir que un admin liste y vea perfiles de transportistas para revisión manual.
+      - title: Implementar listados autenticados de vehicles y trailers del transportista
+        objective: Permitir que el frontend consulte la flota actual del transportista con separacion clara por recurso.
         implementation:
-          - Crear endpoint admin para listar transportistas
-          - Permitir filtrar por verificationStatus
-          - Crear endpoint admin para ver detalle de un perfil
+          - Crear endpoint para listar vehicles del transportista autenticado
+          - Crear endpoint para listar trailers del transportista autenticado
+          - Ordenar los resultados priorizando recursos activos
         acceptance:
-          - Admin puede listar perfiles
-          - Admin puede ver detalle
-          - Se puede filtrar por estado
+          - Existen ambos endpoints de listado
+          - El transportista ve solo sus recursos
+          - Los recursos activos se distinguen correctamente
 
-      - title: Implementar cambio manual de verificationStatus por admin
-        objective: Permitir que el admin marque un transportista como VERIFIED o REJECTED.
+      - title: Implementar criterio reutilizable de trailer activo para operacion futura
+        objective: Dejar preparada la validacion base que E4 usara para exigir al menos un trailer activo antes de publicar ofertas.
         implementation:
-          - Crear endpoint admin para actualizar verificationStatus
-          - Restringir transición a VERIFIED o REJECTED
-          - Guardar estado final
+          - Crear metodo de dominio o servicio consultable para verificar trailers activos
+          - Reusar el criterio desde backend sin duplicar queries
+          - Documentar el contrato esperado para E4
         acceptance:
-          - Admin puede cambiar estado a VERIFIED
-          - Admin puede cambiar estado a REJECTED
-          - Un transportista no puede cambiar su propio estado
-  - key: E2-FE
-    title: Onboarding y perfil de transportista frontend
-    milestone: Sprint 2
-    labels: [frontend, transporter, feature]
+          - El backend puede determinar si un transportista tiene trailer activo
+          - El criterio es reutilizable desde futuros modulos
+          - No depende todavia de TripOffer
+
+  - key: E3-FE
+    title: Vehiculos y trailers frontend
+    milestone: Sprint 3
+    labels: [frontend, vehiculos-trailers, feature]
     issues:
-      - title: Crear pantalla de onboarding del transportista
-        objective: Permitir que un transportista complete sus datos básicos luego del registro.
+      - title: Crear seccion de flota del transportista
+        objective: Dar un punto de entrada claro para administrar vehicles y trailers desde el area protegida.
         implementation:
-          - Crear vista de onboarding para TRANSPORTER
-          - Renderizar formulario con campos del perfil
-          - Conectar con endpoint de actualización
+          - Crear pagina o seccion de flota para TRANSPORTER
+          - Separar visualmente vehicles y trailers
+          - Conectar con los listados reales del backend
         acceptance:
-          - Existe pantalla de onboarding
-          - El formulario muestra los campos requeridos
-          - Se conecta con la API real
+          - Existe una vista de flota
+          - Vehicles y trailers se muestran en bloques separados
+          - La vista consume la API real
 
-      - title: Implementar formulario de perfil transportista
-        objective: Permitir edición de datos básicos de contacto y operación.
+      - title: Implementar formulario de alta de vehicle
+        objective: Permitir registrar un vehicle desde frontend con validaciones coherentes con backend.
         implementation:
-          - Crear formulario tipado
-          - Validar displayName y contactPhone
-          - Manejar estados loading, success y error
+          - Crear formulario tipado para Vehicle
+          - Validar patente, marca y modelo
+          - Manejar loading, success y error
         acceptance:
           - El formulario valida correctamente
-          - Guarda los datos en backend
-          - Muestra feedback adecuado
+          - El vehicle se crea desde la UI
+          - El usuario recibe feedback claro
 
-      - title: Mostrar estado de verificación del transportista
-        objective: Permitir que el transportista vea claramente su estado actual.
+      - title: Implementar edicion y desactivacion de vehicle en la UI
+        objective: Permitir mantener actualizado el vehicle desde la vista de flota.
         implementation:
-          - Consumir endpoint de perfil actual
-          - Mostrar badge o estado visible
-          - Soportar INCOMPLETE, PENDING, VERIFIED y REJECTED
+          - Agregar accion de editar vehicle
+          - Agregar accion de desactivar vehicle
+          - Refrescar el listado luego de la mutacion
         acceptance:
-          - El transportista ve su estado actualizado
-          - Los estados se renderizan correctamente
+          - El transportista puede editar un vehicle desde la UI
+          - El transportista puede desactivar un vehicle desde la UI
+          - El estado visible se actualiza correctamente
 
-      - title: Redirigir transportista a onboarding si su perfil está incompleto
-        objective: Asegurar que el flujo lleve al transportista a completar su perfil antes de operar.
+      - title: Implementar formulario de alta de trailer
+        objective: Permitir registrar trailers con capacidad operativa visible para el transportista.
         implementation:
-          - Evaluar role y verificationStatus al iniciar sesión
-          - Redirigir a onboarding si corresponde
+          - Crear formulario tipado para Trailer
+          - Exponer totalCapacity, cargoType y capacityUnit
+          - Inicializar defaults del MVP con EQUINE y SLOT donde corresponda
         acceptance:
-          - Un transportista INCOMPLETE es redirigido a onboarding
-          - Un transportista PENDING o VERIFIED no vuelve innecesariamente
+          - El formulario valida correctamente
+          - El trailer se crea desde la UI
+          - Se muestran cargoType y capacityUnit de forma entendible
 
-      - title: Crear vista admin mínima de revisión de transportistas
-        objective: Permitir que un admin vea perfiles y cambie su estado.
+      - title: Implementar edicion y desactivacion de trailer en la UI
+        objective: Permitir administrar trailers activos e inactivos desde la vista de flota.
         implementation:
-          - Crear listado admin de transportistas
-          - Mostrar estado actual
-          - Agregar acción para aprobar o rechazar
+          - Agregar accion de editar trailer
+          - Agregar accion de desactivar trailer
+          - Refrescar el listado luego de la mutacion
         acceptance:
-          - Admin puede ver transportistas
-          - Admin puede cambiar estado desde la UI
+          - El transportista puede editar un trailer desde la UI
+          - El transportista puede desactivar un trailer desde la UI
+          - El estado visible se actualiza correctamente
 
-      - title: Reflejar cambios de estado en tiempo de uso
-        objective: Mantener visible el estado de verificación actualizado para el transportista.
+      - title: Mostrar capacidad y clasificacion operativa de la flota
+        objective: Hacer visible la informacion minima que despues se reutilizara al crear ofertas.
         implementation:
-          - Refrescar estado al volver a la vista o al cargar sesión
-          - Mostrar mensajes según estado
+          - Mostrar totalCapacity en cards o filas de trailer
+          - Mostrar cargoType y capacityUnit
+          - Diferenciar recursos activos e inactivos
         acceptance:
-          - El estado se actualiza correctamente
-          - El usuario entiende si está pendiente, verificado o rechazado
+          - La capacidad del trailer es visible
+          - cargoType y capacityUnit se renderizan correctamente
+          - El usuario distingue recursos activos de inactivos
+
+      - title: Mostrar elegibilidad operativa segun trailer activo
+        objective: Anticipar el requisito funcional de E4 sin acoplar todavia la creacion de ofertas.
+        implementation:
+          - Consultar si el transportista tiene al menos un trailer activo
+          - Mostrar mensaje de estado operativo en la vista de flota
+          - Guiar al usuario cuando aun no puede operar
+        acceptance:
+          - El usuario entiende si ya tiene flota operativa minima
+          - La UI informa cuando falta un trailer activo
+          - La vista queda lista para reutilizar la regla en E4
