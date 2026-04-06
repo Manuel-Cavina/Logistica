@@ -3,30 +3,58 @@ description: Agregar una nueva funcionalidad
 title: "[FEAT] "
 labels: ["feature"]
 body:
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Carril responsable
+      description: Elegir un unico carril para evitar trabajo cruzado
+      options:
+        - backend-e3
+        - frontend-e2-redesign
+        - shared-support
+    validations:
+      required: true
+
   - type: textarea
     id: descripcion
     attributes:
-      label: Descripción
-      description: ¿Qué debe hacer esta feature? ¿Por qué es necesaria?
+      label: Descripcion
+      description: Que debe hacer esta feature y por que es necesaria
     validations:
       required: true
 
   - type: textarea
     id: criterios
     attributes:
-      label: Criterios de aceptación
+      label: Criterios de aceptacion
       description: Condiciones concretas que deben cumplirse para marcarla como done
       placeholder: |
         - [ ] El usuario puede hacer X
         - [ ] Si Y falla, se muestra Z
-        - [ ] Pasa tests de...
+        - [ ] Pasa tests relevantes
     validations:
       required: true
 
   - type: textarea
+    id: non_goals
+    attributes:
+      label: No hacer
+      description: Limites del issue para que el agente no se salga de alcance
+      placeholder: |
+        - No cambiar contratos backend existentes
+        - No tocar auth, pagos o zonas protegidas
+
+  - type: input
+    id: depends_on
+    attributes:
+      label: Dependencias
+      description: Issues o PRs que deben mergearse primero
+      placeholder: "#123, #124 o N/A"
+
+  - type: textarea
     id: como_testear
     attributes:
-      label: Cómo testear
+      label: Como testear
       description: Pasos para verificar el comportamiento manualmente
     validations:
       required: true
@@ -34,11 +62,18 @@ body:
   - type: input
     id: epica
     attributes:
-      label: Épica relacionada
-      placeholder: "E3 — Ofertas de viaje"
+      label: Epica relacionada
+      placeholder: "E3 - Vehiculos y trailers"
+
+  - type: textarea
+    id: contract_notes
+    attributes:
+      label: Notas de contrato o API
+      description: Aclarar si el issue consume contrato existente o requiere soporte backend adicional
+      placeholder: Usa el backend existente sin cambios / Requiere nuevo endpoint / Requiere nuevo campo
 
   - type: textarea
     id: notas
     attributes:
-      label: Notas técnicas / decisiones
+      label: Notas tecnicas o decisiones
       description: Restricciones, edge cases o decisiones de arquitectura a tener en cuenta

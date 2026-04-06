@@ -8,6 +8,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "issues:create": "node scripts/create-github-issues.mjs",
+    "agent:branch": "node scripts/agent-workflow.mjs branch",
+    "agent:pr": "node scripts/agent-workflow.mjs pr",
     "test": "turbo run test"
   },
   "devDependencies": {

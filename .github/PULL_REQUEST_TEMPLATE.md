@@ -1,34 +1,55 @@
-## Qué hace este PR
+## Summary
 
-<!-- Describir el cambio en una o dos oraciones -->
+<!-- Explicar el cambio en 2 o 3 puntos claros -->
 
-## Tipo de cambio
+- Closes #<issue-number>
+- Lane: `backend-e3` | `frontend-e2-redesign` | `shared-support`
+- Scope: <!-- que cambia y que no cambia -->
 
-- [ ] Nueva feature
-- [ ] Fix
-- [ ] Refactor
-- [ ] Documentación
-- [ ] Infraestructura / configuración
+## Why
 
-## Cómo testear
+<!-- Contexto del problema y por que se hace ahora -->
 
-<!-- Pasos para verificar el cambio manualmente -->
+## Acceptance Criteria
+
+<!-- Copiar los criterios del issue y marcar lo completado -->
+
+- [ ] Criterio 1
+- [ ] Criterio 2
+- [ ] Criterio 3
+
+## Validation
+
+<!-- Comandos corridos y chequeos manuales -->
+
+- [ ] `pnpm lint`
+- [ ] `pnpm typecheck`
+- [ ] `pnpm test`
+- [ ] Validacion manual realizada
+
+## Risks
+
+<!-- Riesgos residuales, deuda asumida o aclaracion de None -->
+
+- None
+
+## Screenshots / Evidence
+
+<!-- Adjuntar screenshots si toca UI o pegar evidencia relevante -->
+
+## Handoff Notes
+
+<!-- Notas para review, merge y proximo issue del carril -->
+
+- Next ready issue:
+- Contract changes:
+- Protected zones touched:
 
 ## Checklist
 
-- [ ] Pasa `pnpm lint`
-- [ ] Pasa `pnpm typecheck`
-- [ ] Pasa `pnpm test`
-- [ ] No toca zonas protegidas sin aprobación explícita
-- [ ] Incluye manejo de errores si aplica
+- [ ] Un solo proposito claro
+- [ ] No toca zonas protegidas sin aprobacion explicita
+- [ ] Incluye manejo razonable de errores si aplica
 - [ ] `.env.example` actualizado si se agregaron variables
-- [ ] Documentación actualizada si cambia comportamiento importante
-- [ ] PR chico y revisable (1 propósito claro)
-
-## Screenshots (si toca UI)
-
-<!-- Adjuntar antes/después si aplica -->
-
-## Notas adicionales
-
-<!-- Decisiones tomadas, deuda asumida, edge cases cubiertos -->
+- [ ] Documentacion actualizada si cambia comportamiento importante
+- [ ] PR chico y revisable
