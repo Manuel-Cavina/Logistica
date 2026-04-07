@@ -27,6 +27,20 @@ enum TransporterVerificationStatus {
   REJECTED
 }
 
+enum CargoType {
+  EQUINE
+  GENERAL_CARGO
+  FOOD
+  PEOPLE
+}
+
+enum CapacityUnit {
+  SLOT
+  KG
+  M3
+  SEAT
+}
+
 model Account {
   id                 String              @id @default(cuid())
   email              String              @unique
@@ -76,8 +90,49 @@ model TransporterProfile {
   updatedAt          DateTime  @updatedAt
 
   account            Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  vehicles           Vehicle[]
+  trailers           Trailer[]
 
   @@map("transporter_profiles")
+}
+
+model Vehicle {
+  id                    String    @id @default(cuid())
+  transporterProfileId   String
+  licensePlate           String    @unique
+  brand                  String
+  model                  String
+  isActive               Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  transporterProfile     TransporterProfile @relation(fields: [transporterProfileId], references: [id], onDelete: Cascade)
+  trailers               Trailer[]
+
+  @@index([transporterProfileId])
+  @@index([transporterProfileId, isActive])
+  @@index([isActive])
+  @@map("vehicles")
+}
+
+model Trailer {
+  id                    String    @id @default(cuid())
+  transporterProfileId   String
+  vehicleId              String?
+  totalCapacity          Int
+  cargoType              CargoType @default(EQUINE)
+  capacityUnit           CapacityUnit @default(SLOT)
+  isActive               Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  transporterProfile     TransporterProfile @relation(fields: [transporterProfileId], references: [id], onDelete: Cascade)
+  vehicle                Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  @@index([transporterProfileId])
+  @@index([transporterProfileId, isActive])
+  @@index([vehicleId])
+  @@map("trailers")
 }
 
 model Session {
