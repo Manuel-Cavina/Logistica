@@ -5,6 +5,7 @@ import { AdminModule } from './admin/admin.module';
 import { AccountsModule } from './identity/accounts/accounts.module';
 import { AuthenticationModule } from './identity/authentication/authentication.module';
 import { TransporterProfileModule } from './identity/transporter-profile/transporter-profile.module';
+import { VehicleModule } from './vehicle/vehicle.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TransporterProfileModule } from './identity/transporter-profile/transpo
     AccountsModule,
     AuthenticationModule,
     TransporterProfileModule,
+    VehicleModule,
   ],
   controllers: [],
   providers: [],
