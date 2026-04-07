@@ -23,7 +23,9 @@ describe("DashboardNavigation", () => {
 
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /Ir al dashboard/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Ver panel del transportista/i }),
+    );
 
     expect(push).toHaveBeenCalledWith("/dashboard");
   });
@@ -33,7 +35,7 @@ describe("DashboardNavigation", () => {
 
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /Completar onboarding/i }));
+    await user.click(screen.getByRole("button", { name: /Abrir onboarding/i }));
 
     expect(push).toHaveBeenCalledWith("/onboarding/transporter");
   });

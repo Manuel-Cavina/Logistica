@@ -5,22 +5,30 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type DashboardDestination = {
+  eyebrow: string;
   description: string;
   href: string;
+  meta: string;
   title: string;
   variant?: "ghost" | "primary";
 };
 
 const DASHBOARD_DESTINATIONS: DashboardDestination[] = [
   {
-    description: "Volver a la vista principal del area privada.",
+    description:
+      "Consulta el resumen del estado actual, la hoja de ruta del area privada y los accesos mas usados.",
+    eyebrow: "Panel actual",
     href: "/dashboard",
-    title: "Ir al dashboard",
+    meta: "Ruta principal protegida",
+    title: "Ver panel del transportista",
   },
   {
-    description: "Continuar con la carga y revision del perfil transportista.",
+    description:
+      "Segui con la carga y revision del perfil transportista sin salir del flujo protegido actual.",
+    eyebrow: "Siguiente paso",
     href: "/onboarding/transporter",
-    title: "Completar onboarding",
+    meta: "Continua donde lo dejaste",
+    title: "Abrir onboarding",
     variant: "ghost",
   },
 ];
@@ -41,29 +49,40 @@ export function DashboardNavigation() {
           className="text-lg font-semibold text-foreground"
           id="dashboard-navigation-title"
         >
-          Accesos rapidos
+          Accesos prioritarios
         </h2>
         <p className="text-sm leading-6 text-muted">
-          Usa estos accesos para moverte entre las rutas privadas disponibles
-          despues de iniciar sesion.
+          Usa estos accesos para moverte entre las rutas protegidas mas
+          importantes sin perder el contexto de tu sesion.
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {DASHBOARD_DESTINATIONS.map(({ description, href, title, variant }) => (
+        {DASHBOARD_DESTINATIONS.map(
+          ({ description, eyebrow, href, meta, title, variant }) => (
           <Button
-            className="h-auto min-h-14 flex-col items-start px-5 py-4 text-left"
+            className="h-auto min-h-[11rem] flex-col items-start justify-between rounded-[1.8rem] px-5 py-5 text-left"
             key={href}
             onClick={() => handleNavigation(href)}
             type="button"
             variant={variant}
           >
-            <span>{title}</span>
-            <span className="text-sm font-normal leading-6 text-current/80">
-              {description}
+            <div className="space-y-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-current/70">
+                {eyebrow}
+              </span>
+              <span className="block text-lg font-semibold leading-7">{title}</span>
+              <span className="block text-sm font-normal leading-6 text-current/80">
+                {description}
+              </span>
+            </div>
+
+            <span className="inline-flex rounded-full border border-current/15 bg-black/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-current/80">
+              {meta}
             </span>
           </Button>
-        ))}
+          ),
+        )}
       </div>
     </section>
   );
