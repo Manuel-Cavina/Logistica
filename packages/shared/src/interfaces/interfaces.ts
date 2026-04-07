@@ -5,6 +5,7 @@ import {
   RegisterClientSchema,
   RegisterTransporterSchema,
 } from "../schemas/auth.schema";
+import { CreateVehicleSchema } from "../schemas/vehicle.schema";
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
@@ -64,6 +65,15 @@ export type ITransporterProfileView = z.infer<
   typeof TransporterProfileViewSchema
 >;
 
+export const VehicleViewSchema = z.object({
+  id: cuidSchema,
+  licensePlate: z.string().trim().min(1).max(8),
+  brand: z.string().trim().min(1).max(80),
+  model: z.string().trim().min(1).max(80),
+  isActive: z.boolean(),
+});
+export type IVehicleView = z.infer<typeof VehicleViewSchema>;
+
 export type IUpdateTransporterProfileDto = {
   displayName?: string;
   businessName?: string | null;
@@ -71,6 +81,9 @@ export type IUpdateTransporterProfileDto = {
   bio?: string | null;
   maxDetourKmDefault?: number | null;
 };
+
+export const CreateVehicleDtoSchema = CreateVehicleSchema;
+export type ICreateVehicleDto = z.infer<typeof CreateVehicleDtoSchema>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])
