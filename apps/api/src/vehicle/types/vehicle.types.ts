@@ -17,6 +17,7 @@ export type CreateVehicleInput = ICreateVehicleDto;
 export type VehicleRecord = Prisma.VehicleGetPayload<{
   select: typeof vehicleSelect;
 }>;
-export type TransporterProfileOwnerRecord = Prisma.TransporterProfileGetPayload<{
-  select: typeof transporterProfileOwnerSelect;
-}>;
+export type TransporterProfileOwnerRecord =
+  Prisma.TransporterProfileGetPayload<{
+    select: typeof transporterProfileOwnerSelect;
+  }>;

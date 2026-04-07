@@ -5,7 +5,10 @@ import type {
   TransporterProfileOwnerRecord,
   VehicleRecord,
 } from '../types/vehicle.types';
-import { transporterProfileOwnerSelect, vehicleSelect } from '../types/vehicle.types';
+import {
+  transporterProfileOwnerSelect,
+  vehicleSelect,
+} from '../types/vehicle.types';
 
 @Injectable()
 export class VehicleRepository {
@@ -20,7 +23,9 @@ export class VehicleRepository {
     });
   }
 
-  async findByLicensePlate(licensePlate: string): Promise<VehicleRecord | null> {
+  async findByLicensePlate(
+    licensePlate: string,
+  ): Promise<VehicleRecord | null> {
     return this.prisma.vehicle.findUnique({
       where: { licensePlate },
       select: vehicleSelect,

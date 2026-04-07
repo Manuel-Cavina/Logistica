@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@logistica/database';
 import { VehicleService } from './vehicle.service';
 
 describe('VehicleService', () => {
@@ -42,15 +43,20 @@ describe('VehicleService', () => {
       isActive: true,
     });
 
-    expect(vehicleRepository.findTransporterProfileByAccountId).toHaveBeenCalledWith(
-      'account-id',
+    expect(
+      vehicleRepository.findTransporterProfileByAccountId,
+    ).toHaveBeenCalledWith('account-id');
+    expect(vehicleRepository.findByLicensePlate).toHaveBeenCalledWith(
+      'AB123CD',
     );
-    expect(vehicleRepository.findByLicensePlate).toHaveBeenCalledWith('AB123CD');
-    expect(vehicleRepository.create).toHaveBeenCalledWith('transporter-profile-id', {
-      licensePlate: 'AB123CD',
-      brand: 'Scania',
-      model: 'R450',
-    });
+    expect(vehicleRepository.create).toHaveBeenCalledWith(
+      'transporter-profile-id',
+      {
+        licensePlate: 'AB123CD',
+        brand: 'Scania',
+        model: 'R450',
+      },
+    );
   });
 
   it('throws when the authenticated account has no transporter profile', async () => {
@@ -89,5 +95,26 @@ describe('VehicleService', () => {
     ).rejects.toThrow(ConflictException);
 
     expect(vehicleRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('throws conflict when create fails with a unique constraint race', async () => {
+    vehicleRepository.findTransporterProfileByAccountId.mockResolvedValue({
+      id: 'transporter-profile-id',
+    });
+    vehicleRepository.findByLicensePlate.mockResolvedValue(null);
+    vehicleRepository.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed.', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+
+    await expect(
+      vehicleService.createOwnVehicle('account-id', {
+        licensePlate: 'ab123cd',
+        brand: 'Scania',
+        model: 'R450',
+      }),
+    ).rejects.toThrow(ConflictException);
   });
 });

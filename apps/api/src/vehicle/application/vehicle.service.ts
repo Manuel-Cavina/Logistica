@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@logistica/database';
 import type { VehicleResponseDto } from '../dto/vehicle.response.dto';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import type { CreateVehicleInput, VehicleRecord } from '../types/vehicle.types';
@@ -26,15 +31,27 @@ export class VehicleService {
     );
 
     if (existingVehicle) {
-      throw new ConflictException('A vehicle with this license plate already exists.');
+      throw new ConflictException(
+        'A vehicle with this license plate already exists.',
+      );
     }
 
-    const createdVehicle = await this.vehicleRepository.create(
-      transporterProfile.id,
-      normalizedInput,
-    );
+    try {
+      const createdVehicle = await this.vehicleRepository.create(
+        transporterProfile.id,
+        normalizedInput,
+      );
 
-    return this.toVehicleResponse(createdVehicle);
+      return this.toVehicleResponse(createdVehicle);
+    } catch (error) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw new ConflictException(
+          'A vehicle with this license plate already exists.',
+        );
+      }
+
+      throw error;
+    }
   }
 
   private normalizeInput(input: CreateVehicleInput): CreateVehicleInput {
@@ -53,5 +70,12 @@ export class VehicleService {
       model: vehicle.model,
       isActive: vehicle.isActive,
     };
+  }
+
+  private isUniqueConstraintViolation(error: unknown): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
   }
 }
