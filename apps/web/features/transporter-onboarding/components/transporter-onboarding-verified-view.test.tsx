@@ -43,6 +43,9 @@ describe("TransporterOnboardingVerifiedView", () => {
       />,
     );
 
+    expect(
+      screen.getByText(/Ya podes continuar al dashboard cuando termine la confirmacion/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Verificacion completada con exito/i)).toBeInTheDocument();
     expect(screen.getByText(/Te llevamos al dashboard en unos segundos/i)).toBeInTheDocument();
 

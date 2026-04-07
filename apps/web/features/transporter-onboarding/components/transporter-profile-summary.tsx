@@ -31,15 +31,15 @@ export function TransporterProfileSummary({
   profile,
 }: TransporterProfileSummaryProps) {
   return (
-    <Card className="p-6 sm:p-8">
-      <CardHeader>
+    <Card className="border-white/70 bg-white/85 p-6 shadow-[0_16px_40px_rgba(21,40,33,0.08)] sm:p-8">
+      <CardHeader className="space-y-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
           Perfil actual
         </p>
-        <CardTitle>Resumen de tu perfil</CardTitle>
+        <CardTitle>Resumen rapido de tu perfil</CardTitle>
         <CardDescription>
-          Te mostramos la informacion disponible de tu perfil para que puedas revisarla
-          antes de continuar.
+          Te mostramos la informacion disponible de tu perfil para que puedas
+          revisarla antes de continuar.
         </CardDescription>
       </CardHeader>
 
@@ -48,7 +48,7 @@ export function TransporterProfileSummary({
           {summaryLabels.map((field) => (
             <div
               key={field.key}
-              className="rounded-[1.5rem] border border-border/70 bg-background/70 px-4 py-4"
+              className="rounded-[1.5rem] border border-border/70 bg-background/80 px-4 py-4"
             >
               <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                 {field.label}

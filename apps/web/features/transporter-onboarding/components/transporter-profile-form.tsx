@@ -142,8 +142,11 @@ export function TransporterProfileForm({
       : undefined;
 
   return (
-    <Card className="p-6 sm:p-8" id="profile-form">
-      <CardHeader>
+    <Card
+      className="border-white/70 bg-white/85 p-6 shadow-[0_16px_40px_rgba(21,40,33,0.08)] sm:p-8"
+      id="profile-form"
+    >
+      <CardHeader className="space-y-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
           Datos del perfil
         </p>

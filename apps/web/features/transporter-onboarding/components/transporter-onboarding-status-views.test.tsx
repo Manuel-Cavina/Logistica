@@ -23,7 +23,7 @@ function buildProfile(
 describe("Transporter onboarding status views", () => {
   const onSuccess = jest.fn();
 
-  it("shows the reusable incomplete verification card and the form placeholder", () => {
+  it("shows the redesigned incomplete onboarding with the form placeholder", () => {
     render(
       <TransporterOnboardingIncompleteView
         onSuccess={onSuccess}
@@ -32,7 +32,7 @@ describe("Transporter onboarding status views", () => {
     );
 
     expect(
-      screen.getByText(/Completa tu perfil para avanzar con la verificacion/i),
+      screen.getByText(/Ruta de activacion/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Completar perfil/i }),
@@ -42,14 +42,16 @@ describe("Transporter onboarding status views", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the reusable pending verification card without CTA", () => {
+  it("shows the redesigned pending onboarding without CTA", () => {
     render(<TransporterOnboardingPendingView profile={buildProfile("PENDING")} />);
 
-    expect(screen.getByText("En revision")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Tu perfil ya entro en revision manual/i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("shows the reusable rejected verification card without inventing reasons", () => {
+  it("shows the redesigned rejected onboarding without inventing reasons", () => {
     render(
       <TransporterOnboardingRejectedView
         onSuccess={onSuccess}
@@ -57,7 +59,9 @@ describe("Transporter onboarding status views", () => {
       />,
     );
 
-    expect(screen.getByText("Requiere correcciones")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Corregi lo necesario y vuelve a enviar/i),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Revisar datos del perfil/i }),
     ).toHaveAttribute("href", "#profile-form");
