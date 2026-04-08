@@ -13,6 +13,7 @@ import {
   CapacityUnitSchema,
   CargoTypeSchema,
   CreateTrailerSchema,
+  UpdateTrailerSchema,
 } from '../schemas/trailer.schema';
 
 const emailSchema = z.string().trim().email().max(320);
@@ -107,6 +108,9 @@ export type IUpdateVehicleDto = z.infer<typeof UpdateVehicleDtoSchema>;
 
 export const CreateTrailerDtoSchema = CreateTrailerSchema;
 export type ICreateTrailerDto = z.infer<typeof CreateTrailerDtoSchema>;
+
+export const UpdateTrailerDtoSchema = UpdateTrailerSchema;
+export type IUpdateTrailerDto = z.infer<typeof UpdateTrailerDtoSchema>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])

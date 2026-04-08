@@ -5,7 +5,11 @@ import {
 } from '@nestjs/common';
 import type { TrailerResponseDto } from '../dto/trailer.response.dto';
 import { TrailerRepository } from '../repositories/trailer.repository';
-import type { CreateTrailerInput, TrailerRecord } from '../types/trailer.types';
+import type {
+  CreateTrailerInput,
+  TrailerRecord,
+  UpdateTrailerInput,
+} from '../types/trailer.types';
 
 @Injectable()
 export class TrailerService {
@@ -34,7 +38,68 @@ export class TrailerService {
     return this.toTrailerResponse(createdTrailer);
   }
 
-  private validateOperationalCapacity(input: CreateTrailerInput): void {
+  async updateOwnTrailer(
+    accountId: string,
+    trailerId: string,
+    input: UpdateTrailerInput,
+  ): Promise<TrailerResponseDto> {
+    const existingTrailer = await this.trailerRepository.findOwnedById(
+      accountId,
+      trailerId,
+    );
+
+    if (!existingTrailer) {
+      throw new NotFoundException(
+        'Trailer not found for the authenticated account.',
+      );
+    }
+
+    this.validateOperationalCapacity(input);
+
+    const updatedTrailer = await this.trailerRepository.updateById(
+      trailerId,
+      input,
+    );
+
+    return this.toTrailerResponse(updatedTrailer);
+  }
+
+  async deactivateOwnTrailer(
+    accountId: string,
+    trailerId: string,
+  ): Promise<TrailerResponseDto> {
+    const existingTrailer = await this.trailerRepository.findOwnedById(
+      accountId,
+      trailerId,
+    );
+
+    if (!existingTrailer) {
+      throw new NotFoundException(
+        'Trailer not found for the authenticated account.',
+      );
+    }
+
+    if (!existingTrailer.isActive) {
+      return this.toTrailerResponse(existingTrailer);
+    }
+
+    const deactivatedTrailer = await this.trailerRepository.updateById(
+      trailerId,
+      {
+        isActive: false,
+      },
+    );
+
+    return this.toTrailerResponse(deactivatedTrailer);
+  }
+
+  private validateOperationalCapacity(
+    input: Pick<CreateTrailerInput, 'totalCapacity'> | UpdateTrailerInput,
+  ): void {
+    if (input.totalCapacity === undefined) {
+      return;
+    }
+
     if (!Number.isInteger(input.totalCapacity) || input.totalCapacity <= 0) {
       throw new BadRequestException(
         'Trailer total capacity must be a positive integer.',

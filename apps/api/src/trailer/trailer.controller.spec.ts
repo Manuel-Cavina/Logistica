@@ -1,6 +1,7 @@
 import {
   Injectable,
   type ExecutionContext,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -41,6 +42,8 @@ class TestJwtAuthGuard {
 describe('TrailerController', () => {
   const trailerService = {
     createOwnTrailer: jest.fn(),
+    updateOwnTrailer: jest.fn(),
+    deactivateOwnTrailer: jest.fn(),
   };
 
   beforeEach(() => {
@@ -161,6 +164,136 @@ describe('TrailerController', () => {
       .expect(403);
 
     expect(trailerService.createOwnTrailer).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when updating with an invalid trailer id', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .patch('/trailers/trailer-id')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        totalCapacity: 16,
+      })
+      .expect(400);
+
+    expect(trailerService.updateOwnTrailer).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('updates an owned trailer when the id is valid', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+    const trailerId = 'cm9trailer0000wqz5oy7k8ph1';
+
+    trailerService.updateOwnTrailer.mockResolvedValue({
+      id: trailerId,
+      totalCapacity: 16,
+      cargoType: 'GENERAL_CARGO',
+      capacityUnit: 'KG',
+      isActive: true,
+    });
+
+    await request(server)
+      .patch(`/trailers/${trailerId}`)
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+      })
+      .expect(200)
+      .expect({
+        id: trailerId,
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+        isActive: true,
+      });
+
+    expect(trailerService.updateOwnTrailer).toHaveBeenCalledWith(
+      'transporter-account-id',
+      trailerId,
+      {
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+      },
+    );
+
+    await app.close();
+  });
+
+  it('returns 404 when updating a trailer that is not owned by the account', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+    const trailerId = 'cm9trailer0000wqz5oy7k8ph1';
+
+    trailerService.updateOwnTrailer.mockRejectedValue(
+      new NotFoundException('Trailer not found for the authenticated account.'),
+    );
+
+    await request(server)
+      .patch(`/trailers/${trailerId}`)
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .send({
+        totalCapacity: 16,
+      })
+      .expect(404);
+
+    await app.close();
+  });
+
+  it('deactivates an owned trailer for a transporter token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+    const trailerId = 'cm9trailer0000wqz5oy7k8ph1';
+
+    trailerService.deactivateOwnTrailer.mockResolvedValue({
+      id: trailerId,
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: false,
+    });
+
+    await request(server)
+      .patch(`/trailers/${trailerId}/deactivate`)
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .expect(200)
+      .expect({
+        id: trailerId,
+        totalCapacity: 12,
+        cargoType: 'EQUINE',
+        capacityUnit: 'SLOT',
+        isActive: false,
+      });
+
+    expect(trailerService.deactivateOwnTrailer).toHaveBeenCalledWith(
+      'transporter-account-id',
+      trailerId,
+    );
+
+    await app.close();
+  });
+
+  it('returns 404 when deactivating a trailer that is not owned by the account', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+    const trailerId = 'cm9trailer0000wqz5oy7k8ph1';
+
+    trailerService.deactivateOwnTrailer.mockRejectedValue(
+      new NotFoundException('Trailer not found for the authenticated account.'),
+    );
+
+    await request(server)
+      .patch(`/trailers/${trailerId}/deactivate`)
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .expect(404);
 
     await app.close();
   });

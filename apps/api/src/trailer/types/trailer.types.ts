@@ -1,5 +1,5 @@
 import type { Prisma } from '@logistica/database';
-import type { ICreateTrailerDto } from '@logistica/shared';
+import type { ICreateTrailerDto, IUpdateTrailerDto } from '@logistica/shared';
 
 export const trailerSelect = {
   id: true,
@@ -14,6 +14,7 @@ export const transporterProfileOwnerSelect = {
 } satisfies Prisma.TransporterProfileSelect;
 
 export type CreateTrailerInput = ICreateTrailerDto;
+export type UpdateTrailerInput = IUpdateTrailerDto;
 export type TrailerRecord = Prisma.TrailerGetPayload<{
   select: typeof trailerSelect;
 }>;
@@ -21,3 +22,4 @@ export type TransporterProfileOwnerRecord =
   Prisma.TransporterProfileGetPayload<{
     select: typeof transporterProfileOwnerSelect;
   }>;
+export type TrailerUpdateData = Prisma.TrailerUpdateInput;

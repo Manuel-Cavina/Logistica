@@ -4,7 +4,9 @@ import { TrailerService } from './trailer.service';
 describe('TrailerService', () => {
   const trailerRepository = {
     findTransporterProfileByAccountId: jest.fn(),
+    findOwnedById: jest.fn(),
     create: jest.fn(),
+    updateById: jest.fn(),
   };
 
   let trailerService: TrailerService;
@@ -81,5 +83,107 @@ describe('TrailerService', () => {
     ).rejects.toThrow(BadRequestException);
 
     expect(trailerRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('updates an owned trailer', async () => {
+    trailerRepository.findOwnedById.mockResolvedValue({
+      id: 'trailer-id',
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: true,
+    });
+    trailerRepository.updateById.mockResolvedValue({
+      id: 'trailer-id',
+      totalCapacity: 16,
+      cargoType: 'GENERAL_CARGO',
+      capacityUnit: 'KG',
+      isActive: true,
+    });
+
+    await expect(
+      trailerService.updateOwnTrailer('account-id', 'trailer-id', {
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+      }),
+    ).resolves.toEqual({
+      id: 'trailer-id',
+      totalCapacity: 16,
+      cargoType: 'GENERAL_CARGO',
+      capacityUnit: 'KG',
+      isActive: true,
+    });
+
+    expect(trailerRepository.findOwnedById).toHaveBeenCalledWith(
+      'account-id',
+      'trailer-id',
+    );
+    expect(trailerRepository.updateById).toHaveBeenCalledWith('trailer-id', {
+      totalCapacity: 16,
+      cargoType: 'GENERAL_CARGO',
+      capacityUnit: 'KG',
+    });
+  });
+
+  it('throws when updating a trailer that is not owned by the account', async () => {
+    trailerRepository.findOwnedById.mockResolvedValue(null);
+
+    await expect(
+      trailerService.updateOwnTrailer('account-id', 'trailer-id', {
+        totalCapacity: 14,
+      }),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(trailerRepository.updateById).not.toHaveBeenCalled();
+  });
+
+  it('throws when updating a trailer with an invalid capacity', async () => {
+    trailerRepository.findOwnedById.mockResolvedValue({
+      id: 'trailer-id',
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: true,
+    });
+
+    await expect(
+      trailerService.updateOwnTrailer('account-id', 'trailer-id', {
+        totalCapacity: 0,
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(trailerRepository.updateById).not.toHaveBeenCalled();
+  });
+
+  it('deactivates an owned trailer without hard deleting it', async () => {
+    trailerRepository.findOwnedById.mockResolvedValue({
+      id: 'trailer-id',
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: true,
+    });
+    trailerRepository.updateById.mockResolvedValue({
+      id: 'trailer-id',
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: false,
+    });
+
+    await expect(
+      trailerService.deactivateOwnTrailer('account-id', 'trailer-id'),
+    ).resolves.toEqual({
+      id: 'trailer-id',
+      totalCapacity: 12,
+      cargoType: 'EQUINE',
+      capacityUnit: 'SLOT',
+      isActive: false,
+    });
+
+    expect(trailerRepository.updateById).toHaveBeenCalledWith('trailer-id', {
+      isActive: false,
+    });
   });
 });
