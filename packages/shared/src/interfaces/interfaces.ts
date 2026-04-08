@@ -1,19 +1,24 @@
-import { z } from "zod";
+import { z } from 'zod';
 import {
   LoginSchema,
   RegisterSchema,
   RegisterClientSchema,
   RegisterTransporterSchema,
-} from "../schemas/auth.schema";
+} from '../schemas/auth.schema';
 import {
   CreateVehicleSchema,
   UpdateVehicleSchema,
-} from "../schemas/vehicle.schema";
+} from '../schemas/vehicle.schema';
+import {
+  CapacityUnitSchema,
+  CargoTypeSchema,
+  CreateTrailerSchema,
+} from '../schemas/trailer.schema';
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
 
-export const AccountRoleSchema = z.enum(["CLIENT", "TRANSPORTER", "ADMIN"]);
+export const AccountRoleSchema = z.enum(['CLIENT', 'TRANSPORTER', 'ADMIN']);
 export type AccountRole = z.infer<typeof AccountRoleSchema>;
 
 export const RegisterClientDtoSchema = RegisterClientSchema;
@@ -47,10 +52,10 @@ export const UserProfileViewSchema = z.object({
 export type IUserProfileView = z.infer<typeof UserProfileViewSchema>;
 
 export const TransporterVerificationStatusSchema = z.enum([
-  "INCOMPLETE",
-  "PENDING",
-  "VERIFIED",
-  "REJECTED",
+  'INCOMPLETE',
+  'PENDING',
+  'VERIFIED',
+  'REJECTED',
 ]);
 export type ITransporterVerificationStatus = z.infer<
   typeof TransporterVerificationStatusSchema
@@ -77,6 +82,15 @@ export const VehicleViewSchema = z.object({
 });
 export type IVehicleView = z.infer<typeof VehicleViewSchema>;
 
+export const TrailerViewSchema = z.object({
+  id: cuidSchema,
+  totalCapacity: z.number().int().positive(),
+  cargoType: CargoTypeSchema,
+  capacityUnit: CapacityUnitSchema,
+  isActive: z.boolean(),
+});
+export type ITrailerView = z.infer<typeof TrailerViewSchema>;
+
 export type IUpdateTransporterProfileDto = {
   displayName?: string;
   businessName?: string | null;
@@ -90,6 +104,9 @@ export type ICreateVehicleDto = z.infer<typeof CreateVehicleDtoSchema>;
 
 export const UpdateVehicleDtoSchema = UpdateVehicleSchema;
 export type IUpdateVehicleDto = z.infer<typeof UpdateVehicleDtoSchema>;
+
+export const CreateTrailerDtoSchema = CreateTrailerSchema;
+export type ICreateTrailerDto = z.infer<typeof CreateTrailerDtoSchema>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])
