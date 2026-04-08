@@ -31,6 +31,15 @@ const DASHBOARD_DESTINATIONS: DashboardDestination[] = [
     title: "Abrir onboarding",
     variant: "ghost",
   },
+  {
+    description:
+      "Carga el vehicle inicial del transportista con feedback de validacion y respuesta real del backend E3.",
+    eyebrow: "Nuevo flujo E3",
+    href: "/vehicles/new",
+    meta: "Alta minima usable",
+    title: "Registrar vehicle",
+    variant: "ghost",
+  },
 ];
 
 export function DashboardNavigation() {
@@ -57,7 +66,7 @@ export function DashboardNavigation() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {DASHBOARD_DESTINATIONS.map(
           ({ description, eyebrow, href, meta, title, variant }) => (
           <Button
