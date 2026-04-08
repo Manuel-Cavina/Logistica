@@ -3,6 +3,7 @@ import { PrismaService } from '@logistica/database';
 import type {
   CreateTrailerInput,
   TrailerRecord,
+  TrailerUpdateData,
   TransporterProfileOwnerRecord,
 } from '../types/trailer.types';
 import {
@@ -38,6 +39,32 @@ export class TrailerRepository {
         cargoType: input.cargoType,
         capacityUnit: input.capacityUnit,
       },
+      select: trailerSelect,
+    });
+  }
+
+  async findOwnedById(
+    accountId: string,
+    trailerId: string,
+  ): Promise<TrailerRecord | null> {
+    return this.prisma.trailer.findFirst({
+      where: {
+        id: trailerId,
+        transporterProfile: {
+          accountId,
+        },
+      },
+      select: trailerSelect,
+    });
+  }
+
+  async updateById(
+    trailerId: string,
+    data: TrailerUpdateData,
+  ): Promise<TrailerRecord> {
+    return this.prisma.trailer.update({
+      where: { id: trailerId },
+      data,
       select: trailerSelect,
     });
   }
