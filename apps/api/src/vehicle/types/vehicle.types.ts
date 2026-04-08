@@ -14,6 +14,12 @@ export const transporterProfileOwnerSelect = {
 } satisfies Prisma.TransporterProfileSelect;
 
 export type CreateVehicleInput = ICreateVehicleDto;
+export type NormalizedVehicleUpdateInput = {
+  licensePlate?: string;
+  brand?: string;
+  model?: string;
+};
+export type UpdateVehicleInput = NormalizedVehicleUpdateInput;
 export type VehicleRecord = Prisma.VehicleGetPayload<{
   select: typeof vehicleSelect;
 }>;
@@ -21,3 +27,4 @@ export type TransporterProfileOwnerRecord =
   Prisma.TransporterProfileGetPayload<{
     select: typeof transporterProfileOwnerSelect;
   }>;
+export type VehicleUpdateData = Prisma.VehicleUpdateInput;
