@@ -39,4 +39,14 @@ describe("DashboardNavigation", () => {
 
     expect(push).toHaveBeenCalledWith("/onboarding/transporter");
   });
+
+  it("navigates to the vehicle creation route", async () => {
+    render(<DashboardNavigation />);
+
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: /Registrar vehicle/i }));
+
+    expect(push).toHaveBeenCalledWith("/vehicles/new");
+  });
 });
