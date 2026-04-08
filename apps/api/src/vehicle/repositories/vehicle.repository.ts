@@ -4,6 +4,7 @@ import type {
   CreateVehicleInput,
   TransporterProfileOwnerRecord,
   VehicleRecord,
+  VehicleUpdateData,
 } from '../types/vehicle.types';
 import {
   transporterProfileOwnerSelect,
@@ -32,6 +33,21 @@ export class VehicleRepository {
     });
   }
 
+  async findOwnedById(
+    accountId: string,
+    vehicleId: string,
+  ): Promise<VehicleRecord | null> {
+    return this.prisma.vehicle.findFirst({
+      where: {
+        id: vehicleId,
+        transporterProfile: {
+          accountId,
+        },
+      },
+      select: vehicleSelect,
+    });
+  }
+
   async create(
     transporterProfileId: string,
     input: CreateVehicleInput,
@@ -47,6 +63,17 @@ export class VehicleRepository {
         brand: input.brand,
         model: input.model,
       },
+      select: vehicleSelect,
+    });
+  }
+
+  async updateById(
+    vehicleId: string,
+    data: VehicleUpdateData,
+  ): Promise<VehicleRecord> {
+    return this.prisma.vehicle.update({
+      where: { id: vehicleId },
+      data,
       select: vehicleSelect,
     });
   }

@@ -25,4 +25,25 @@ export const CreateVehicleSchema = z
   })
   .strict();
 
+export const UpdateVehicleSchema = z
+  .object({
+    licensePlate: z
+      .string()
+      .trim()
+      .transform((value) => value.toUpperCase())
+      .pipe(
+        z
+          .string()
+          .regex(LICENSE_PLATE_REGEX, 'Ingresa una patente valida.'),
+      )
+      .optional(),
+    brand: requiredTrimmedTextSchema(80, 'Ingresa la marca del vehicle.').optional(),
+    model: requiredTrimmedTextSchema(80, 'Ingresa el modelo del vehicle.').optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'Debes enviar al menos un campo para actualizar el vehicle.',
+  });
+
 export type CreateVehicleDto = z.infer<typeof CreateVehicleSchema>;
+export type UpdateVehicleDto = z.infer<typeof UpdateVehicleSchema>;

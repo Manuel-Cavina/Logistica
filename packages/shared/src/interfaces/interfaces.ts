@@ -5,7 +5,10 @@ import {
   RegisterClientSchema,
   RegisterTransporterSchema,
 } from "../schemas/auth.schema";
-import { CreateVehicleSchema } from "../schemas/vehicle.schema";
+import {
+  CreateVehicleSchema,
+  UpdateVehicleSchema,
+} from "../schemas/vehicle.schema";
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
@@ -84,6 +87,9 @@ export type IUpdateTransporterProfileDto = {
 
 export const CreateVehicleDtoSchema = CreateVehicleSchema;
 export type ICreateVehicleDto = z.infer<typeof CreateVehicleDtoSchema>;
+
+export const UpdateVehicleDtoSchema = UpdateVehicleSchema;
+export type IUpdateVehicleDto = z.infer<typeof UpdateVehicleDtoSchema>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])

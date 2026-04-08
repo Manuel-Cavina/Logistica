@@ -6,7 +6,12 @@ import {
 import { Prisma } from '@logistica/database';
 import type { VehicleResponseDto } from '../dto/vehicle.response.dto';
 import { VehicleRepository } from '../repositories/vehicle.repository';
-import type { CreateVehicleInput, VehicleRecord } from '../types/vehicle.types';
+import type {
+  CreateVehicleInput,
+  NormalizedVehicleUpdateInput,
+  UpdateVehicleInput,
+  VehicleRecord,
+} from '../types/vehicle.types';
 
 @Injectable()
 export class VehicleService {
@@ -54,11 +59,103 @@ export class VehicleService {
     }
   }
 
+  async updateOwnVehicle(
+    accountId: string,
+    vehicleId: string,
+    input: UpdateVehicleInput,
+  ): Promise<VehicleResponseDto> {
+    const existingVehicle = await this.vehicleRepository.findOwnedById(
+      accountId,
+      vehicleId,
+    );
+
+    if (!existingVehicle) {
+      throw new NotFoundException(
+        'Vehicle not found for the authenticated account.',
+      );
+    }
+
+    const normalizedInput = this.normalizeUpdateInput(input);
+
+    if (
+      normalizedInput.licensePlate &&
+      normalizedInput.licensePlate !== existingVehicle.licensePlate
+    ) {
+      const duplicatedVehicle = await this.vehicleRepository.findByLicensePlate(
+        normalizedInput.licensePlate,
+      );
+
+      if (duplicatedVehicle && duplicatedVehicle.id !== existingVehicle.id) {
+        throw new ConflictException(
+          'A vehicle with this license plate already exists.',
+        );
+      }
+    }
+
+    try {
+      const updatedVehicle = await this.vehicleRepository.updateById(
+        vehicleId,
+        normalizedInput,
+      );
+
+      return this.toVehicleResponse(updatedVehicle);
+    } catch (error) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw new ConflictException(
+          'A vehicle with this license plate already exists.',
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async deactivateOwnVehicle(
+    accountId: string,
+    vehicleId: string,
+  ): Promise<VehicleResponseDto> {
+    const existingVehicle = await this.vehicleRepository.findOwnedById(
+      accountId,
+      vehicleId,
+    );
+
+    if (!existingVehicle) {
+      throw new NotFoundException(
+        'Vehicle not found for the authenticated account.',
+      );
+    }
+
+    if (!existingVehicle.isActive) {
+      return this.toVehicleResponse(existingVehicle);
+    }
+
+    const deactivatedVehicle = await this.vehicleRepository.updateById(
+      vehicleId,
+      {
+        isActive: false,
+      },
+    );
+
+    return this.toVehicleResponse(deactivatedVehicle);
+  }
+
   private normalizeInput(input: CreateVehicleInput): CreateVehicleInput {
     return {
       licensePlate: input.licensePlate.trim().toUpperCase(),
       brand: input.brand.trim(),
       model: input.model.trim(),
+    };
+  }
+
+  private normalizeUpdateInput(
+    input: UpdateVehicleInput,
+  ): NormalizedVehicleUpdateInput {
+    return {
+      ...(input.licensePlate !== undefined
+        ? { licensePlate: input.licensePlate.trim().toUpperCase() }
+        : {}),
+      ...(input.brand !== undefined ? { brand: input.brand.trim() } : {}),
+      ...(input.model !== undefined ? { model: input.model.trim() } : {}),
     };
   }
 

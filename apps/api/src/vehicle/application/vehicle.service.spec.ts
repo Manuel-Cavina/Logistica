@@ -6,7 +6,9 @@ describe('VehicleService', () => {
   const vehicleRepository = {
     findTransporterProfileByAccountId: jest.fn(),
     findByLicensePlate: jest.fn(),
+    findOwnedById: jest.fn(),
     create: jest.fn(),
+    updateById: jest.fn(),
   };
 
   let vehicleService: VehicleService;
@@ -116,5 +118,113 @@ describe('VehicleService', () => {
         model: 'R450',
       }),
     ).rejects.toThrow(ConflictException);
+  });
+
+  it('updates an owned vehicle', async () => {
+    vehicleRepository.findOwnedById.mockResolvedValue({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Scania',
+      model: 'R450',
+      isActive: true,
+    });
+    vehicleRepository.updateById.mockResolvedValue({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Mercedes',
+      model: 'Actros',
+      isActive: true,
+    });
+
+    await expect(
+      vehicleService.updateOwnVehicle('account-id', 'vehicle-id', {
+        brand: ' Mercedes ',
+        model: ' Actros ',
+      }),
+    ).resolves.toEqual({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Mercedes',
+      model: 'Actros',
+      isActive: true,
+    });
+
+    expect(vehicleRepository.findOwnedById).toHaveBeenCalledWith(
+      'account-id',
+      'vehicle-id',
+    );
+    expect(vehicleRepository.findByLicensePlate).not.toHaveBeenCalled();
+    expect(vehicleRepository.updateById).toHaveBeenCalledWith('vehicle-id', {
+      brand: 'Mercedes',
+      model: 'Actros',
+    });
+  });
+
+  it('throws when updating a vehicle that is not owned by the account', async () => {
+    vehicleRepository.findOwnedById.mockResolvedValue(null);
+
+    await expect(
+      vehicleService.updateOwnVehicle('account-id', 'vehicle-id', {
+        brand: 'Mercedes',
+      }),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(vehicleRepository.updateById).not.toHaveBeenCalled();
+  });
+
+  it('throws conflict when updating to a duplicated license plate', async () => {
+    vehicleRepository.findOwnedById.mockResolvedValue({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Scania',
+      model: 'R450',
+      isActive: true,
+    });
+    vehicleRepository.findByLicensePlate.mockResolvedValue({
+      id: 'other-vehicle-id',
+      licensePlate: 'CD456EF',
+      brand: 'Volvo',
+      model: 'FH',
+      isActive: true,
+    });
+
+    await expect(
+      vehicleService.updateOwnVehicle('account-id', 'vehicle-id', {
+        licensePlate: 'cd456ef',
+      }),
+    ).rejects.toThrow(ConflictException);
+
+    expect(vehicleRepository.updateById).not.toHaveBeenCalled();
+  });
+
+  it('deactivates an owned vehicle without hard deleting it', async () => {
+    vehicleRepository.findOwnedById.mockResolvedValue({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Scania',
+      model: 'R450',
+      isActive: true,
+    });
+    vehicleRepository.updateById.mockResolvedValue({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Scania',
+      model: 'R450',
+      isActive: false,
+    });
+
+    await expect(
+      vehicleService.deactivateOwnVehicle('account-id', 'vehicle-id'),
+    ).resolves.toEqual({
+      id: 'vehicle-id',
+      licensePlate: 'AB123CD',
+      brand: 'Scania',
+      model: 'R450',
+      isActive: false,
+    });
+
+    expect(vehicleRepository.updateById).toHaveBeenCalledWith('vehicle-id', {
+      isActive: false,
+    });
   });
 });
