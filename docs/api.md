@@ -304,12 +304,76 @@ Mismo shape que `GET /admin/transporters/:id`.
 
 ---
 
+## Flota E3
+
+Todos los endpoints de esta seccion requieren:
+
+- bearer token valido
+- rol `TRANSPORTER`
+
+### `GET /vehicles`
+
+Lista los vehicles del transportista autenticado.
+
+**Respuesta 200**
+
+```json
+[
+  {
+    "id": "string",
+    "licensePlate": "string",
+    "brand": "string",
+    "model": "string",
+    "isActive": true
+  }
+]
+```
+
+Reglas actuales:
+
+- devuelve solo resources propios de la cuenta autenticada
+- ordena activos primero
+
+---
+
+### `GET /trailers`
+
+Lista los trailers del transportista autenticado.
+
+**Respuesta 200**
+
+```json
+[
+  {
+    "id": "string",
+    "totalCapacity": 12,
+    "cargoType": "EQUINE | GENERAL_CARGO | FOOD | PEOPLE",
+    "capacityUnit": "SLOT | KG | M3 | SEAT",
+    "isActive": true
+  }
+]
+```
+
+Reglas actuales:
+
+- devuelve solo resources propios de la cuenta autenticada
+- ordena activos primero
+
+### Contrato interno previsto para E4
+
+`TrailerService.hasActiveTrailer(accountId: string): Promise<boolean>`
+
+Uso esperado:
+
+- validar si el transportista tiene al menos un trailer activo antes de publicar una `TripOffer`
+- reutilizar el criterio desde futuros modulos sin duplicar queries ni materializar el listado completo
+
+---
+
 ## Fuera de alcance por ahora
 
 Todavia no existen en la API:
 
 - endpoints de documentos de transportista
 - `verificationNote`
-- endpoints de `Vehicle`
-- endpoints de `Trailer`
 - endpoints de `TripOffer`

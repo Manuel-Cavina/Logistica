@@ -22,6 +22,14 @@ export class TrailerService {
     return trailers.map((trailer) => this.toTrailerResponse(trailer));
   }
 
+  /**
+   * Reusable E4-facing criterion: tells whether the transporter owns at least
+   * one active trailer without materializing the trailer list.
+   */
+  async hasActiveTrailer(accountId: string): Promise<boolean> {
+    return this.trailerRepository.hasActiveTrailer(accountId);
+  }
+
   async createOwnTrailer(
     accountId: string,
     input: CreateTrailerInput,
