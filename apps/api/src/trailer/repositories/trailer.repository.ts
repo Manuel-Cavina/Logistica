@@ -70,6 +70,22 @@ export class TrailerRepository {
     });
   }
 
+  async hasActiveTrailer(accountId: string): Promise<boolean> {
+    const activeTrailer = await this.prisma.trailer.findFirst({
+      where: {
+        isActive: true,
+        transporterProfile: {
+          accountId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return activeTrailer !== null;
+  }
+
   async updateById(
     trailerId: string,
     data: TrailerUpdateData,

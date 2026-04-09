@@ -6,6 +6,7 @@ describe('TrailerService', () => {
     findTransporterProfileByAccountId: jest.fn(),
     findOwnedById: jest.fn(),
     findOwnedByAccountId: jest.fn(),
+    hasActiveTrailer: jest.fn(),
     create: jest.fn(),
     updateById: jest.fn(),
   };
@@ -55,6 +56,30 @@ describe('TrailerService', () => {
     );
 
     expect(trailerRepository.findOwnedByAccountId).toHaveBeenCalledWith(
+      'account-id',
+    );
+  });
+
+  it('returns whether the authenticated transporter has at least one active trailer', async () => {
+    trailerRepository.hasActiveTrailer.mockResolvedValue(true);
+
+    await expect(trailerService.hasActiveTrailer('account-id')).resolves.toBe(
+      true,
+    );
+
+    expect(trailerRepository.hasActiveTrailer).toHaveBeenCalledWith(
+      'account-id',
+    );
+  });
+
+  it('returns false when the authenticated transporter has no active trailer', async () => {
+    trailerRepository.hasActiveTrailer.mockResolvedValue(false);
+
+    await expect(trailerService.hasActiveTrailer('account-id')).resolves.toBe(
+      false,
+    );
+
+    expect(trailerRepository.hasActiveTrailer).toHaveBeenCalledWith(
       'account-id',
     );
   });
