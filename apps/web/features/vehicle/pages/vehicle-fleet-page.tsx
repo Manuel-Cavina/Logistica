@@ -62,7 +62,7 @@ export default function VehicleFleetPage() {
                   Alta disponible
                 </p>
                 <p className="mt-2 text-sm font-semibold leading-6 text-primary-foreground">
-                  Seguimos usando /vehicles/new
+                  Vehicles en /vehicles/new y trailers en /trailers/new
                 </p>
               </article>
 
@@ -97,6 +97,13 @@ export default function VehicleFleetPage() {
                 href="/vehicles/new"
               >
                 Registrar vehicle
+              </Link>
+
+              <Link
+                className="inline-flex min-h-14 items-center justify-center rounded-[1.4rem] bg-primary/5 px-5 py-3 text-[15px] font-semibold text-foreground transition hover:bg-primary/8"
+                href="/trailers/new"
+              >
+                Registrar trailer
               </Link>
 
               <Link
