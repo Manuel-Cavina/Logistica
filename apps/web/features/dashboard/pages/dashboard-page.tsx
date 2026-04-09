@@ -1,43 +1,43 @@
-import { DashboardNavigation } from "../components/dashboard-navigation";
-import { LogoutButton } from "@/features/auth/components/feedback/logout-button";
+import { DashboardNavigation } from '../components/dashboard-navigation';
+import { LogoutButton } from '@/features/auth/components/feedback/logout-button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
 const dashboardSignals = [
   {
-    label: "Sesion protegida",
-    value: "Bootstrap restaurado",
+    label: 'Sesion protegida',
+    value: 'Bootstrap restaurado',
   },
   {
-    label: "Contrato activo",
-    value: "API E2 intacta",
+    label: 'Contrato activo',
+    value: 'API E2 intacta',
   },
   {
-    label: "Proximo foco",
-    value: "Perfil y operacion",
+    label: 'Proximo foco',
+    value: 'Flota y operacion',
   },
 ];
 
 const dashboardHighlights = [
   {
     description:
-      "Tu acceso privado ya esta funcionando y el flujo del onboarding sigue siendo la pieza central para dejar el perfil listo.",
-    title: "Base operativa estable",
+      'Tu acceso privado ya esta funcionando y el flujo del onboarding sigue siendo la pieza central para dejar el perfil listo.',
+    title: 'Base operativa estable',
   },
   {
     description:
-      "La nueva navegacion prioriza contexto, siguiente accion y lectura rapida sin tocar contratos backend.",
-    title: "Navegacion mas clara",
+      'La nueva navegacion prioriza contexto, siguiente accion y lectura rapida sin tocar contratos backend.',
+    title: 'Navegacion mas clara',
   },
   {
     description:
-      "El panel resume donde estas parado y te deja a un click de las rutas protegidas mas importantes.",
-    title: "Entrada mas util",
+      'El panel resume donde estas parado y te deja a un click de las rutas protegidas mas importantes.',
+    title: 'Entrada mas util',
   },
 ];
 
@@ -71,9 +71,9 @@ export default function DashboardPageView() {
                   Panel operativo del transportista
                 </h1>
                 <CardDescription className="max-w-2xl text-base leading-7 text-primary-foreground/76">
-                  La sesion ya se restauro correctamente. Este panel pone en primer
-                  plano el contexto, la proxima accion y los accesos protegidos
-                  mas importantes sin cambiar la API actual.
+                  La sesion ya se restauro correctamente. Este panel pone en
+                  primer plano el contexto, la proxima accion y los accesos
+                  protegidos mas importantes sin cambiar la API actual.
                 </CardDescription>
               </div>
             </CardHeader>
@@ -100,10 +100,13 @@ export default function DashboardPageView() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                 Lo que ya esta resuelto
               </p>
-              <CardTitle className="text-[2rem]">Resumen rapido del flujo</CardTitle>
+              <CardTitle className="text-[2rem]">
+                Resumen rapido del flujo
+              </CardTitle>
               <CardDescription className="text-base leading-7">
                 El area protegida ya cuenta con bootstrap de sesion, guards y
-                onboarding conectado. Este dashboard mejora lectura y orientacion.
+                onboarding conectado. Este dashboard mejora lectura y
+                orientacion.
               </CardDescription>
             </CardHeader>
 
@@ -131,10 +134,12 @@ export default function DashboardPageView() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                 Navegacion prioritaria
               </p>
-              <CardTitle className="text-[2rem]">Segui el recorrido protegido</CardTitle>
+              <CardTitle className="text-[2rem]">
+                Segui el recorrido protegido
+              </CardTitle>
               <CardDescription className="text-base leading-7">
-                Usa el panel como base y el onboarding como proxima accion natural
-                para dejar tu operacion lista.
+                Usa el panel como base y el onboarding como proxima accion
+                natural para dejar tu operacion lista.
               </CardDescription>
             </CardHeader>
 
@@ -148,10 +153,13 @@ export default function DashboardPageView() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
                 Control de sesion
               </p>
-              <CardTitle className="text-[2rem]">Sesion activa y contexto visible</CardTitle>
+              <CardTitle className="text-[2rem]">
+                Sesion activa y contexto visible
+              </CardTitle>
               <CardDescription className="text-base leading-7">
                 La proteccion de rutas sigue igual. Este bloque solo hace mas
-                evidente donde estas, que se conserva y como salir si hace falta.
+                evidente donde estas, que se conserva y como salir si hace
+                falta.
               </CardDescription>
             </CardHeader>
 
@@ -161,8 +169,9 @@ export default function DashboardPageView() {
                   Contrato E2
                 </p>
                 <p className="mt-2 text-sm leading-6 text-foreground/78">
-                  No se modifico el backend ni el shape de los datos. El cambio es
-                  visual, estructural y de experiencia dentro del area protegida.
+                  No se modifico el backend ni el shape de los datos. El cambio
+                  es visual, estructural y de experiencia dentro del area
+                  protegida.
                 </p>
               </div>
 
