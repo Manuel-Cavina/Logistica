@@ -42,6 +42,7 @@ class TestJwtAuthGuard {
 
 describe('VehicleController', () => {
   const vehicleService = {
+    listOwnVehicles: jest.fn(),
     createOwnVehicle: jest.fn(),
     updateOwnVehicle: jest.fn(),
     deactivateOwnVehicle: jest.fn(),
@@ -71,6 +72,55 @@ describe('VehicleController', () => {
 
     return app;
   }
+
+  it('lists the authenticated transporter vehicles', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    vehicleService.listOwnVehicles.mockResolvedValue([
+      {
+        id: 'vehicle-active-id',
+        licensePlate: 'AB123CD',
+        brand: 'Scania',
+        model: 'R450',
+        isActive: true,
+      },
+      {
+        id: 'vehicle-inactive-id',
+        licensePlate: 'EF456GH',
+        brand: 'Volvo',
+        model: 'FH',
+        isActive: false,
+      },
+    ]);
+
+    await request(server)
+      .get('/vehicles')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .expect(200)
+      .expect([
+        {
+          id: 'vehicle-active-id',
+          licensePlate: 'AB123CD',
+          brand: 'Scania',
+          model: 'R450',
+          isActive: true,
+        },
+        {
+          id: 'vehicle-inactive-id',
+          licensePlate: 'EF456GH',
+          brand: 'Volvo',
+          model: 'FH',
+          isActive: false,
+        },
+      ]);
+
+    expect(vehicleService.listOwnVehicles).toHaveBeenCalledWith(
+      'transporter-account-id',
+    );
+
+    await app.close();
+  });
 
   it('creates a vehicle for a transporter token', async () => {
     const app = await createApp();

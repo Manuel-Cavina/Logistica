@@ -7,6 +7,7 @@ describe('VehicleService', () => {
     findTransporterProfileByAccountId: jest.fn(),
     findByLicensePlate: jest.fn(),
     findOwnedById: jest.fn(),
+    findOwnedByAccountId: jest.fn(),
     create: jest.fn(),
     updateById: jest.fn(),
   };
@@ -16,6 +17,48 @@ describe('VehicleService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     vehicleService = new VehicleService(vehicleRepository as never);
+  });
+
+  it('lists the authenticated transporter vehicles with active ones first', async () => {
+    vehicleRepository.findOwnedByAccountId.mockResolvedValue([
+      {
+        id: 'vehicle-active-id',
+        licensePlate: 'AB123CD',
+        brand: 'Scania',
+        model: 'R450',
+        isActive: true,
+      },
+      {
+        id: 'vehicle-inactive-id',
+        licensePlate: 'EF456GH',
+        brand: 'Volvo',
+        model: 'FH',
+        isActive: false,
+      },
+    ]);
+
+    await expect(vehicleService.listOwnVehicles('account-id')).resolves.toEqual(
+      [
+        {
+          id: 'vehicle-active-id',
+          licensePlate: 'AB123CD',
+          brand: 'Scania',
+          model: 'R450',
+          isActive: true,
+        },
+        {
+          id: 'vehicle-inactive-id',
+          licensePlate: 'EF456GH',
+          brand: 'Volvo',
+          model: 'FH',
+          isActive: false,
+        },
+      ],
+    );
+
+    expect(vehicleRepository.findOwnedByAccountId).toHaveBeenCalledWith(
+      'account-id',
+    );
   });
 
   it('creates a vehicle for the authenticated transporter', async () => {

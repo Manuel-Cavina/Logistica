@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -29,6 +30,15 @@ interface AuthenticatedHttpRequest {
 @Controller('vehicles')
 export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async listOwnVehicles(
+    @Req() request: AuthenticatedHttpRequest,
+  ): Promise<VehicleResponseDto[]> {
+    return this.vehicleService.listOwnVehicles(request.user.accountId);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

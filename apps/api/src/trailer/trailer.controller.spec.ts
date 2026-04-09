@@ -41,6 +41,7 @@ class TestJwtAuthGuard {
 
 describe('TrailerController', () => {
   const trailerService = {
+    listOwnTrailers: jest.fn(),
     createOwnTrailer: jest.fn(),
     updateOwnTrailer: jest.fn(),
     deactivateOwnTrailer: jest.fn(),
@@ -70,6 +71,55 @@ describe('TrailerController', () => {
 
     return app;
   }
+
+  it('lists the authenticated transporter trailers', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    trailerService.listOwnTrailers.mockResolvedValue([
+      {
+        id: 'trailer-active-id',
+        totalCapacity: 12,
+        cargoType: 'EQUINE',
+        capacityUnit: 'SLOT',
+        isActive: true,
+      },
+      {
+        id: 'trailer-inactive-id',
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+        isActive: false,
+      },
+    ]);
+
+    await request(server)
+      .get('/trailers')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .expect(200)
+      .expect([
+        {
+          id: 'trailer-active-id',
+          totalCapacity: 12,
+          cargoType: 'EQUINE',
+          capacityUnit: 'SLOT',
+          isActive: true,
+        },
+        {
+          id: 'trailer-inactive-id',
+          totalCapacity: 16,
+          cargoType: 'GENERAL_CARGO',
+          capacityUnit: 'KG',
+          isActive: false,
+        },
+      ]);
+
+    expect(trailerService.listOwnTrailers).toHaveBeenCalledWith(
+      'transporter-account-id',
+    );
+
+    await app.close();
+  });
 
   it('creates a trailer for a transporter token', async () => {
     const app = await createApp();

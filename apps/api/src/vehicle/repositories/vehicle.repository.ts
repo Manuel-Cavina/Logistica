@@ -48,6 +48,18 @@ export class VehicleRepository {
     });
   }
 
+  async findOwnedByAccountId(accountId: string): Promise<VehicleRecord[]> {
+    return this.prisma.vehicle.findMany({
+      where: {
+        transporterProfile: {
+          accountId,
+        },
+      },
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
+      select: vehicleSelect,
+    });
+  }
+
   async create(
     transporterProfileId: string,
     input: CreateVehicleInput,

@@ -15,6 +15,13 @@ import type {
 export class TrailerService {
   constructor(private readonly trailerRepository: TrailerRepository) {}
 
+  async listOwnTrailers(accountId: string): Promise<TrailerResponseDto[]> {
+    const trailers =
+      await this.trailerRepository.findOwnedByAccountId(accountId);
+
+    return trailers.map((trailer) => this.toTrailerResponse(trailer));
+  }
+
   async createOwnTrailer(
     accountId: string,
     input: CreateTrailerInput,
