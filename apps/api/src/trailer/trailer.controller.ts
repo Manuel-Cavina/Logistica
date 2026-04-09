@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -29,6 +30,15 @@ interface AuthenticatedHttpRequest {
 @Controller('trailers')
 export class TrailerController {
   constructor(private readonly trailerService: TrailerService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async listOwnTrailers(
+    @Req() request: AuthenticatedHttpRequest,
+  ): Promise<TrailerResponseDto[]> {
+    return this.trailerService.listOwnTrailers(request.user.accountId);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

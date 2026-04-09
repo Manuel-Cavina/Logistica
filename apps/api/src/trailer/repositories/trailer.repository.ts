@@ -58,6 +58,18 @@ export class TrailerRepository {
     });
   }
 
+  async findOwnedByAccountId(accountId: string): Promise<TrailerRecord[]> {
+    return this.prisma.trailer.findMany({
+      where: {
+        transporterProfile: {
+          accountId,
+        },
+      },
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
+      select: trailerSelect,
+    });
+  }
+
   async updateById(
     trailerId: string,
     data: TrailerUpdateData,

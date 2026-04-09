@@ -17,6 +17,13 @@ import type {
 export class VehicleService {
   constructor(private readonly vehicleRepository: VehicleRepository) {}
 
+  async listOwnVehicles(accountId: string): Promise<VehicleResponseDto[]> {
+    const vehicles =
+      await this.vehicleRepository.findOwnedByAccountId(accountId);
+
+    return vehicles.map((vehicle) => this.toVehicleResponse(vehicle));
+  }
+
   async createOwnVehicle(
     accountId: string,
     input: CreateVehicleInput,

@@ -5,6 +5,7 @@ describe('TrailerService', () => {
   const trailerRepository = {
     findTransporterProfileByAccountId: jest.fn(),
     findOwnedById: jest.fn(),
+    findOwnedByAccountId: jest.fn(),
     create: jest.fn(),
     updateById: jest.fn(),
   };
@@ -14,6 +15,48 @@ describe('TrailerService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     trailerService = new TrailerService(trailerRepository as never);
+  });
+
+  it('lists the authenticated transporter trailers with active ones first', async () => {
+    trailerRepository.findOwnedByAccountId.mockResolvedValue([
+      {
+        id: 'trailer-active-id',
+        totalCapacity: 12,
+        cargoType: 'EQUINE',
+        capacityUnit: 'SLOT',
+        isActive: true,
+      },
+      {
+        id: 'trailer-inactive-id',
+        totalCapacity: 16,
+        cargoType: 'GENERAL_CARGO',
+        capacityUnit: 'KG',
+        isActive: false,
+      },
+    ]);
+
+    await expect(trailerService.listOwnTrailers('account-id')).resolves.toEqual(
+      [
+        {
+          id: 'trailer-active-id',
+          totalCapacity: 12,
+          cargoType: 'EQUINE',
+          capacityUnit: 'SLOT',
+          isActive: true,
+        },
+        {
+          id: 'trailer-inactive-id',
+          totalCapacity: 16,
+          cargoType: 'GENERAL_CARGO',
+          capacityUnit: 'KG',
+          isActive: false,
+        },
+      ],
+    );
+
+    expect(trailerRepository.findOwnedByAccountId).toHaveBeenCalledWith(
+      'account-id',
+    );
   });
 
   it('creates a trailer for the authenticated transporter', async () => {
