@@ -1,6 +1,10 @@
 'use client';
 
 import { useTransporterTrailers } from '../hooks/use-transporter-trailers';
+import {
+  TRAILER_CAPACITY_UNIT_LABELS,
+  TRAILER_CARGO_TYPE_LABELS,
+} from '../config/trailer-option-labels';
 import type { TransporterTrailer } from '../types/fleet.types';
 import {
   EmptyStateCard,
@@ -8,21 +12,6 @@ import {
   FleetSectionShell,
   LoadingStateCard,
 } from './fleet-section-shell';
-
-const CARGO_TYPE_LABELS: Record<TransporterTrailer['cargoType'], string> = {
-  EQUINE: 'Equino',
-  FOOD: 'Alimentos',
-  GENERAL_CARGO: 'Carga general',
-  PEOPLE: 'Personas',
-};
-
-const CAPACITY_UNIT_LABELS: Record<TransporterTrailer['capacityUnit'], string> =
-  {
-    KG: 'kg',
-    M3: 'm3',
-    SEAT: 'asiento',
-    SLOT: 'slot',
-  };
 
 function getTrailerStatusLabel(isActive: boolean): string {
   return isActive ? 'Activo' : 'Inactivo';
@@ -46,7 +35,7 @@ function TrailersList({ trailers }: { trailers: TransporterTrailer[] }) {
             <div className="min-w-0">
               <p className="truncate text-base font-semibold text-foreground">
                 {trailer.totalCapacity}{' '}
-                {CAPACITY_UNIT_LABELS[trailer.capacityUnit]}
+                {TRAILER_CAPACITY_UNIT_LABELS[trailer.capacityUnit]}
               </p>
               <p className="mt-1 text-sm leading-6 text-muted">
                 Capacidad total declarada.
@@ -55,11 +44,11 @@ function TrailersList({ trailers }: { trailers: TransporterTrailer[] }) {
 
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">
-                {CARGO_TYPE_LABELS[trailer.cargoType]}
+                {TRAILER_CARGO_TYPE_LABELS[trailer.cargoType]}
               </p>
               <p className="mt-1 text-sm leading-6 text-muted">
                 Unidad de capacidad:{' '}
-                {CAPACITY_UNIT_LABELS[trailer.capacityUnit]}.
+                {TRAILER_CAPACITY_UNIT_LABELS[trailer.capacityUnit]}.
               </p>
             </div>
 
@@ -106,6 +95,8 @@ export function TrailerFleetSection() {
 
       {trailersStatus === 'success' && trailers.length === 0 ? (
         <EmptyStateCard
+          actionHref="/trailers/new"
+          actionLabel="Registrar trailer"
           description="Aun no hay trailers cargados para esta cuenta."
           title="No encontramos trailers"
         />

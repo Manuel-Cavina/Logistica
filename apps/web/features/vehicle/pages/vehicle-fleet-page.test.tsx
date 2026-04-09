@@ -64,6 +64,9 @@ describe('VehicleFleetPage', () => {
     expect(
       screen.getByRole('link', { name: /Registrar vehicle/i }),
     ).toHaveAttribute('href', '/vehicles/new');
+    expect(
+      screen.getByRole('link', { name: /Registrar trailer/i }),
+    ).toHaveAttribute('href', '/trailers/new');
   });
 
   it('renders the vehicles and trailers lists independently', () => {
@@ -118,6 +121,9 @@ describe('VehicleFleetPage', () => {
       'href',
       '/vehicles/cmavhcl110000wqz5oy7k8v01/edit',
     );
+    expect(
+      screen.getByRole('link', { name: /Registrar trailer/i }),
+    ).toHaveAttribute('href', '/trailers/new');
     expect(screen.getByText('12 slot')).toBeInTheDocument();
     expect(screen.getByText(/Equino/i)).toBeInTheDocument();
   });
