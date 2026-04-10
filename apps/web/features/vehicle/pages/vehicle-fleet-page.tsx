@@ -8,10 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { FleetOperationalStatus } from '../components/fleet-operational-status';
 import { TrailerFleetSection } from '../components/trailer-fleet-section';
 import { VehicleFleetSection } from '../components/vehicle-fleet-section';
+import { useTransporterTrailers } from '../hooks/use-transporter-trailers';
 
 export default function VehicleFleetPage() {
+  const {
+    error: trailersError,
+    refetch: refetchTrailers,
+    requestStatus: trailersStatus,
+    trailers,
+  } = useTransporterTrailers();
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#eff4ef_0%,#e7efe7_44%,#d9e4da_100%)] px-6 py-10">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
@@ -127,9 +136,21 @@ export default function VehicleFleetPage() {
           </Card>
         </section>
 
+        <FleetOperationalStatus
+          error={trailersError}
+          onRetry={refetchTrailers}
+          requestStatus={trailersStatus}
+          trailers={trailers}
+        />
+
         <section className="grid gap-6 lg:grid-cols-2">
           <VehicleFleetSection />
-          <TrailerFleetSection />
+          <TrailerFleetSection
+            error={trailersError}
+            onRetry={refetchTrailers}
+            requestStatus={trailersStatus}
+            trailers={trailers}
+          />
         </section>
       </div>
     </main>

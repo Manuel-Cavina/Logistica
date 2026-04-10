@@ -5,7 +5,7 @@ import { ApiError } from '@/src/lib/api';
 import { fetchOwnTrailers } from '../services/list-trailers-api';
 import type { TransporterTrailer } from '../types/fleet.types';
 
-type TransporterTrailersRequestStatus = 'loading' | 'success' | 'error';
+export type TransporterTrailersRequestStatus = 'loading' | 'success' | 'error';
 
 type TransporterTrailersState = {
   error: string | null;

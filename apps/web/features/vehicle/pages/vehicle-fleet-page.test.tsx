@@ -59,6 +59,11 @@ describe('VehicleFleetPage', () => {
         name: /Gestiona tu flota desde un solo lugar/i,
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Estamos verificando si ya tenes la flota operativa minima/i,
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Cargando vehicles/i)).toBeInTheDocument();
     expect(screen.getByText(/Cargando trailers/i)).toBeInTheDocument();
     expect(
@@ -138,8 +143,120 @@ describe('VehicleFleetPage', () => {
     expect(
       screen.getByRole('link', { name: /Registrar trailer/i }),
     ).toHaveAttribute('href', '/trailers/new');
+    expect(
+      screen.getByText(
+        /Ya cumples con la flota operativa minima para la proxima etapa/i,
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('12 slot')).toBeInTheDocument();
     expect(screen.getByText(/Equino/i)).toBeInTheDocument();
+  });
+
+  it('shows guidance when there are no trailers yet', () => {
+    mockedUseTransporterVehicles.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      vehicles: [],
+    });
+    mockedUseDeactivateVehicle.mockReturnValue({
+      deactivateVehicle: jest.fn(),
+      isSubmitting: false,
+      resetSubmitError: jest.fn(),
+      submitError: null,
+    });
+    mockedUseTransporterTrailers.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      trailers: [],
+    });
+
+    render(<VehicleFleetPage />);
+
+    expect(
+      screen.getByText(
+        /Todavia no registraste trailers. Para operar en la proxima etapa necesitas al menos uno activo./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('link', { name: /Registrar trailer/i })[0],
+    ).toHaveAttribute('href', '/trailers/new');
+  });
+
+  it('warns when all loaded trailers are inactive', () => {
+    mockedUseTransporterVehicles.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      vehicles: [],
+    });
+    mockedUseDeactivateVehicle.mockReturnValue({
+      deactivateVehicle: jest.fn(),
+      isSubmitting: false,
+      resetSubmitError: jest.fn(),
+      submitError: null,
+    });
+    mockedUseTransporterTrailers.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      trailers: [
+        {
+          capacityUnit: 'SLOT',
+          cargoType: 'EQUINE',
+          id: 'cmavhcl110000wqz5oy7k8v02',
+          isActive: false,
+          totalCapacity: 12,
+        },
+      ],
+    });
+
+    render(<VehicleFleetPage />);
+
+    expect(
+      screen.getByText(/Tenes trailers cargados, pero ninguno esta activo./i),
+    ).toBeInTheDocument();
+  });
+
+  it('shows an operational status error and retries the trailers query', async () => {
+    const refetchTrailers = jest.fn();
+
+    mockedUseTransporterVehicles.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      vehicles: [],
+    });
+    mockedUseDeactivateVehicle.mockReturnValue({
+      deactivateVehicle: jest.fn(),
+      isSubmitting: false,
+      resetSubmitError: jest.fn(),
+      submitError: null,
+    });
+    mockedUseTransporterTrailers.mockReturnValue({
+      error: 'No pudimos cargar los trailers.',
+      refetch: refetchTrailers,
+      requestStatus: 'error',
+      trailers: [],
+    });
+
+    render(<VehicleFleetPage />);
+
+    expect(
+      screen.getByText(/No pudimos verificar tu estado operativo/i),
+    ).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    const [retryButton] = screen.getAllByRole('button', {
+      name: /Reintentar/i,
+    });
+
+    expect(retryButton).toBeDefined();
+
+    await user.click(retryButton as HTMLElement);
+
+    expect(refetchTrailers).toHaveBeenCalled();
   });
 
   it('deactivates a vehicle from the fleet list and refetches the section', async () => {

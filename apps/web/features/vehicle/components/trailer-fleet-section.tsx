@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useTransporterTrailers } from '../hooks/use-transporter-trailers';
 import {
   TRAILER_CAPACITY_UNIT_LABELS,
   TRAILER_CARGO_TYPE_LABELS,
 } from '../config/trailer-option-labels';
 import { useDeactivateTrailer } from '../hooks/use-deactivate-trailer';
+import type { TransporterTrailersRequestStatus } from '../hooks/use-transporter-trailers';
 import type { TransporterTrailer } from '../types/fleet.types';
 import {
   EmptyStateCard,
@@ -19,6 +19,12 @@ import {
 
 function getTrailerStatusLabel(isActive: boolean): string {
   return isActive ? 'Activo' : 'Inactivo';
+}
+
+function getTrailerStatusClasses(isActive: boolean): string {
+  return isActive
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+    : 'border-border/80 bg-black/5 text-muted';
 }
 
 function TrailersList({
@@ -71,7 +77,11 @@ function TrailersList({
               </div>
 
               <div className="flex items-center justify-end">
-                <span className="inline-flex rounded-full border border-border/70 bg-primary/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-foreground/80">
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] ${getTrailerStatusClasses(
+                    trailer.isActive,
+                  )}`}
+                >
                   {getTrailerStatusLabel(trailer.isActive)}
                 </span>
               </div>
@@ -103,13 +113,19 @@ function TrailersList({
   );
 }
 
-export function TrailerFleetSection() {
-  const {
-    error: trailersError,
-    refetch: refetchTrailers,
-    requestStatus: trailersStatus,
-    trailers,
-  } = useTransporterTrailers();
+type TrailerFleetSectionProps = {
+  error: string | null;
+  onRetry: () => void;
+  requestStatus: TransporterTrailersRequestStatus;
+  trailers: TransporterTrailer[];
+};
+
+export function TrailerFleetSection({
+  error,
+  onRetry,
+  requestStatus,
+  trailers,
+}: TrailerFleetSectionProps) {
   const [pendingTrailerId, setPendingTrailerId] = useState<string | null>(null);
   const { deactivateTrailer, isSubmitting, resetSubmitError, submitError } =
     useDeactivateTrailer();
@@ -137,7 +153,7 @@ export function TrailerFleetSection() {
         return;
       }
 
-      await refetchTrailers();
+      await onRetry();
     } finally {
       setPendingTrailerId(null);
     }
@@ -149,22 +165,22 @@ export function TrailerFleetSection() {
       eyebrow="Trailers"
       title="Trailers cargados"
     >
-      {trailersStatus === 'loading' ? (
+      {requestStatus === 'loading' ? (
         <LoadingStateCard
           description="Estamos consultando el estado actual de los trailers del transportista."
           title="Cargando trailers"
         />
       ) : null}
 
-      {trailersStatus === 'error' ? (
+      {requestStatus === 'error' ? (
         <ErrorStateCard
-          description={trailersError ?? 'No pudimos cargar los trailers.'}
-          onRetry={refetchTrailers}
+          description={error ?? 'No pudimos cargar los trailers.'}
+          onRetry={onRetry}
           title="No pudimos cargar trailers"
         />
       ) : null}
 
-      {trailersStatus === 'success' && trailers.length === 0 ? (
+      {requestStatus === 'success' && trailers.length === 0 ? (
         <EmptyStateCard
           actionHref="/trailers/new"
           actionLabel="Registrar trailer"
@@ -173,7 +189,7 @@ export function TrailerFleetSection() {
         />
       ) : null}
 
-      {trailersStatus === 'success' && trailers.length > 0 ? (
+      {requestStatus === 'success' && trailers.length > 0 ? (
         <div className="space-y-4">
           {submitError ? (
             <div
