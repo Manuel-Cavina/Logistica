@@ -22,10 +22,12 @@ function getTrailerStatusLabel(isActive: boolean): string {
 }
 
 function TrailersList({
+  isSubmitting,
   onDeactivate,
   pendingTrailerId,
   trailers,
 }: {
+  isSubmitting: boolean;
   onDeactivate: (trailer: TransporterTrailer) => Promise<void>;
   pendingTrailerId: string | null;
   trailers: TransporterTrailer[];
@@ -83,7 +85,7 @@ function TrailersList({
                 </Link>
                 <Button
                   className="h-10 w-auto rounded-[1rem] px-4 text-sm"
-                  disabled={!trailer.isActive}
+                  disabled={isSubmitting || !trailer.isActive}
                   isLoading={isPending}
                   loadingText="Desactivando"
                   onClick={() => void onDeactivate(trailer)}
@@ -183,6 +185,7 @@ export function TrailerFleetSection() {
           ) : null}
 
           <TrailersList
+            isSubmitting={isSubmitting}
             onDeactivate={handleDeactivate}
             pendingTrailerId={isSubmitting ? pendingTrailerId : null}
             trailers={trailers}

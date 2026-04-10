@@ -101,4 +101,44 @@ describe('TrailerFleetSection', () => {
     expect(deactivateTrailer).toHaveBeenCalledWith('cmavhcl110000wqz5oy7k8v02');
     expect(refetchTrailers).toHaveBeenCalled();
   });
+
+  it('disables every deactivate action while one request is in flight', () => {
+    mockedUseTransporterTrailers.mockReturnValue({
+      error: null,
+      refetch: jest.fn(),
+      requestStatus: 'success',
+      trailers: [
+        {
+          capacityUnit: 'SLOT',
+          cargoType: 'EQUINE',
+          id: 'cmavhcl110000wqz5oy7k8v02',
+          isActive: true,
+          totalCapacity: 6,
+        },
+        {
+          capacityUnit: 'SLOT',
+          cargoType: 'EQUINE',
+          id: 'cmavhcl110000wqz5oy7k8v03',
+          isActive: true,
+          totalCapacity: 8,
+        },
+      ],
+    });
+    mockedUseDeactivateTrailer.mockReturnValue({
+      deactivateTrailer: jest.fn(),
+      isSubmitting: true,
+      resetSubmitError: jest.fn(),
+      submitError: null,
+    });
+
+    render(<TrailerFleetSection />);
+
+    const deactivateButtons = screen.getAllByRole('button', {
+      name: /Desactivar/i,
+    });
+
+    expect(deactivateButtons).toHaveLength(2);
+    expect(deactivateButtons[0]).toBeDisabled();
+    expect(deactivateButtons[1]).toBeDisabled();
+  });
 });

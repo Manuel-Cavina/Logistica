@@ -117,10 +117,24 @@ describe('VehicleFleetPage', () => {
 
     expect(screen.getByText('AA123BB')).toBeInTheDocument();
     expect(screen.getByText(/Scania R450/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Editar/i })).toHaveAttribute(
-      'href',
-      '/vehicles/cmavhcl110000wqz5oy7k8v01/edit',
-    );
+    expect(
+      screen
+        .getAllByRole('link', { name: /Editar/i })
+        .some(
+          (link) =>
+            link.getAttribute('href') ===
+            '/vehicles/cmavhcl110000wqz5oy7k8v01/edit',
+        ),
+    ).toBe(true);
+    expect(
+      screen
+        .getAllByRole('link', { name: /Editar/i })
+        .some(
+          (link) =>
+            link.getAttribute('href') ===
+            '/trailers/cmavhcl110000wqz5oy7k8v02/edit',
+        ),
+    ).toBe(true);
     expect(
       screen.getByRole('link', { name: /Registrar trailer/i }),
     ).toHaveAttribute('href', '/trailers/new');
