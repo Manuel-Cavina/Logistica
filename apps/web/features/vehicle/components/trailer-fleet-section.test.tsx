@@ -4,42 +4,21 @@ import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useDeactivateTrailer } from '../hooks/use-deactivate-trailer';
-import { useTransporterTrailers } from '../hooks/use-transporter-trailers';
 import { TrailerFleetSection } from './trailer-fleet-section';
 
 jest.mock('../hooks/use-deactivate-trailer', () => ({
   useDeactivateTrailer: jest.fn(),
 }));
 
-jest.mock('../hooks/use-transporter-trailers', () => ({
-  useTransporterTrailers: jest.fn(),
-}));
-
-const mockedUseTransporterTrailers = jest.mocked(useTransporterTrailers);
 const mockedUseDeactivateTrailer = jest.mocked(useDeactivateTrailer);
 
 describe('TrailerFleetSection', () => {
   beforeEach(() => {
-    mockedUseTransporterTrailers.mockReset();
     mockedUseDeactivateTrailer.mockReset();
     window.confirm = jest.fn().mockReturnValue(true);
   });
 
   it('renders trailer actions in the fleet list', () => {
-    mockedUseTransporterTrailers.mockReturnValue({
-      error: null,
-      refetch: jest.fn(),
-      requestStatus: 'success',
-      trailers: [
-        {
-          capacityUnit: 'SLOT',
-          cargoType: 'EQUINE',
-          id: 'cmavhcl110000wqz5oy7k8v02',
-          isActive: true,
-          totalCapacity: 6,
-        },
-      ],
-    });
     mockedUseDeactivateTrailer.mockReturnValue({
       deactivateTrailer: jest.fn(),
       isSubmitting: false,
@@ -47,7 +26,22 @@ describe('TrailerFleetSection', () => {
       submitError: null,
     });
 
-    render(<TrailerFleetSection />);
+    render(
+      <TrailerFleetSection
+        error={null}
+        onRetry={jest.fn()}
+        requestStatus="success"
+        trailers={[
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'EQUINE',
+            id: 'cmavhcl110000wqz5oy7k8v02',
+            isActive: true,
+            totalCapacity: 6,
+          },
+        ]}
+      />,
+    );
 
     expect(screen.getByRole('link', { name: /Editar/i })).toHaveAttribute(
       'href',
@@ -68,20 +62,6 @@ describe('TrailerFleetSection', () => {
     });
     const refetchTrailers = jest.fn().mockResolvedValue(undefined);
 
-    mockedUseTransporterTrailers.mockReturnValue({
-      error: null,
-      refetch: refetchTrailers,
-      requestStatus: 'success',
-      trailers: [
-        {
-          capacityUnit: 'SLOT',
-          cargoType: 'EQUINE',
-          id: 'cmavhcl110000wqz5oy7k8v02',
-          isActive: true,
-          totalCapacity: 6,
-        },
-      ],
-    });
     mockedUseDeactivateTrailer.mockReturnValue({
       deactivateTrailer,
       isSubmitting: false,
@@ -89,7 +69,22 @@ describe('TrailerFleetSection', () => {
       submitError: null,
     });
 
-    render(<TrailerFleetSection />);
+    render(
+      <TrailerFleetSection
+        error={null}
+        onRetry={refetchTrailers}
+        requestStatus="success"
+        trailers={[
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'EQUINE',
+            id: 'cmavhcl110000wqz5oy7k8v02',
+            isActive: true,
+            totalCapacity: 6,
+          },
+        ]}
+      />,
+    );
 
     const user = userEvent.setup();
 
@@ -103,27 +98,6 @@ describe('TrailerFleetSection', () => {
   });
 
   it('disables every deactivate action while one request is in flight', () => {
-    mockedUseTransporterTrailers.mockReturnValue({
-      error: null,
-      refetch: jest.fn(),
-      requestStatus: 'success',
-      trailers: [
-        {
-          capacityUnit: 'SLOT',
-          cargoType: 'EQUINE',
-          id: 'cmavhcl110000wqz5oy7k8v02',
-          isActive: true,
-          totalCapacity: 6,
-        },
-        {
-          capacityUnit: 'SLOT',
-          cargoType: 'EQUINE',
-          id: 'cmavhcl110000wqz5oy7k8v03',
-          isActive: true,
-          totalCapacity: 8,
-        },
-      ],
-    });
     mockedUseDeactivateTrailer.mockReturnValue({
       deactivateTrailer: jest.fn(),
       isSubmitting: true,
@@ -131,7 +105,29 @@ describe('TrailerFleetSection', () => {
       submitError: null,
     });
 
-    render(<TrailerFleetSection />);
+    render(
+      <TrailerFleetSection
+        error={null}
+        onRetry={jest.fn()}
+        requestStatus="success"
+        trailers={[
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'EQUINE',
+            id: 'cmavhcl110000wqz5oy7k8v02',
+            isActive: true,
+            totalCapacity: 6,
+          },
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'EQUINE',
+            id: 'cmavhcl110000wqz5oy7k8v03',
+            isActive: true,
+            totalCapacity: 8,
+          },
+        ]}
+      />,
+    );
 
     const deactivateButtons = screen.getAllByRole('button', {
       name: /Desactivar/i,
@@ -140,5 +136,43 @@ describe('TrailerFleetSection', () => {
     expect(deactivateButtons).toHaveLength(2);
     expect(deactivateButtons[0]).toBeDisabled();
     expect(deactivateButtons[1]).toBeDisabled();
+  });
+
+  it('shows active and inactive trailer states with distinct labels', () => {
+    mockedUseDeactivateTrailer.mockReturnValue({
+      deactivateTrailer: jest.fn(),
+      isSubmitting: false,
+      resetSubmitError: jest.fn(),
+      submitError: null,
+    });
+
+    render(
+      <TrailerFleetSection
+        error={null}
+        onRetry={jest.fn()}
+        requestStatus="success"
+        trailers={[
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'EQUINE',
+            id: 'cmavhcl110000wqz5oy7k8v02',
+            isActive: true,
+            totalCapacity: 6,
+          },
+          {
+            capacityUnit: 'SLOT',
+            cargoType: 'GENERAL_CARGO',
+            id: 'cmavhcl110000wqz5oy7k8v03',
+            isActive: false,
+            totalCapacity: 8,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('Activo')).toBeInTheDocument();
+    expect(screen.getByText('Inactivo')).toBeInTheDocument();
+    expect(screen.getByText('8 slot')).toBeInTheDocument();
+    expect(screen.getByText(/Carga general/i)).toBeInTheDocument();
   });
 });
