@@ -3,6 +3,7 @@
 import { startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import type { AuthRole } from '@/features/auth/types/auth.types';
 
 type DashboardDestination = {
   eyebrow: string;
@@ -13,7 +14,7 @@ type DashboardDestination = {
   variant?: 'ghost' | 'primary';
 };
 
-const DASHBOARD_DESTINATIONS: DashboardDestination[] = [
+const TRANSPORTER_DASHBOARD_DESTINATIONS: DashboardDestination[] = [
   {
     description:
       'Consulta el resumen del estado actual, la hoja de ruta del area privada y los accesos mas usados.',
@@ -51,8 +52,45 @@ const DASHBOARD_DESTINATIONS: DashboardDestination[] = [
   },
 ];
 
-export function DashboardNavigation() {
+const ADMIN_DASHBOARD_DESTINATIONS: DashboardDestination[] = [
+  {
+    description:
+      'Consulta el resumen del estado actual, los accesos administrativos y la sesion protegida en curso.',
+    eyebrow: 'Panel actual',
+    href: '/dashboard',
+    meta: 'Ruta principal protegida',
+    title: 'Ver panel admin',
+  },
+  {
+    description:
+      'Abre la gestion principal de cuentas para revisar usuarios, accesos y estados disponibles.',
+    eyebrow: 'Usuarios',
+    href: '/admin/users',
+    meta: 'Supervision central',
+    title: 'Gestionar usuarios',
+    variant: 'ghost',
+  },
+  {
+    description:
+      'Entra a la vista administrativa de transportistas para revisar onboarding y actividad operativa.',
+    eyebrow: 'Transportistas',
+    href: '/admin/transporters',
+    meta: 'Revision protegida',
+    title: 'Revisar transportistas',
+    variant: 'ghost',
+  },
+];
+
+type DashboardNavigationProps = {
+  role?: AuthRole | null;
+};
+
+export function DashboardNavigation({ role }: DashboardNavigationProps) {
   const router = useRouter();
+  const destinations =
+    role === 'ADMIN'
+      ? ADMIN_DASHBOARD_DESTINATIONS
+      : TRANSPORTER_DASHBOARD_DESTINATIONS;
 
   function handleNavigation(href: string) {
     startTransition(() => {
@@ -79,7 +117,7 @@ export function DashboardNavigation() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {DASHBOARD_DESTINATIONS.map(
+        {destinations.map(
           ({ description, eyebrow, href, meta, title, variant }) => (
             <Button
               className="h-auto min-h-[11rem] flex-col items-start justify-between rounded-[1.8rem] px-5 py-5 text-left"

@@ -19,7 +19,7 @@ describe('DashboardNavigation', () => {
   });
 
   it('navigates to the dashboard route', async () => {
-    render(<DashboardNavigation />);
+    render(<DashboardNavigation role="TRANSPORTER" />);
 
     const user = userEvent.setup();
 
@@ -31,7 +31,7 @@ describe('DashboardNavigation', () => {
   });
 
   it('navigates to the transporter onboarding route', async () => {
-    render(<DashboardNavigation />);
+    render(<DashboardNavigation role="TRANSPORTER" />);
 
     const user = userEvent.setup();
 
@@ -41,7 +41,7 @@ describe('DashboardNavigation', () => {
   });
 
   it('navigates to the fleet hub route', async () => {
-    render(<DashboardNavigation />);
+    render(<DashboardNavigation role="TRANSPORTER" />);
 
     const user = userEvent.setup();
 
@@ -51,7 +51,7 @@ describe('DashboardNavigation', () => {
   });
 
   it('navigates to the vehicle creation route', async () => {
-    render(<DashboardNavigation />);
+    render(<DashboardNavigation role="TRANSPORTER" />);
 
     const user = userEvent.setup();
 
@@ -60,5 +60,29 @@ describe('DashboardNavigation', () => {
     );
 
     expect(push).toHaveBeenCalledWith('/vehicles/new');
+  });
+
+  it('navigates to the admin users route', async () => {
+    render(<DashboardNavigation role="ADMIN" />);
+
+    const user = userEvent.setup();
+
+    await user.click(
+      screen.getByRole('button', { name: /Gestionar usuarios/i }),
+    );
+
+    expect(push).toHaveBeenCalledWith('/admin/users');
+  });
+
+  it('navigates to the admin transporters route', async () => {
+    render(<DashboardNavigation role="ADMIN" />);
+
+    const user = userEvent.setup();
+
+    await user.click(
+      screen.getByRole('button', { name: /Revisar transportistas/i }),
+    );
+
+    expect(push).toHaveBeenCalledWith('/admin/transporters');
   });
 });
