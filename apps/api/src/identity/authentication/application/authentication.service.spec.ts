@@ -232,6 +232,50 @@ describe('AuthenticationService', () => {
     );
   });
 
+  it('returns the effective transporter role when logging in with an inconsistent legacy account', async () => {
+    accountsService.findByEmail.mockResolvedValue({
+      id: 'legacy-transporter-account-id',
+      email: 'legacy.transporter@example.com',
+      role: 'CLIENT',
+      isEmailVerified: true,
+      passwordHash: 'stored-password-hash',
+      userProfile: null,
+      transporterProfile: {
+        id: 'transporter-profile-id',
+        displayName: 'Legacy Transportes',
+      },
+    });
+    passwordService.verify.mockResolvedValue(true);
+    authSessionService.createLoginSession.mockResolvedValue({
+      accessToken: 'transporter-access-token',
+      refreshToken: 'transporter-refresh-token',
+    });
+
+    await expect(
+      authenticationService.login(
+        {
+          email: 'legacy.transporter@example.com',
+          password: 'supersafe123',
+        },
+        {
+          ipAddress: '127.0.0.1',
+          userAgent: 'jest',
+        },
+      ),
+    ).resolves.toEqual({
+      response: {
+        account: {
+          id: 'legacy-transporter-account-id',
+          email: 'legacy.transporter@example.com',
+          role: 'TRANSPORTER',
+          isEmailVerified: true,
+        },
+        accessToken: 'transporter-access-token',
+      },
+      refreshToken: 'transporter-refresh-token',
+    });
+  });
+
   it('logs in with the development admin credentials without querying accounts', async () => {
     configService.get.mockImplementation((key: string) => {
       switch (key) {
@@ -438,6 +482,63 @@ describe('AuthenticationService', () => {
     });
 
     expect(accountsService.findById).toHaveBeenCalledWith('client-account-id');
+  });
+
+  it('returns the effective transporter role for auth/me on a legacy transporter account', async () => {
+    accountsService.findById.mockResolvedValue({
+      id: 'legacy-transporter-account-id',
+      email: 'legacy.transporter@example.com',
+      role: 'CLIENT',
+      isEmailVerified: true,
+      passwordHash: 'stored-password-hash',
+      userProfile: null,
+      transporterProfile: {
+        id: 'transporter-profile-id',
+        displayName: 'Legacy Transportes',
+      },
+    });
+
+    await expect(
+      authenticationService.getCurrentAccount({
+        accountId: 'legacy-transporter-account-id',
+        role: 'CLIENT',
+      }),
+    ).resolves.toEqual({
+      id: 'legacy-transporter-account-id',
+      email: 'legacy.transporter@example.com',
+      role: 'TRANSPORTER',
+    });
+  });
+
+  it('returns the effective transporter role for auth/me when the legacy account still has both profiles', async () => {
+    accountsService.findById.mockResolvedValue({
+      id: 'legacy-transporter-account-id',
+      email: 'legacy.transporter@example.com',
+      role: 'CLIENT',
+      isEmailVerified: true,
+      passwordHash: 'stored-password-hash',
+      userProfile: {
+        id: 'user-profile-id',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phone: '+5491112345678',
+      },
+      transporterProfile: {
+        id: 'transporter-profile-id',
+        displayName: 'Legacy Transportes',
+      },
+    });
+
+    await expect(
+      authenticationService.getCurrentAccount({
+        accountId: 'legacy-transporter-account-id',
+        role: 'CLIENT',
+      }),
+    ).resolves.toEqual({
+      id: 'legacy-transporter-account-id',
+      email: 'legacy.transporter@example.com',
+      role: 'TRANSPORTER',
+    });
   });
 
   it('rejects auth/me when the authenticated account no longer exists', async () => {

@@ -13,6 +13,7 @@ import {
   getDevelopmentAdminAuthConfiguration,
   type DevelopmentAdminAuthConfiguration,
 } from '../development-admin-auth.config';
+import { resolveEffectiveAccountRole } from '../authentication-role.utils';
 import type { LoginDto } from '../dto/login.dto';
 import type { RegisterDto } from '../dto/register.dto';
 import type {
@@ -247,7 +248,7 @@ export class AuthenticationService {
     return {
       id: account.id,
       email: account.email,
-      role: account.role,
+      role: resolveEffectiveAccountRole(account),
       isEmailVerified: account.isEmailVerified,
     };
   }
@@ -256,7 +257,7 @@ export class AuthenticationService {
     return {
       id: account.id,
       email: account.email,
-      role: account.role,
+      role: resolveEffectiveAccountRole(account),
     };
   }
 
