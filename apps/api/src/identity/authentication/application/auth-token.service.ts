@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+import type { AccountWithProfiles } from '../../accounts/types/accounts.types';
+import { resolveEffectiveAccountRole } from '../authentication-role.utils';
 import { getAuthenticationConfiguration } from '../cookies/authentication-cookie.config';
 import type {
   AccessTokenPayload,
@@ -9,6 +11,10 @@ import type {
   AuthSessionAccount,
   RefreshTokenPayload,
 } from '../types/authentication.types';
+
+type SignableAccessTokenAccount = (AuthSessionAccount | AccountWithProfiles) & {
+  isMockAdmin?: boolean;
+};
 
 @Injectable()
 export class AuthTokenService {
@@ -49,10 +55,12 @@ export class AuthTokenService {
     return timingSafeEqual(storedHashBuffer, presentedHashBuffer);
   }
 
-  async signAccessToken(account: AuthSessionAccount): Promise<string> {
+  async signAccessToken(
+    account: SignableAccessTokenAccount,
+  ): Promise<string> {
     const payload: AccessTokenPayload = {
       sub: account.id,
-      role: account.role,
+      role: resolveEffectiveAccountRole(account),
       ...(account.isMockAdmin ? { mockAdmin: true } : {}),
     };
 

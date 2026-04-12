@@ -100,6 +100,64 @@ describe('AuthTokenService', () => {
     );
   });
 
+  it('upgrades inconsistent transporter accounts when signing refreshed access tokens', async () => {
+    jwtService.signAsync.mockResolvedValue('transporter-access-token');
+
+    await expect(
+      authTokenService.signAccessToken({
+        id: 'transporter-account-id',
+        email: 'transporter@example.com',
+        role: 'CLIENT',
+        isEmailVerified: true,
+        userProfile: null,
+        transporterProfile: {
+          id: 'transporter-profile-id',
+        },
+      } as never),
+    ).resolves.toBe('transporter-access-token');
+
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      {
+        sub: 'transporter-account-id',
+        role: 'TRANSPORTER',
+      },
+      {
+        secret: 'access-secret',
+        expiresIn: 900,
+      },
+    );
+  });
+
+  it('keeps transporter precedence even when the legacy account still has a user profile', async () => {
+    jwtService.signAsync.mockResolvedValue('transporter-access-token');
+
+    await expect(
+      authTokenService.signAccessToken({
+        id: 'transporter-account-id',
+        email: 'transporter@example.com',
+        role: 'CLIENT',
+        isEmailVerified: true,
+        userProfile: {
+          id: 'user-profile-id',
+        },
+        transporterProfile: {
+          id: 'transporter-profile-id',
+        },
+      } as never),
+    ).resolves.toBe('transporter-access-token');
+
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      {
+        sub: 'transporter-account-id',
+        role: 'TRANSPORTER',
+      },
+      {
+        secret: 'access-secret',
+        expiresIn: 900,
+      },
+    );
+  });
+
   it('verifies refresh tokens with the configured secret', async () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 'client-account-id',
