@@ -15,6 +15,12 @@ import {
   CreateTrailerSchema,
   UpdateTrailerSchema,
 } from '../schemas/trailer.schema';
+import {
+  CreateTripOfferSchema,
+  TripOfferParamsSchema,
+  TripOfferViewSchema,
+  UpdateTripOfferSchema,
+} from '../schemas/trip-offer.schema';
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
@@ -92,6 +98,15 @@ export const TrailerViewSchema = z.object({
 });
 export type ITrailerView = z.infer<typeof TrailerViewSchema>;
 
+export const TripOfferStatusSchema = z.enum([
+  'DRAFT',
+  'PUBLISHED',
+  'FULL',
+  'CLOSED',
+  'CANCELLED',
+]);
+export type ITripOfferStatus = z.infer<typeof TripOfferStatusSchema>;
+
 export type IUpdateTransporterProfileDto = {
   displayName?: string;
   businessName?: string | null;
@@ -111,6 +126,18 @@ export type ICreateTrailerDto = z.infer<typeof CreateTrailerDtoSchema>;
 
 export const UpdateTrailerDtoSchema = UpdateTrailerSchema;
 export type IUpdateTrailerDto = z.infer<typeof UpdateTrailerDtoSchema>;
+
+export const CreateTripOfferDtoSchema = CreateTripOfferSchema;
+export type ICreateTripOfferDto = z.infer<typeof CreateTripOfferDtoSchema>;
+
+export const UpdateTripOfferDtoSchema = UpdateTripOfferSchema;
+export type IUpdateTripOfferDto = z.infer<typeof UpdateTripOfferDtoSchema>;
+
+export const TripOfferParamsDtoSchema = TripOfferParamsSchema;
+export type ITripOfferParamsDto = z.infer<typeof TripOfferParamsDtoSchema>;
+
+export const TripOfferViewDtoSchema = TripOfferViewSchema;
+export type ITripOfferView = z.infer<typeof TripOfferViewDtoSchema>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])
