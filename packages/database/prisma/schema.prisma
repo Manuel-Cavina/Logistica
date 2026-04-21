@@ -41,6 +41,14 @@ enum CapacityUnit {
   SEAT
 }
 
+enum TripOfferStatus {
+  DRAFT
+  PUBLISHED
+  FULL
+  CLOSED
+  CANCELLED
+}
+
 model Account {
   id                 String              @id @default(cuid())
   email              String              @unique
@@ -92,6 +100,7 @@ model TransporterProfile {
   account            Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   vehicles           Vehicle[]
   trailers           Trailer[]
+  tripOffers         TripOffer[]
 
   @@map("transporter_profiles")
 }
@@ -133,6 +142,39 @@ model Trailer {
   @@index([transporterProfileId, isActive])
   @@index([vehicleId])
   @@map("trailers")
+}
+
+model TripOffer {
+  id                   String           @id @default(cuid())
+  transporterProfileId String
+  originLabel          String
+  originLat            Decimal          @db.Decimal(9, 6)
+  originLng            Decimal          @db.Decimal(9, 6)
+  destinationLabel     String
+  destinationLat       Decimal          @db.Decimal(9, 6)
+  destinationLng       Decimal          @db.Decimal(9, 6)
+  departureDate        DateTime?
+  departureWindowStart DateTime?
+  departureWindowEnd   DateTime?
+  capacityTotal        Int
+  availableCapacity    Int
+  pricePerSlot         Int
+  maxDetourKm          Int?
+  notes                String?
+  cancellationPolicy   String?
+  cargoType            CargoType        @default(EQUINE)
+  isReturn             Boolean          @default(false)
+  status               TripOfferStatus  @default(DRAFT)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  transporterProfile   TransporterProfile @relation(fields: [transporterProfileId], references: [id], onDelete: Cascade)
+
+  @@index([transporterProfileId])
+  @@index([transporterProfileId, status])
+  @@index([status])
+  @@index([cargoType, status])
+  @@map("trip_offers")
 }
 
 model Session {
