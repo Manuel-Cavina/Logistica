@@ -6,6 +6,7 @@ import { AccountsModule } from './identity/accounts/accounts.module';
 import { AuthenticationModule } from './identity/authentication/authentication.module';
 import { TransporterProfileModule } from './identity/transporter-profile/transporter-profile.module';
 import { TrailerModule } from './trailer/trailer.module';
+import { TripOfferModule } from './trip-offer/trip-offer.module';
 import { VehicleModule } from './vehicle/vehicle.module';
 
 @Module({
@@ -38,6 +39,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
     AuthenticationModule,
     TransporterProfileModule,
     TrailerModule,
+    TripOfferModule,
     VehicleModule,
   ],
   controllers: [],
