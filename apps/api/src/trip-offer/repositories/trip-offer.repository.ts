@@ -31,6 +31,20 @@ export class TripOfferRepository {
     });
   }
 
+  async findOwnedByAccountId(accountId: string): Promise<TripOfferRecord[]> {
+    return this.prisma.tripOffer.findMany({
+      where: {
+        transporterProfile: {
+          accountId,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: tripOfferSelect,
+    });
+  }
+
   async create(
     transporterProfileId: string,
     input: CreateTripOfferInput,
@@ -72,6 +86,17 @@ export class TripOfferRepository {
     return this.prisma.tripOffer.update({
       where: { id: tripOfferId },
       data,
+      select: tripOfferSelect,
+    });
+  }
+
+  async updateStatusById(
+    tripOfferId: string,
+    status: TripOfferStatus,
+  ): Promise<TripOfferRecord> {
+    return this.prisma.tripOffer.update({
+      where: { id: tripOfferId },
+      data: { status },
       select: tripOfferSelect,
     });
   }

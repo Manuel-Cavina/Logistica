@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { TripOfferStatus } from '@logistica/database';
 import type { TripOfferResponseDto } from '../dto/trip-offer.response.dto';
 import { TripOfferRepository } from '../repositories/trip-offer.repository';
 import type {
@@ -44,20 +45,21 @@ type TripOfferDraftState = Pick<
 export class TripOfferService {
   constructor(private readonly tripOfferRepository: TripOfferRepository) {}
 
+  async listOwnTripOffers(accountId: string): Promise<TripOfferResponseDto[]> {
+    await this.getTransporterProfileOrThrow(accountId);
+
+    const tripOffers =
+      await this.tripOfferRepository.findOwnedByAccountId(accountId);
+
+    return tripOffers.map((tripOffer) => this.toTripOfferResponse(tripOffer));
+  }
+
   async createOwnTripOffer(
     accountId: string,
     input: CreateTripOfferInput,
   ): Promise<TripOfferResponseDto> {
     const transporterProfile =
-      await this.tripOfferRepository.findTransporterProfileByAccountId(
-        accountId,
-      );
-
-    if (!transporterProfile) {
-      throw new NotFoundException(
-        'Transporter profile not found for the authenticated account.',
-      );
-    }
+      await this.getTransporterProfileOrThrow(accountId);
 
     const normalizedInput = this.normalizeCreateInput(input);
     this.validateDraftState(normalizedInput);
@@ -68,6 +70,38 @@ export class TripOfferService {
     );
 
     return this.toTripOfferResponse(createdTripOffer);
+  }
+
+  async publishOwnTripOffer(
+    accountId: string,
+    tripOfferId: string,
+  ): Promise<TripOfferResponseDto> {
+    const existingTripOffer =
+      await this.tripOfferRepository.findById(tripOfferId);
+
+    if (!existingTripOffer) {
+      throw new NotFoundException('Trip offer not found.');
+    }
+
+    const transporterProfile =
+      await this.getTransporterProfileOrThrow(accountId);
+
+    this.assertOwnership(existingTripOffer, transporterProfile.id, 'publish');
+
+    if (existingTripOffer.status !== TripOfferStatus.DRAFT) {
+      throw new ConflictException(
+        'Only trip offers in DRAFT status can be published.',
+      );
+    }
+
+    this.validateDraftState(this.toDraftState(existingTripOffer));
+
+    const publishedTripOffer = await this.tripOfferRepository.updateStatusById(
+      tripOfferId,
+      this.resolvePublishedStatus(existingTripOffer.availableCapacity),
+    );
+
+    return this.toTripOfferResponse(publishedTripOffer);
   }
 
   async updateOwnTripOffer(
@@ -83,21 +117,9 @@ export class TripOfferService {
     }
 
     const transporterProfile =
-      await this.tripOfferRepository.findTransporterProfileByAccountId(
-        accountId,
-      );
+      await this.getTransporterProfileOrThrow(accountId);
 
-    if (!transporterProfile) {
-      throw new NotFoundException(
-        'Transporter profile not found for the authenticated account.',
-      );
-    }
-
-    if (existingTripOffer.transporterProfileId !== transporterProfile.id) {
-      throw new ForbiddenException(
-        'You cannot edit a trip offer that belongs to another transporter.',
-      );
-    }
+    this.assertOwnership(existingTripOffer, transporterProfile.id, 'edit');
 
     if (existingTripOffer.status !== 'DRAFT') {
       throw new ConflictException(
@@ -122,6 +144,64 @@ export class TripOfferService {
     );
 
     return this.toTripOfferResponse(updatedTripOffer);
+  }
+
+  async closeOwnTripOffer(
+    accountId: string,
+    tripOfferId: string,
+  ): Promise<TripOfferResponseDto> {
+    const existingTripOffer =
+      await this.tripOfferRepository.findById(tripOfferId);
+
+    if (!existingTripOffer) {
+      throw new NotFoundException('Trip offer not found.');
+    }
+
+    const transporterProfile =
+      await this.getTransporterProfileOrThrow(accountId);
+
+    this.assertOwnership(existingTripOffer, transporterProfile.id, 'close');
+    this.assertStatusTransitionAllowed(
+      existingTripOffer,
+      [TripOfferStatus.DRAFT, TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
+      'close',
+    );
+
+    const closedTripOffer = await this.tripOfferRepository.updateStatusById(
+      tripOfferId,
+      TripOfferStatus.CLOSED,
+    );
+
+    return this.toTripOfferResponse(closedTripOffer);
+  }
+
+  async cancelOwnTripOffer(
+    accountId: string,
+    tripOfferId: string,
+  ): Promise<TripOfferResponseDto> {
+    const existingTripOffer =
+      await this.tripOfferRepository.findById(tripOfferId);
+
+    if (!existingTripOffer) {
+      throw new NotFoundException('Trip offer not found.');
+    }
+
+    const transporterProfile =
+      await this.getTransporterProfileOrThrow(accountId);
+
+    this.assertOwnership(existingTripOffer, transporterProfile.id, 'cancel');
+    this.assertStatusTransitionAllowed(
+      existingTripOffer,
+      [TripOfferStatus.DRAFT, TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
+      'cancel',
+    );
+
+    const cancelledTripOffer = await this.tripOfferRepository.updateStatusById(
+      tripOfferId,
+      TripOfferStatus.CANCELLED,
+    );
+
+    return this.toTripOfferResponse(cancelledTripOffer);
   }
 
   private validateDraftState(input: {
@@ -362,6 +442,102 @@ export class TripOfferService {
     return normalizedValue.length > 0 ? normalizedValue : null;
   }
 
+  private async getTransporterProfileOrThrow(accountId: string) {
+    const transporterProfile =
+      await this.tripOfferRepository.findTransporterProfileByAccountId(
+        accountId,
+      );
+
+    if (!transporterProfile) {
+      throw new NotFoundException(
+        'Transporter profile not found for the authenticated account.',
+      );
+    }
+
+    return transporterProfile;
+  }
+
+  private assertOwnership(
+    tripOffer: TripOfferRecord,
+    transporterProfileId: string,
+    action: 'edit' | 'publish' | 'close' | 'cancel',
+  ): void {
+    if (tripOffer.transporterProfileId === transporterProfileId) {
+      return;
+    }
+
+    const messages = {
+      edit: 'You cannot edit a trip offer that belongs to another transporter.',
+      publish:
+        'You cannot publish a trip offer that belongs to another transporter.',
+      close:
+        'You cannot close a trip offer that belongs to another transporter.',
+      cancel:
+        'You cannot cancel a trip offer that belongs to another transporter.',
+    } as const;
+
+    throw new ForbiddenException(messages[action]);
+  }
+
+  private assertStatusTransitionAllowed(
+    tripOffer: TripOfferRecord,
+    allowedStatuses: TripOfferStatus[],
+    action: 'close' | 'cancel',
+  ): void {
+    const effectiveStatus = this.getEffectiveStatus(tripOffer);
+
+    if (allowedStatuses.includes(effectiveStatus)) {
+      return;
+    }
+
+    const messages = {
+      close:
+        'Only trip offers in DRAFT, PUBLISHED, or FULL status can be closed.',
+      cancel:
+        'Only trip offers in DRAFT, PUBLISHED, or FULL status can be cancelled.',
+    } as const;
+
+    throw new ConflictException(messages[action]);
+  }
+
+  private toDraftState(tripOffer: TripOfferRecord): TripOfferDraftState {
+    return {
+      originLabel: tripOffer.originLabel,
+      originLat: Number(tripOffer.originLat),
+      originLng: Number(tripOffer.originLng),
+      destinationLabel: tripOffer.destinationLabel,
+      destinationLat: Number(tripOffer.destinationLat),
+      destinationLng: Number(tripOffer.destinationLng),
+      departureDate: tripOffer.departureDate,
+      departureWindowStart: tripOffer.departureWindowStart,
+      departureWindowEnd: tripOffer.departureWindowEnd,
+      capacityTotal: tripOffer.capacityTotal,
+      pricePerSlot: tripOffer.pricePerSlot,
+      maxDetourKm: tripOffer.maxDetourKm,
+      notes: tripOffer.notes,
+      cancellationPolicy: tripOffer.cancellationPolicy,
+      cargoType: tripOffer.cargoType,
+      isReturn: tripOffer.isReturn,
+    };
+  }
+
+  private resolvePublishedStatus(availableCapacity: number): TripOfferStatus {
+    return availableCapacity === 0
+      ? TripOfferStatus.FULL
+      : TripOfferStatus.PUBLISHED;
+  }
+
+  private getEffectiveStatus(tripOffer: TripOfferRecord): TripOfferStatus {
+    if (
+      tripOffer.status === TripOfferStatus.PUBLISHED &&
+      tripOffer.availableCapacity === 0
+    ) {
+      return TripOfferStatus.FULL;
+    }
+
+    return tripOffer.status;
+  }
+
   private toTripOfferResponse(
     tripOffer: TripOfferRecord,
   ): TripOfferResponseDto {
@@ -384,7 +560,7 @@ export class TripOfferService {
       cancellationPolicy: tripOffer.cancellationPolicy,
       cargoType: tripOffer.cargoType,
       isReturn: tripOffer.isReturn,
-      status: tripOffer.status,
+      status: this.getEffectiveStatus(tripOffer),
       createdAt: tripOffer.createdAt,
       updatedAt: tripOffer.updatedAt,
     };
