@@ -55,9 +55,7 @@ export class AuthTokenService {
     return timingSafeEqual(storedHashBuffer, presentedHashBuffer);
   }
 
-  async signAccessToken(
-    account: SignableAccessTokenAccount,
-  ): Promise<string> {
+  async signAccessToken(account: SignableAccessTokenAccount): Promise<string> {
     const payload: AccessTokenPayload = {
       sub: account.id,
       role: resolveEffectiveAccountRole(account),

@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -33,6 +35,15 @@ interface AuthenticatedHttpRequest {
 export class TripOfferController {
   constructor(private readonly tripOfferService: TripOfferService) {}
 
+  @Get('my')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async listOwnTripOffers(
+    @Req() request: AuthenticatedHttpRequest,
+  ): Promise<TripOfferResponseDto[]> {
+    return this.tripOfferService.listOwnTripOffers(request.user.accountId);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TRANSPORTER')
@@ -44,6 +55,21 @@ export class TripOfferController {
     return this.tripOfferService.createOwnTripOffer(
       request.user.accountId,
       createTripOfferDto,
+    );
+  }
+
+  @Post(':id/publish')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async publishOwnTripOffer(
+    @Req() request: AuthenticatedHttpRequest,
+    @Param(new ZodValidationPipe(TripOfferParamsSchema))
+    params: TripOfferParamsDto,
+  ): Promise<TripOfferResponseDto> {
+    return this.tripOfferService.publishOwnTripOffer(
+      request.user.accountId,
+      params.id,
     );
   }
 
@@ -61,6 +87,36 @@ export class TripOfferController {
       request.user.accountId,
       params.id,
       updateTripOfferDto,
+    );
+  }
+
+  @Post(':id/close')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async closeOwnTripOffer(
+    @Req() request: AuthenticatedHttpRequest,
+    @Param(new ZodValidationPipe(TripOfferParamsSchema))
+    params: TripOfferParamsDto,
+  ): Promise<TripOfferResponseDto> {
+    return this.tripOfferService.closeOwnTripOffer(
+      request.user.accountId,
+      params.id,
+    );
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TRANSPORTER')
+  async cancelOwnTripOffer(
+    @Req() request: AuthenticatedHttpRequest,
+    @Param(new ZodValidationPipe(TripOfferParamsSchema))
+    params: TripOfferParamsDto,
+  ): Promise<TripOfferResponseDto> {
+    return this.tripOfferService.cancelOwnTripOffer(
+      request.user.accountId,
+      params.id,
     );
   }
 }
