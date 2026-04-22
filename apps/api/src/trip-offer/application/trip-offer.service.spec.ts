@@ -103,6 +103,39 @@ describe('TripOfferService', () => {
     );
   });
 
+  it('forwards optional public search filters to the repository', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+
+    await tripOfferService.searchPublicTripOffers({
+      origin: ' Buenos Aires ',
+      destination: ' Rosario ',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 2,
+      minPrice: 100000,
+      maxPrice: 150000,
+      verifiedOnly: true,
+      maxDetourKm: 80,
+      page: 1,
+      limit: 10,
+    });
+
+    expect(tripOfferRepository.searchPublic).toHaveBeenCalledWith({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 2,
+      minPrice: 100000,
+      maxPrice: 150000,
+      verifiedOnly: true,
+      maxDetourKm: 80,
+      page: 1,
+      limit: 10,
+    });
+  });
+
   it('returns totalPages as 0 when the public search has no results', async () => {
     tripOfferRepository.searchPublic.mockResolvedValue({
       items: [],

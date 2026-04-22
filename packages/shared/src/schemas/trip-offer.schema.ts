@@ -51,10 +51,31 @@ const positiveIntegerQuerySchema = z.coerce
   .int('El valor debe ser un numero entero.')
   .positive('El valor debe ser mayor a cero.');
 
+const nonNegativeIntegerQuerySchema = z.coerce
+  .number()
+  .int('El valor debe ser un numero entero.')
+  .min(0, 'El valor no puede ser negativo.');
+
 const nonNegativeIntegerSchema = z
   .number()
   .int('El valor debe ser un numero entero.')
   .min(0, 'El valor no puede ser negativo.');
+
+const optionalStrictBooleanQuerySchema = z.preprocess((value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  return value;
+}, z.boolean().optional());
 
 type TemporalFields = {
   departureDate?: Date | null;
@@ -193,10 +214,7 @@ export const TripOfferParamsSchema = z.object({
 
 export const TripOfferSearchQuerySchema = z
   .object({
-    origin: requiredTrimmedTextSchema(
-      160,
-      'Ingresa el origen de la busqueda.',
-    ),
+    origin: requiredTrimmedTextSchema(160, 'Ingresa el origen de la busqueda.'),
     destination: requiredTrimmedTextSchema(
       160,
       'Ingresa el destino de la busqueda.',
@@ -206,6 +224,10 @@ export const TripOfferSearchQuerySchema = z
       invalid_type_error: 'Ingresa una fecha valida.',
     }),
     requiredCapacity: positiveIntegerQuerySchema,
+    minPrice: nonNegativeIntegerQuerySchema.optional(),
+    maxPrice: nonNegativeIntegerQuerySchema.optional(),
+    verifiedOnly: optionalStrictBooleanQuerySchema,
+    maxDetourKm: nonNegativeIntegerQuerySchema.optional(),
     page: positiveIntegerQuerySchema.default(1),
     limit: positiveIntegerQuerySchema.default(10),
   })
@@ -216,6 +238,18 @@ export const TripOfferSearchQuerySchema = z
         code: z.ZodIssueCode.custom,
         message: 'El limite no puede ser mayor a 20.',
         path: ['limit'],
+      });
+    }
+
+    if (
+      value.minPrice !== undefined &&
+      value.maxPrice !== undefined &&
+      value.minPrice > value.maxPrice
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'minPrice no puede ser mayor que maxPrice.',
+        path: ['minPrice'],
       });
     }
   });
@@ -266,7 +300,9 @@ export const PublicTripOfferSearchResponseSchema = z.object({
 export type CreateTripOfferDto = z.infer<typeof CreateTripOfferSchema>;
 export type UpdateTripOfferDto = z.infer<typeof UpdateTripOfferSchema>;
 export type TripOfferParamsDto = z.infer<typeof TripOfferParamsSchema>;
-export type TripOfferSearchQueryDto = z.infer<typeof TripOfferSearchQuerySchema>;
+export type TripOfferSearchQueryDto = z.infer<
+  typeof TripOfferSearchQuerySchema
+>;
 export type TripOfferView = z.infer<typeof TripOfferViewSchema>;
 export type PublicTripOfferSearchItem = z.infer<
   typeof PublicTripOfferSearchItemSchema
