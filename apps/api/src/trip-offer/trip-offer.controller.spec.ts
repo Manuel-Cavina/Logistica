@@ -156,6 +156,10 @@ describe('TripOfferController', () => {
         destination: 'Rosario',
         date: '2026-05-01',
         requiredCapacity: '2',
+        minPrice: '100000',
+        maxPrice: '150000',
+        verifiedOnly: 'true',
+        maxDetourKm: '80',
         page: '2',
         limit: '5',
       })
@@ -184,6 +188,10 @@ describe('TripOfferController', () => {
       destination: 'Rosario',
       date: new Date('2026-05-01T00:00:00.000Z'),
       requiredCapacity: 2,
+      minPrice: 100000,
+      maxPrice: 150000,
+      verifiedOnly: true,
+      maxDetourKm: 80,
       page: 2,
       limit: 5,
     });
@@ -692,6 +700,107 @@ describe('TripOfferController', () => {
         date: '2026-05-01',
         requiredCapacity: '1',
         limit: '21',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when minPrice is invalid in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        minPrice: '-1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when maxPrice is invalid in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        maxPrice: '-1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when maxDetourKm is invalid in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        maxDetourKm: '-1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when minPrice is greater than maxPrice in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        minPrice: '200000',
+        maxPrice: '100000',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when verifiedOnly is not a strict boolean in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        verifiedOnly: '1',
       })
       .expect(400);
 

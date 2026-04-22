@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, PrismaService, TripOfferStatus } from '@logistica/database';
+import {
+  Prisma,
+  PrismaService,
+  TripOfferStatus,
+  TransporterVerificationStatus,
+} from '@logistica/database';
 import type {
   CreateTripOfferInput,
   SearchTripOffersQuery,
@@ -148,6 +153,35 @@ export class TripOfferRepository {
       availableCapacity: {
         gte: query.requiredCapacity,
       },
+      ...(query.minPrice !== undefined
+        ? {
+            pricePerSlot: {
+              gte: query.minPrice,
+            },
+          }
+        : {}),
+      ...(query.maxPrice !== undefined
+        ? {
+            pricePerSlot: {
+              ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}),
+              lte: query.maxPrice,
+            },
+          }
+        : {}),
+      ...(query.verifiedOnly === true
+        ? {
+            transporterProfile: {
+              verificationStatus: TransporterVerificationStatus.VERIFIED,
+            },
+          }
+        : {}),
+      ...(query.maxDetourKm !== undefined
+        ? {
+            maxDetourKm: {
+              lte: query.maxDetourKm,
+            },
+          }
+        : {}),
       departureDate: {
         gte: dayStart,
         lt: nextDayStart,
