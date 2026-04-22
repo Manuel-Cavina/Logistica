@@ -1,167 +1,76 @@
+- key: E5-FE
+  title: Búsqueda y exploración de ofertas frontend
+  milestone: Sprint 4
+  labels: [frontend, feature, busqueda-exploracion-ofertas, mvp]
+  issues:
+    - title: Crear formulario de búsqueda de ofertas para cliente
+      objective: Dar al cliente un punto de entrada claro para buscar ofertas viables.
+      implementation:
+        - Crear vista o bloque de búsqueda con origin, destination, date y requiredCapacity
+        - Validar campos obligatorios y formatos básicos
+        - Conectar el submit con el endpoint real de búsqueda
+      acceptance:
+        - Existe el formulario de búsqueda
+        - El formulario valida origen, destino, fecha y cupos
+        - La búsqueda se ejecuta contra la API real
+        - El usuario recibe feedback claro ante error de validación
 
+    - title: Implementar vista de resultados de búsqueda
+      objective: Mostrar ofertas compatibles de forma clara y reutilizable.
+      implementation:
+        - Renderizar listado de ofertas desde la respuesta del backend
+        - Mostrar información mínima relevante en cada card o fila
+        - Manejar estados de loading, empty y error
+      acceptance:
+        - Existe la vista de resultados
+        - La vista consume la API real
+        - Cada resultado muestra información útil para decidir
+        - Los estados de loading, empty y error funcionan correctamente
 
-  - key: E3-BE
-    title: Vehiculos y trailers backend
-    milestone: Sprint 3
-    labels: [backend, feature,vehiculos-trailers, mvp]
-    issues:
-      - title: Extender schema con Vehicle, Trailer, CargoType y CapacityUnit
-        objective: Incorporar las entidades operativas del transportista con base multi-rubro lista para E3.
-        implementation:
-          - Agregar modelo Vehicle relacionado a TransporterProfile
-          - Agregar modelo Trailer relacionado a TransporterProfile y opcionalmente a Vehicle
-          - Agregar enums CargoType y CapacityUnit
-          - Ejecutar migracion y regenerar Prisma Client
-        acceptance:
-          - Existe el modelo Vehicle
-          - Existe el modelo Trailer
-          - Existen CargoType y CapacityUnit
-          - La migracion corre sin errores
+    - title: Implementar filtros de búsqueda en la UI
+      objective: Permitir refinar resultados sin abandonar el flujo de exploración.
+      implementation:
+        - Agregar controles para precio mínimo y máximo
+        - Agregar control para solo verificados
+        - Agregar control para desvío máximo
+        - Sincronizar filtros con la consulta al backend
+      acceptance:
+        - El usuario puede filtrar por precio
+        - El usuario puede filtrar por verificación
+        - El usuario puede filtrar por desvío
+        - La UI refleja correctamente los filtros aplicados
 
-      - title: Implementar alta de vehicle para el transportista autenticado
-        objective: Permitir que un transportista registre su unidad principal con datos minimos validos.
-        implementation:
-          - Crear servicio de alta de Vehicle
-          - Validar patente, marca y modelo
-          - Restringir la creacion al transportista autenticado
-        acceptance:
-          - Transportista puede crear un vehicle
-          - La patente, marca y modelo quedan persistidos
-          - Otro usuario no puede crear vehicles en nombre ajeno
+    - title: Implementar ordenamiento y paginación en resultados
+      objective: Permitir navegar y priorizar resultados de forma cómoda y consistente.
+      implementation:
+        - Agregar selector de orden por precio, cercanía y rating
+        - Implementar paginación con máximo 20 resultados por página
+        - Mantener estado de búsqueda, filtros y orden al cambiar de página
+      acceptance:
+        - El usuario puede ordenar por precio, cercanía y rating
+        - El usuario puede navegar entre páginas de resultados
+        - La paginación respeta el máximo de 20 resultados por página
+        - La navegación conserva filtros y ordenamiento activos
 
-      - title: Implementar actualizacion y desactivacion de vehicle
-        objective: Permitir mantener actualizado el vehicle sin borrar historial operativo.
-        implementation:
-          - Crear endpoint de actualizacion de Vehicle
-          - Permitir desactivar sin hard delete
-          - Validar que solo el dueno del recurso pueda editarlo
-        acceptance:
-          - Transportista puede editar su vehicle
-          - Transportista puede desactivar su vehicle
-          - Un vehicle desactivado no aparece como operativo
+    - title: Implementar navegación desde resultados al detalle de oferta
+      objective: Permitir profundizar en una oferta específica desde la exploración.
+      implementation:
+        - Agregar acción para abrir el detalle desde cada resultado
+        - Resolver el id de oferta y consumir el endpoint de detalle público
+        - Manejar errores de navegación o detalle no disponible
+      acceptance:
+        - Cada resultado permite abrir su detalle
+        - La navegación al detalle funciona correctamente
+        - La UI maneja correctamente ofertas inexistentes o no disponibles
 
-      - title: Implementar alta de trailer con capacidad operativa
-        objective: Permitir que un transportista registre trailers con capacidad valida para el MVP.
-        implementation:
-          - Crear servicio de alta de Trailer
-          - Persistir totalCapacity, cargoType y capacityUnit
-          - Validar que la capacidad sea positiva y consistente
-        acceptance:
-          - Transportista puede crear un trailer
-          - El trailer guarda totalCapacity, cargoType y capacityUnit
-          - No se aceptan capacidades invalidas
-
-      - title: Implementar actualizacion y desactivacion de trailer
-        objective: Permitir administrar el ciclo de vida del trailer sin eliminar datos historicos.
-        implementation:
-          - Crear endpoint de actualizacion de Trailer
-          - Permitir desactivar sin hard delete
-          - Validar ownership del recurso
-        acceptance:
-          - Transportista puede editar su trailer
-          - Transportista puede desactivar su trailer
-          - Un trailer desactivado no aparece como operativo
-
-      - title: Implementar listados autenticados de vehicles y trailers del transportista
-        objective: Permitir que el frontend consulte la flota actual del transportista con separacion clara por recurso.
-        implementation:
-          - Crear endpoint para listar vehicles del transportista autenticado
-          - Crear endpoint para listar trailers del transportista autenticado
-          - Ordenar los resultados priorizando recursos activos
-        acceptance:
-          - Existen ambos endpoints de listado
-          - El transportista ve solo sus recursos
-          - Los recursos activos se distinguen correctamente
-
-      - title: Implementar criterio reutilizable de trailer activo para operacion futura
-        objective: Dejar preparada la validacion base que E4 usara para exigir al menos un trailer activo antes de publicar ofertas.
-        implementation:
-          - Crear metodo de dominio o servicio consultable para verificar trailers activos
-          - Reusar el criterio desde backend sin duplicar queries
-          - Documentar el contrato esperado para E4
-        acceptance:
-          - El backend puede determinar si un transportista tiene trailer activo
-          - El criterio es reutilizable desde futuros modulos
-          - No depende todavia de TripOffer
-
-  - key: E3-FE
-    title: Vehiculos y trailers frontend
-    milestone: Sprint 3
-    labels: [frontend, vehiculos-trailers, feature]
-    issues:
-      - title: Crear seccion de flota del transportista
-        objective: Dar un punto de entrada claro para administrar vehicles y trailers desde el area protegida.
-        implementation:
-          - Crear pagina o seccion de flota para TRANSPORTER
-          - Separar visualmente vehicles y trailers
-          - Conectar con los listados reales del backend
-        acceptance:
-          - Existe una vista de flota
-          - Vehicles y trailers se muestran en bloques separados
-          - La vista consume la API real
-
-      - title: Implementar formulario de alta de vehicle
-        objective: Permitir registrar un vehicle desde frontend con validaciones coherentes con backend.
-        implementation:
-          - Crear formulario tipado para Vehicle
-          - Validar patente, marca y modelo
-          - Manejar loading, success y error
-        acceptance:
-          - El formulario valida correctamente
-          - El vehicle se crea desde la UI
-          - El usuario recibe feedback claro
-
-      - title: Implementar edicion y desactivacion de vehicle en la UI
-        objective: Permitir mantener actualizado el vehicle desde la vista de flota.
-        implementation:
-          - Agregar accion de editar vehicle
-          - Agregar accion de desactivar vehicle
-          - Refrescar el listado luego de la mutacion
-        acceptance:
-          - El transportista puede editar un vehicle desde la UI
-          - El transportista puede desactivar un vehicle desde la UI
-          - El estado visible se actualiza correctamente
-
-      - title: Implementar formulario de alta de trailer
-        objective: Permitir registrar trailers con capacidad operativa visible para el transportista.
-        implementation:
-          - Crear formulario tipado para Trailer
-          - Exponer totalCapacity, cargoType y capacityUnit
-          - Inicializar defaults del MVP con EQUINE y SLOT donde corresponda
-        acceptance:
-          - El formulario valida correctamente
-          - El trailer se crea desde la UI
-          - Se muestran cargoType y capacityUnit de forma entendible
-
-      - title: Implementar edicion y desactivacion de trailer en la UI
-        objective: Permitir administrar trailers activos e inactivos desde la vista de flota.
-        implementation:
-          - Agregar accion de editar trailer
-          - Agregar accion de desactivar trailer
-          - Refrescar el listado luego de la mutacion
-        acceptance:
-          - El transportista puede editar un trailer desde la UI
-          - El transportista puede desactivar un trailer desde la UI
-          - El estado visible se actualiza correctamente
-
-      - title: Mostrar capacidad y clasificacion operativa de la flota
-        objective: Hacer visible la informacion minima que despues se reutilizara al crear ofertas.
-        implementation:
-          - Mostrar totalCapacity en cards o filas de trailer
-          - Mostrar cargoType y capacityUnit
-          - Diferenciar recursos activos e inactivos
-        acceptance:
-          - La capacidad del trailer es visible
-          - cargoType y capacityUnit se renderizan correctamente
-          - El usuario distingue recursos activos de inactivos
-
-      - title: Mostrar elegibilidad operativa segun trailer activo
-        objective: Anticipar el requisito funcional de E4 sin acoplar todavia la creacion de ofertas.
-        implementation:
-          - Consultar si el transportista tiene al menos un trailer activo
-          - Mostrar mensaje de estado operativo en la vista de flota
-          - Guiar al usuario cuando aun no puede operar
-        acceptance:
-          - El usuario entiende si ya tiene flota operativa minima
-          - La UI informa cuando falta un trailer activo
-          - La vista queda lista para reutilizar la regla en E4
+    - title: Implementar vista de detalle completo de oferta
+      objective: Mostrar toda la información necesaria para que el cliente entienda la oferta y pueda decidir.
+      implementation:
+        - Renderizar ruta, fecha, precio, capacidad disponible, desvío y condiciones
+        - Mostrar resumen del transportista con verificación y rating
+        - Dejar preparada la vista para futura acción de reserva sin acoplarla todavía
+      acceptance:
+        - El detalle de oferta muestra la información necesaria para decidir
+        - La verificación del transportista es visible
+        - El rating del transportista es visible
+        - La capacidad disponible, precio y desvío se muestran claramente
