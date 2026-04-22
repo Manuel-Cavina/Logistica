@@ -17,7 +17,7 @@ describe('TripOfferRepository', () => {
     tripOfferRepository = new TripOfferRepository(prisma as never);
   });
 
-  it('searches only public offers matching capacity and date filters', async () => {
+  it('searches only published offers matching origin, destination, capacity, and date filters', async () => {
     prisma.tripOffer.findMany.mockReturnValue('findMany-operation');
     prisma.tripOffer.count.mockReturnValue('count-operation');
     prisma.$transaction.mockResolvedValue([[], 0]);
@@ -33,9 +33,7 @@ describe('TripOfferRepository', () => {
 
     expect(prisma.tripOffer.findMany).toHaveBeenCalledWith({
       where: {
-        status: {
-          in: [TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
-        },
+        status: TripOfferStatus.PUBLISHED,
         originLabel: {
           contains: 'Buenos Aires',
           mode: 'insensitive',
@@ -59,9 +57,7 @@ describe('TripOfferRepository', () => {
     });
     expect(prisma.tripOffer.count).toHaveBeenCalledWith({
       where: {
-        status: {
-          in: [TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
-        },
+        status: TripOfferStatus.PUBLISHED,
         originLabel: {
           contains: 'Buenos Aires',
           mode: 'insensitive',

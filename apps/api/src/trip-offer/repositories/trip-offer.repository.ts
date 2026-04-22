@@ -136,9 +136,7 @@ export class TripOfferRepository {
     nextDayStart.setUTCDate(nextDayStart.getUTCDate() + 1);
 
     return {
-      status: {
-        in: [TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
-      },
+      status: TripOfferStatus.PUBLISHED,
       originLabel: {
         contains: query.origin,
         mode: 'insensitive',

@@ -127,6 +127,89 @@ describe('TripOfferService', () => {
     });
   });
 
+  it('keeps public search results limited to published offers with enough capacity', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [
+        createTripOfferRecord({
+          id: 'published-eligible-offer',
+          status: TripOfferStatus.PUBLISHED,
+          availableCapacity: 4,
+        }),
+      ],
+      total: 1,
+    });
+
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 4,
+        page: 1,
+        limit: 10,
+      }),
+    ).resolves.toEqual({
+      items: [
+        {
+          id: 'published-eligible-offer',
+          originLabel: 'Buenos Aires',
+          destinationLabel: 'Rosario',
+          departureDate: new Date('2026-05-01T00:00:00.000Z'),
+          availableCapacity: 4,
+          pricePerSlot: 120000,
+          cargoType: 'EQUINE',
+          status: 'PUBLISHED',
+        },
+      ],
+      page: 1,
+      limit: 10,
+      total: 1,
+      totalPages: 1,
+    });
+
+    expect(tripOfferRepository.searchPublic).toHaveBeenCalledWith({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 4,
+      page: 1,
+      limit: 10,
+    });
+  });
+
+  it('returns no public search results when no offer matches origin, destination, date, and required capacity together', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: 'Mendoza',
+        destination: 'Rosario',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 3,
+        page: 3,
+        limit: 2,
+      }),
+    ).resolves.toEqual({
+      items: [],
+      page: 3,
+      limit: 2,
+      total: 0,
+      totalPages: 0,
+    });
+
+    expect(tripOfferRepository.searchPublic).toHaveBeenCalledWith({
+      origin: 'Mendoza',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 3,
+      page: 3,
+      limit: 2,
+    });
+  });
+
   it('creates a draft trip offer for the authenticated transporter', async () => {
     const createdAt = new Date('2026-04-21T10:00:00.000Z');
     const updatedAt = new Date('2026-04-21T10:00:00.000Z');
