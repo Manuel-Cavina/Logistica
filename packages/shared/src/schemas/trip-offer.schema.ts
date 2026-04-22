@@ -46,6 +46,11 @@ const positiveIntegerSchema = z
   .int('El valor debe ser un numero entero.')
   .positive('El valor debe ser mayor a cero.');
 
+const positiveIntegerQuerySchema = z.coerce
+  .number()
+  .int('El valor debe ser un numero entero.')
+  .positive('El valor debe ser mayor a cero.');
+
 const nonNegativeIntegerSchema = z
   .number()
   .int('El valor debe ser un numero entero.')
@@ -186,6 +191,35 @@ export const TripOfferParamsSchema = z.object({
   id: cuidSchema,
 });
 
+export const TripOfferSearchQuerySchema = z
+  .object({
+    origin: requiredTrimmedTextSchema(
+      160,
+      'Ingresa el origen de la busqueda.',
+    ),
+    destination: requiredTrimmedTextSchema(
+      160,
+      'Ingresa el destino de la busqueda.',
+    ),
+    date: z.coerce.date({
+      required_error: 'Ingresa la fecha de la busqueda.',
+      invalid_type_error: 'Ingresa una fecha valida.',
+    }),
+    requiredCapacity: positiveIntegerQuerySchema,
+    page: positiveIntegerQuerySchema.default(1),
+    limit: positiveIntegerQuerySchema.default(10),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.limit > 20) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El limite no puede ser mayor a 20.',
+        path: ['limit'],
+      });
+    }
+  });
+
 export const TripOfferViewSchema = z.object({
   id: cuidSchema,
   originLabel: z.string().trim().min(1).max(160),
@@ -210,7 +244,33 @@ export const TripOfferViewSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const PublicTripOfferSearchItemSchema = z.object({
+  id: cuidSchema,
+  originLabel: z.string().trim().min(1).max(160),
+  destinationLabel: z.string().trim().min(1).max(160),
+  departureDate: z.date().nullable(),
+  availableCapacity: z.number().int().min(0),
+  pricePerSlot: z.number().int().min(0),
+  cargoType: CargoTypeSchema,
+  status: tripOfferStatusSchema,
+});
+
+export const PublicTripOfferSearchResponseSchema = z.object({
+  items: z.array(PublicTripOfferSearchItemSchema),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive().max(20),
+  total: z.number().int().min(0),
+  totalPages: z.number().int().min(0),
+});
+
 export type CreateTripOfferDto = z.infer<typeof CreateTripOfferSchema>;
 export type UpdateTripOfferDto = z.infer<typeof UpdateTripOfferSchema>;
 export type TripOfferParamsDto = z.infer<typeof TripOfferParamsSchema>;
+export type TripOfferSearchQueryDto = z.infer<typeof TripOfferSearchQuerySchema>;
 export type TripOfferView = z.infer<typeof TripOfferViewSchema>;
+export type PublicTripOfferSearchItem = z.infer<
+  typeof PublicTripOfferSearchItemSchema
+>;
+export type PublicTripOfferSearchResponse = z.infer<
+  typeof PublicTripOfferSearchResponseSchema
+>;
