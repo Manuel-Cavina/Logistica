@@ -206,6 +206,30 @@ describe('TripOfferService', () => {
     });
   });
 
+  it('calculates totalPages from the total and requested limit', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [],
+      total: 12,
+    });
+
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 1,
+        page: 2,
+        limit: 4,
+      }),
+    ).resolves.toEqual({
+      items: [],
+      page: 2,
+      limit: 4,
+      total: 12,
+      totalPages: 3,
+    });
+  });
+
   it('keeps public search results limited to published offers with enough capacity', async () => {
     tripOfferRepository.searchPublic.mockResolvedValue({
       items: [

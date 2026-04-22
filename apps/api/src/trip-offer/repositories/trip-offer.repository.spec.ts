@@ -244,4 +244,33 @@ describe('TripOfferRepository', () => {
       }),
     );
   });
+
+  it('reuses the final filtered query for items and total while paginating the requested page', async () => {
+    prisma.tripOffer.findMany.mockReturnValue('findMany-operation');
+    prisma.tripOffer.count.mockReturnValue('count-operation');
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await tripOfferRepository.searchPublic({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T15:24:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'price',
+      sortOrder: 'asc',
+      page: 3,
+      limit: 2,
+    });
+
+    const findManyArgs = prisma.tripOffer.findMany.mock.calls[0][0];
+    const countArgs = prisma.tripOffer.count.mock.calls[0][0];
+
+    expect(findManyArgs.where).toBe(countArgs.where);
+    expect(findManyArgs.orderBy).toEqual([
+      { pricePerSlot: 'asc' },
+      { departureDate: 'asc' },
+      { id: 'asc' },
+    ]);
+    expect(findManyArgs.skip).toBe(4);
+    expect(findManyArgs.take).toBe(2);
+  });
 });

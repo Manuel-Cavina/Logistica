@@ -28,13 +28,13 @@ export class TripOfferRepository {
   ): Promise<{ items: TripOfferRecord[]; total: number }> {
     const where = this.buildSearchWhere(query);
     const orderBy = this.buildSearchOrderBy(query);
+    const pagination = this.buildSearchPagination(query);
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.tripOffer.findMany({
         where,
         orderBy,
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
+        ...pagination,
         select: tripOfferSelect,
       }),
       this.prisma.tripOffer.count({ where }),
@@ -211,5 +211,12 @@ export class TripOfferRepository {
     }
 
     return [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }];
+  }
+
+  private buildSearchPagination(query: SearchTripOffersQuery) {
+    return {
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    } as const;
   }
 }
