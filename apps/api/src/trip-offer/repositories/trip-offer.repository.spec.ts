@@ -54,7 +54,7 @@ describe('TripOfferRepository', () => {
             lt: new Date('2026-05-02T00:00:00.000Z'),
           },
         },
-        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }],
+        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
         skip: 5,
         take: 5,
       }),
@@ -133,7 +133,7 @@ describe('TripOfferRepository', () => {
             lt: new Date('2026-05-02T00:00:00.000Z'),
           },
         },
-        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }],
+        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
         skip: 0,
         take: 10,
       }),
@@ -168,5 +168,80 @@ describe('TripOfferRepository', () => {
         },
       },
     });
+  });
+
+  it('orders public search results by price using the requested sort order', async () => {
+    prisma.tripOffer.findMany.mockReturnValue('findMany-operation');
+    prisma.tripOffer.count.mockReturnValue('count-operation');
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await tripOfferRepository.searchPublic({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T15:24:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'price',
+      sortOrder: 'desc',
+      page: 1,
+      limit: 10,
+    });
+
+    expect(prisma.tripOffer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [
+          { pricePerSlot: 'desc' },
+          { departureDate: 'asc' },
+          { id: 'asc' },
+        ],
+      }),
+    );
+  });
+
+  it('orders public search results by proximity using maxDetourKm as the current approximation', async () => {
+    prisma.tripOffer.findMany.mockReturnValue('findMany-operation');
+    prisma.tripOffer.count.mockReturnValue('count-operation');
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await tripOfferRepository.searchPublic({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T15:24:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'proximity',
+      page: 1,
+      limit: 10,
+    });
+
+    expect(prisma.tripOffer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [
+          { maxDetourKm: 'asc' },
+          { departureDate: 'asc' },
+          { id: 'asc' },
+        ],
+      }),
+    );
+  });
+
+  it('orders public search results by rating using the stable fallback while no aggregate rating exists', async () => {
+    prisma.tripOffer.findMany.mockReturnValue('findMany-operation');
+    prisma.tripOffer.count.mockReturnValue('count-operation');
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await tripOfferRepository.searchPublic({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T15:24:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'rating',
+      page: 1,
+      limit: 10,
+    });
+
+    expect(prisma.tripOffer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ departureDate: 'asc' }, { id: 'asc' }],
+      }),
+    );
   });
 });

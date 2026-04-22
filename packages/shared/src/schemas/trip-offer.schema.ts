@@ -77,6 +77,9 @@ const optionalStrictBooleanQuerySchema = z.preprocess((value) => {
   return value;
 }, z.boolean().optional());
 
+const tripOfferSearchSortBySchema = z.enum(['price', 'proximity', 'rating']);
+const tripOfferSearchSortOrderSchema = z.enum(['asc', 'desc']);
+
 type TemporalFields = {
   departureDate?: Date | null;
   departureWindowStart?: Date | null;
@@ -228,6 +231,8 @@ export const TripOfferSearchQuerySchema = z
     maxPrice: nonNegativeIntegerQuerySchema.optional(),
     verifiedOnly: optionalStrictBooleanQuerySchema,
     maxDetourKm: nonNegativeIntegerQuerySchema.optional(),
+    sortBy: tripOfferSearchSortBySchema.optional(),
+    sortOrder: tripOfferSearchSortOrderSchema.optional(),
     page: positiveIntegerQuerySchema.default(1),
     limit: positiveIntegerQuerySchema.default(10),
   })
@@ -250,6 +255,14 @@ export const TripOfferSearchQuerySchema = z
         code: z.ZodIssueCode.custom,
         message: 'minPrice no puede ser mayor que maxPrice.',
         path: ['minPrice'],
+      });
+    }
+
+    if (value.sortOrder !== undefined && value.sortBy !== 'price') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'sortOrder solo se permite cuando sortBy es price.',
+        path: ['sortOrder'],
       });
     }
   });
