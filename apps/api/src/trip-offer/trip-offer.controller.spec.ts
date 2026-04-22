@@ -44,6 +44,7 @@ class TestJwtAuthGuard {
 describe('TripOfferController', () => {
   const tripOfferService = {
     searchPublicTripOffers: jest.fn(),
+    getPublicTripOfferById: jest.fn(),
     listOwnTripOffers: jest.fn(),
     createOwnTripOffer: jest.fn(),
     publishOwnTripOffer: jest.fn(),
@@ -241,6 +242,60 @@ describe('TripOfferController', () => {
       page: 1,
       limit: 10,
     });
+
+    await app.close();
+  });
+
+  it('returns a public trip offer detail when the id is valid', async () => {
+    const tripOfferId = 'cm9tripoffer0000wqz5oy7k8ph1';
+
+    tripOfferService.getPublicTripOfferById.mockResolvedValue({
+      id: tripOfferId,
+      price: 120000,
+      availableCapacity: 6,
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      departureDate: new Date('2026-05-01T00:00:00.000Z'),
+      departureWindowStart: null,
+      departureWindowEnd: null,
+      maxDetourKm: 50,
+      notes: 'Salida temprana',
+      cancellationPolicy: 'Flexible',
+      transporter: {
+        id: 'cm9transporter0000wqz5oy7k8ph1',
+        displayName: 'Acme Transportes',
+        verificationStatus: 'VERIFIED',
+      },
+    });
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get(`/trip-offers/${tripOfferId}/public`)
+      .expect(200)
+      .expect({
+        id: tripOfferId,
+        price: 120000,
+        availableCapacity: 6,
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        departureDate: '2026-05-01T00:00:00.000Z',
+        departureWindowStart: null,
+        departureWindowEnd: null,
+        maxDetourKm: 50,
+        notes: 'Salida temprana',
+        cancellationPolicy: 'Flexible',
+        transporter: {
+          id: 'cm9transporter0000wqz5oy7k8ph1',
+          displayName: 'Acme Transportes',
+          verificationStatus: 'VERIFIED',
+        },
+      });
+
+    expect(tripOfferService.getPublicTripOfferById).toHaveBeenCalledWith(
+      tripOfferId,
+    );
 
     await app.close();
   });
@@ -917,6 +972,17 @@ describe('TripOfferController', () => {
     await app.close();
   });
 
+  it('returns 400 when the path id is invalid for the public detail endpoint', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server).get('/trip-offers/not-a-cuid/public').expect(400);
+
+    expect(tripOfferService.getPublicTripOfferById).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
   it('returns 401 when the access token is missing', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
@@ -969,6 +1035,20 @@ describe('TripOfferController', () => {
         pricePerSlot: 140000,
       })
       .expect(404);
+
+    await app.close();
+  });
+
+  it('returns 404 when the public trip offer detail is not visible', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+    const tripOfferId = 'cm9tripoffer0000wqz5oy7k8ph1';
+
+    tripOfferService.getPublicTripOfferById.mockRejectedValue(
+      new NotFoundException('Trip offer not found.'),
+    );
+
+    await request(server).get(`/trip-offers/${tripOfferId}/public`).expect(404);
 
     await app.close();
   });

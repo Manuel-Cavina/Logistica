@@ -24,6 +24,7 @@ import type { CreateTripOfferDto } from './dto/create-trip-offer.dto';
 import type { SearchTripOffersQueryDto } from './dto/search-trip-offers.dto';
 import { SearchTripOffersQuerySchema } from './dto/search-trip-offers.dto';
 import type { SearchTripOffersResponseDto } from './dto/search-trip-offers.response.dto';
+import type { PublicTripOfferDetailResponseDto } from './dto/public-trip-offer-detail.response.dto';
 import type {
   TripOfferParamsDto,
   UpdateTripOfferDto,
@@ -45,6 +46,14 @@ export class TripOfferController {
     query: SearchTripOffersQueryDto,
   ): Promise<SearchTripOffersResponseDto> {
     return this.tripOfferService.searchPublicTripOffers(query);
+  }
+
+  @Get(':id/public')
+  async getPublicTripOfferById(
+    @Param(new ZodValidationPipe(TripOfferParamsSchema))
+    params: TripOfferParamsDto,
+  ): Promise<PublicTripOfferDetailResponseDto> {
+    return this.tripOfferService.getPublicTripOfferById(params.id);
   }
 
   @Get('my')
