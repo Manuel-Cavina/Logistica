@@ -38,6 +38,7 @@ const createTripOfferRecord = (
 describe('TripOfferService', () => {
   const tripOfferRepository = {
     searchPublic: jest.fn(),
+    findPublicById: jest.fn(),
     findTransporterProfileByAccountId: jest.fn(),
     findById: jest.fn(),
     findOwnedByAccountId: jest.fn(),
@@ -311,6 +312,60 @@ describe('TripOfferService', () => {
       page: 3,
       limit: 2,
     });
+  });
+
+  it('returns the public trip offer detail with a transporter summary', async () => {
+    tripOfferRepository.findPublicById.mockResolvedValue({
+      id: 'trip-offer-public-id',
+      originLabel: 'Buenos Aires',
+      destinationLabel: 'Rosario',
+      departureDate: new Date('2026-05-01T00:00:00.000Z'),
+      departureWindowStart: null,
+      departureWindowEnd: null,
+      availableCapacity: 6,
+      pricePerSlot: 120000,
+      maxDetourKm: 50,
+      notes: 'Salida temprana',
+      cancellationPolicy: 'Flexible',
+      transporterProfile: {
+        id: 'transporter-profile-id',
+        displayName: 'Acme Transportes',
+        verificationStatus: 'VERIFIED',
+      },
+    });
+
+    await expect(
+      tripOfferService.getPublicTripOfferById('trip-offer-public-id'),
+    ).resolves.toEqual({
+      id: 'trip-offer-public-id',
+      price: 120000,
+      availableCapacity: 6,
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      departureDate: new Date('2026-05-01T00:00:00.000Z'),
+      departureWindowStart: null,
+      departureWindowEnd: null,
+      maxDetourKm: 50,
+      notes: 'Salida temprana',
+      cancellationPolicy: 'Flexible',
+      transporter: {
+        id: 'transporter-profile-id',
+        displayName: 'Acme Transportes',
+        verificationStatus: 'VERIFIED',
+      },
+    });
+
+    expect(tripOfferRepository.findPublicById).toHaveBeenCalledWith(
+      'trip-offer-public-id',
+    );
+  });
+
+  it('throws when the public trip offer does not exist or is not published', async () => {
+    tripOfferRepository.findPublicById.mockResolvedValue(null);
+
+    await expect(
+      tripOfferService.getPublicTripOfferById('missing-trip-offer-id'),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('creates a draft trip offer for the authenticated transporter', async () => {

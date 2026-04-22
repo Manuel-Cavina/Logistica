@@ -310,6 +310,27 @@ export const PublicTripOfferSearchResponseSchema = z.object({
   totalPages: z.number().int().min(0),
 });
 
+export const PublicTripOfferTransporterSummarySchema = z.object({
+  id: cuidSchema,
+  displayName: z.string().trim().min(1).max(160),
+  verificationStatus: z.enum(['INCOMPLETE', 'PENDING', 'VERIFIED', 'REJECTED']),
+});
+
+export const PublicTripOfferDetailSchema = z.object({
+  id: cuidSchema,
+  price: z.number().int().min(0),
+  availableCapacity: z.number().int().min(0),
+  origin: z.string().trim().min(1).max(160),
+  destination: z.string().trim().min(1).max(160),
+  departureDate: z.date().nullable(),
+  departureWindowStart: z.date().nullable(),
+  departureWindowEnd: z.date().nullable(),
+  maxDetourKm: z.number().int().min(0).nullable(),
+  notes: z.string().max(2000).nullable(),
+  cancellationPolicy: z.string().max(1000).nullable(),
+  transporter: PublicTripOfferTransporterSummarySchema,
+});
+
 export type CreateTripOfferDto = z.infer<typeof CreateTripOfferSchema>;
 export type UpdateTripOfferDto = z.infer<typeof UpdateTripOfferSchema>;
 export type TripOfferParamsDto = z.infer<typeof TripOfferParamsSchema>;
@@ -323,3 +344,7 @@ export type PublicTripOfferSearchItem = z.infer<
 export type PublicTripOfferSearchResponse = z.infer<
   typeof PublicTripOfferSearchResponseSchema
 >;
+export type PublicTripOfferTransporterSummary = z.infer<
+  typeof PublicTripOfferTransporterSummarySchema
+>;
+export type PublicTripOfferDetail = z.infer<typeof PublicTripOfferDetailSchema>;

@@ -17,8 +17,10 @@ import {
 } from '../schemas/trailer.schema';
 import {
   CreateTripOfferSchema,
+  PublicTripOfferDetailSchema,
   PublicTripOfferSearchItemSchema,
   PublicTripOfferSearchResponseSchema,
+  PublicTripOfferTransporterSummarySchema,
   TripOfferSearchQuerySchema,
   TripOfferParamsSchema,
   TripOfferViewSchema,
@@ -147,7 +149,8 @@ export type ITripOfferSearchQueryDto = z.infer<
 export const TripOfferViewDtoSchema = TripOfferViewSchema;
 export type ITripOfferView = z.infer<typeof TripOfferViewDtoSchema>;
 
-export const PublicTripOfferSearchItemDtoSchema = PublicTripOfferSearchItemSchema;
+export const PublicTripOfferSearchItemDtoSchema =
+  PublicTripOfferSearchItemSchema;
 export type IPublicTripOfferSearchItem = z.infer<
   typeof PublicTripOfferSearchItemDtoSchema
 >;
@@ -156,6 +159,17 @@ export const PublicTripOfferSearchResponseDtoSchema =
   PublicTripOfferSearchResponseSchema;
 export type IPublicTripOfferSearchResponse = z.infer<
   typeof PublicTripOfferSearchResponseDtoSchema
+>;
+
+export const PublicTripOfferTransporterSummaryDtoSchema =
+  PublicTripOfferTransporterSummarySchema;
+export type IPublicTripOfferTransporterSummary = z.infer<
+  typeof PublicTripOfferTransporterSummaryDtoSchema
+>;
+
+export const PublicTripOfferDetailDtoSchema = PublicTripOfferDetailSchema;
+export type IPublicTripOfferDetail = z.infer<
+  typeof PublicTripOfferDetailDtoSchema
 >;
 
 export const AuthProfileViewSchema = z

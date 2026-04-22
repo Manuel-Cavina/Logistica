@@ -1,6 +1,7 @@
 import type { Prisma } from '@logistica/database';
 import type {
   ICreateTripOfferDto,
+  IPublicTripOfferDetail,
   ITripOfferSearchQueryDto,
   IPublicTripOfferSearchItem,
   IUpdateTripOfferDto,
@@ -35,12 +36,37 @@ export const transporterProfileOwnerSelect = {
   id: true,
 } satisfies Prisma.TransporterProfileSelect;
 
+export const publicTripOfferDetailSelect = {
+  id: true,
+  originLabel: true,
+  destinationLabel: true,
+  departureDate: true,
+  departureWindowStart: true,
+  departureWindowEnd: true,
+  availableCapacity: true,
+  pricePerSlot: true,
+  maxDetourKm: true,
+  notes: true,
+  cancellationPolicy: true,
+  transporterProfile: {
+    select: {
+      id: true,
+      displayName: true,
+      verificationStatus: true,
+    },
+  },
+} satisfies Prisma.TripOfferSelect;
+
 export type CreateTripOfferInput = ICreateTripOfferDto;
 export type UpdateTripOfferInput = IUpdateTripOfferDto;
 export type SearchTripOffersQuery = ITripOfferSearchQueryDto;
 export type PublicTripOfferSearchItem = IPublicTripOfferSearchItem;
+export type PublicTripOfferDetail = IPublicTripOfferDetail;
 export type TripOfferRecord = Prisma.TripOfferGetPayload<{
   select: typeof tripOfferSelect;
+}>;
+export type PublicTripOfferDetailRecord = Prisma.TripOfferGetPayload<{
+  select: typeof publicTripOfferDetailSelect;
 }>;
 export type TransporterProfileOwnerRecord =
   Prisma.TransporterProfileGetPayload<{

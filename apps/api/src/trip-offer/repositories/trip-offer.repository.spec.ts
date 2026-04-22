@@ -1,4 +1,5 @@
 import {
+  type Prisma,
   TripOfferStatus,
   TransporterVerificationStatus,
 } from '@logistica/database';
@@ -8,6 +9,7 @@ describe('TripOfferRepository', () => {
   const prisma = {
     $transaction: jest.fn(),
     tripOffer: {
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
@@ -54,7 +56,11 @@ describe('TripOfferRepository', () => {
             lt: new Date('2026-05-02T00:00:00.000Z'),
           },
         },
-        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+        orderBy: [
+          { departureDate: 'asc' },
+          { createdAt: 'desc' },
+          { id: 'asc' },
+        ],
         skip: 5,
         take: 5,
       }),
@@ -133,7 +139,11 @@ describe('TripOfferRepository', () => {
             lt: new Date('2026-05-02T00:00:00.000Z'),
           },
         },
-        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+        orderBy: [
+          { departureDate: 'asc' },
+          { createdAt: 'desc' },
+          { id: 'asc' },
+        ],
         skip: 0,
         take: 10,
       }),
@@ -261,8 +271,14 @@ describe('TripOfferRepository', () => {
       limit: 2,
     });
 
-    const findManyArgs = prisma.tripOffer.findMany.mock.calls[0][0];
-    const countArgs = prisma.tripOffer.count.mock.calls[0][0];
+    const findManyCalls = prisma.tripOffer.findMany.mock.calls as [
+      [Prisma.TripOfferFindManyArgs],
+    ];
+    const countCalls = prisma.tripOffer.count.mock.calls as [
+      [Prisma.TripOfferCountArgs],
+    ];
+    const [findManyArgs] = findManyCalls[0];
+    const [countArgs] = countCalls[0];
 
     expect(findManyArgs.where).toBe(countArgs.where);
     expect(findManyArgs.orderBy).toEqual([
@@ -272,5 +288,38 @@ describe('TripOfferRepository', () => {
     ]);
     expect(findManyArgs.skip).toBe(4);
     expect(findManyArgs.take).toBe(2);
+  });
+
+  it('loads the public trip offer detail using a published-only public select', async () => {
+    prisma.tripOffer.findFirst.mockResolvedValue(null);
+
+    await tripOfferRepository.findPublicById('cm9tripoffer0000wqz5oy7k8ph1');
+
+    expect(prisma.tripOffer.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'cm9tripoffer0000wqz5oy7k8ph1',
+        status: TripOfferStatus.PUBLISHED,
+      },
+      select: {
+        id: true,
+        originLabel: true,
+        destinationLabel: true,
+        departureDate: true,
+        departureWindowStart: true,
+        departureWindowEnd: true,
+        availableCapacity: true,
+        pricePerSlot: true,
+        maxDetourKm: true,
+        notes: true,
+        cancellationPolicy: true,
+        transporterProfile: {
+          select: {
+            id: true,
+            displayName: true,
+            verificationStatus: true,
+          },
+        },
+      },
+    });
   });
 });

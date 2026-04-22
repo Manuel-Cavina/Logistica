@@ -7,6 +7,7 @@ import {
 } from '@logistica/database';
 import type {
   CreateTripOfferInput,
+  PublicTripOfferDetailRecord,
   TripOfferSearchOrderBy,
   SearchTripOffersQuery,
   TransporterProfileOwnerRecord,
@@ -15,6 +16,7 @@ import type {
   TripOfferUpdateData,
 } from '../types/trip-offer.types';
 import {
+  publicTripOfferDetailSelect,
   transporterProfileOwnerSelect,
   tripOfferSelect,
 } from '../types/trip-offer.types';
@@ -56,6 +58,18 @@ export class TripOfferRepository {
     return this.prisma.tripOffer.findUnique({
       where: { id: tripOfferId },
       select: tripOfferSelect,
+    });
+  }
+
+  async findPublicById(
+    tripOfferId: string,
+  ): Promise<PublicTripOfferDetailRecord | null> {
+    return this.prisma.tripOffer.findFirst({
+      where: {
+        id: tripOfferId,
+        status: TripOfferStatus.PUBLISHED,
+      },
+      select: publicTripOfferDetailSelect,
     });
   }
 

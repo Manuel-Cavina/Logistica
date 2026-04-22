@@ -6,11 +6,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { TripOfferStatus } from '@logistica/database';
+import type { PublicTripOfferDetailResponseDto } from '../dto/public-trip-offer-detail.response.dto';
 import type { SearchTripOffersResponseDto } from '../dto/search-trip-offers.response.dto';
 import type { TripOfferResponseDto } from '../dto/trip-offer.response.dto';
 import { TripOfferRepository } from '../repositories/trip-offer.repository';
 import type {
   CreateTripOfferInput,
+  PublicTripOfferDetailRecord,
   SearchTripOffersQuery,
   TripOfferRecord,
   UpdateTripOfferInput,
@@ -67,6 +69,19 @@ export class TripOfferService {
       total,
       totalPages: total === 0 ? 0 : Math.ceil(total / normalizedQuery.limit),
     };
+  }
+
+  async getPublicTripOfferById(
+    tripOfferId: string,
+  ): Promise<PublicTripOfferDetailResponseDto> {
+    const tripOffer =
+      await this.tripOfferRepository.findPublicById(tripOfferId);
+
+    if (!tripOffer) {
+      throw new NotFoundException('Trip offer not found.');
+    }
+
+    return this.toPublicTripOfferDetail(tripOffer);
   }
 
   private validateSearchSort(query: SearchTripOffersQuery): void {
@@ -608,6 +623,29 @@ export class TripOfferService {
       pricePerSlot: tripOffer.pricePerSlot,
       cargoType: tripOffer.cargoType,
       status: this.getEffectiveStatus(tripOffer),
+    };
+  }
+
+  private toPublicTripOfferDetail(
+    tripOffer: PublicTripOfferDetailRecord,
+  ): PublicTripOfferDetailResponseDto {
+    return {
+      id: tripOffer.id,
+      price: tripOffer.pricePerSlot,
+      availableCapacity: tripOffer.availableCapacity,
+      origin: tripOffer.originLabel,
+      destination: tripOffer.destinationLabel,
+      departureDate: tripOffer.departureDate,
+      departureWindowStart: tripOffer.departureWindowStart,
+      departureWindowEnd: tripOffer.departureWindowEnd,
+      maxDetourKm: tripOffer.maxDetourKm,
+      notes: tripOffer.notes,
+      cancellationPolicy: tripOffer.cancellationPolicy,
+      transporter: {
+        id: tripOffer.transporterProfile.id,
+        displayName: tripOffer.transporterProfile.displayName,
+        verificationStatus: tripOffer.transporterProfile.verificationStatus,
+      },
     };
   }
 }
