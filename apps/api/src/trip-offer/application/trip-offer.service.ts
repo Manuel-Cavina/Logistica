@@ -50,6 +50,8 @@ export class TripOfferService {
   async searchPublicTripOffers(
     query: SearchTripOffersQuery,
   ): Promise<SearchTripOffersResponseDto> {
+    this.validateSearchSort(query);
+
     const normalizedQuery = {
       ...query,
       origin: query.origin.trim(),
@@ -65,6 +67,14 @@ export class TripOfferService {
       total,
       totalPages: total === 0 ? 0 : Math.ceil(total / normalizedQuery.limit),
     };
+  }
+
+  private validateSearchSort(query: SearchTripOffersQuery): void {
+    if (query.sortOrder !== undefined && query.sortBy !== 'price') {
+      throw new BadRequestException(
+        'sortOrder is only supported when sortBy=price.',
+      );
+    }
   }
 
   async listOwnTripOffers(accountId: string): Promise<TripOfferResponseDto[]> {

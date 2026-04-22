@@ -136,6 +136,52 @@ describe('TripOfferService', () => {
     });
   });
 
+  it('forwards public search sorting to the repository', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+
+    await tripOfferService.searchPublicTripOffers({
+      origin: ' Buenos Aires ',
+      destination: ' Rosario ',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'price',
+      sortOrder: 'asc',
+      page: 1,
+      limit: 10,
+    });
+
+    expect(tripOfferRepository.searchPublic).toHaveBeenCalledWith({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 2,
+      sortBy: 'price',
+      sortOrder: 'asc',
+      page: 1,
+      limit: 10,
+    });
+  });
+
+  it('throws when sortOrder is sent for a non-price sort', async () => {
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 2,
+        sortBy: 'rating',
+        sortOrder: 'desc',
+        page: 1,
+        limit: 10,
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(tripOfferRepository.searchPublic).not.toHaveBeenCalled();
+  });
+
   it('returns totalPages as 0 when the public search has no results', async () => {
     tripOfferRepository.searchPublic.mockResolvedValue({
       items: [],

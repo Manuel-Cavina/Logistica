@@ -49,3 +49,4 @@ export type TransporterProfileOwnerRecord =
 export type TripOfferCreateData = Prisma.TripOfferCreateInput;
 export type TripOfferUpdateData = Prisma.TripOfferUpdateInput;
 export type TripOfferSearchWhereInput = Prisma.TripOfferWhereInput;
+export type TripOfferSearchOrderBy = Prisma.TripOfferOrderByWithRelationInput[];

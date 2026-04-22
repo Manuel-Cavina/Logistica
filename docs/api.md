@@ -370,10 +370,70 @@ Uso esperado:
 
 ---
 
+## Trip offers
+
+### `GET /trip-offers/search`
+
+Busqueda publica de ofertas publicadas.
+
+**Query params**
+
+- `origin`: `string` requerido
+- `destination`: `string` requerido
+- `date`: fecha requerida
+- `requiredCapacity`: entero positivo requerido
+- `minPrice`: entero no negativo opcional
+- `maxPrice`: entero no negativo opcional
+- `verifiedOnly`: `true | false` opcional
+- `maxDetourKm`: entero no negativo opcional
+- `sortBy`: `price | proximity | rating` opcional
+- `sortOrder`: `asc | desc` opcional, solo valido cuando `sortBy=price`
+- `page`: entero positivo opcional, default `1`
+- `limit`: entero positivo opcional, maximo `20`, default `10`
+
+**Respuesta 200**
+
+```json
+{
+  "items": [
+    {
+      "id": "string",
+      "originLabel": "string",
+      "destinationLabel": "string",
+      "departureDate": "2026-05-01T00:00:00.000Z",
+      "availableCapacity": 4,
+      "pricePerSlot": 120000,
+      "cargoType": "EQUINE | GENERAL_CARGO | FOOD | PEOPLE",
+      "status": "PUBLISHED | FULL"
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+**Reglas actuales**
+
+- solo devuelve ofertas `PUBLISHED` con capacidad suficiente y filtros aplicados antes de paginar
+- si no se envia `sortBy`, el backend mantiene su orden default actual
+- `sortBy=price` ordena por `pricePerSlot`
+- `sortBy=proximity` usa una aproximacion temporal: menor `maxDetourKm` primero
+- `sortBy=rating` queda soportado desde ahora, pero mientras no exista rating agregado persistido el orden se resuelve con desempate estable
+- desempate estable para ordenamientos explicitos: `departureDate asc` y luego `id asc`
+- `sortOrder` solo se admite con `sortBy=price`
+
+**Errores**
+
+- `400` query invalida
+
+---
+
 ## Fuera de alcance por ahora
 
 Todavia no existen en la API:
 
 - endpoints de documentos de transportista
 - `verificationNote`
-- endpoints de `TripOffer`
+- detalle publico de `TripOffer`

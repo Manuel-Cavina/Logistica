@@ -7,6 +7,7 @@ import {
 } from '@logistica/database';
 import type {
   CreateTripOfferInput,
+  TripOfferSearchOrderBy,
   SearchTripOffersQuery,
   TransporterProfileOwnerRecord,
   TripOfferRecord,
@@ -26,11 +27,12 @@ export class TripOfferRepository {
     query: SearchTripOffersQuery,
   ): Promise<{ items: TripOfferRecord[]; total: number }> {
     const where = this.buildSearchWhere(query);
+    const orderBy = this.buildSearchOrderBy(query);
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.tripOffer.findMany({
         where,
-        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }],
+        orderBy,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
         select: tripOfferSelect,
@@ -187,5 +189,27 @@ export class TripOfferRepository {
         lt: nextDayStart,
       },
     };
+  }
+
+  private buildSearchOrderBy(
+    query: SearchTripOffersQuery,
+  ): TripOfferSearchOrderBy {
+    if (query.sortBy === 'price') {
+      return [
+        { pricePerSlot: query.sortOrder ?? 'asc' },
+        { departureDate: 'asc' },
+        { id: 'asc' },
+      ];
+    }
+
+    if (query.sortBy === 'proximity') {
+      return [{ maxDetourKm: 'asc' }, { departureDate: 'asc' }, { id: 'asc' }];
+    }
+
+    if (query.sortBy === 'rating') {
+      return [{ departureDate: 'asc' }, { id: 'asc' }];
+    }
+
+    return [{ departureDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }];
   }
 }

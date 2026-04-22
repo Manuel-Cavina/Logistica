@@ -160,6 +160,8 @@ describe('TripOfferController', () => {
         maxPrice: '150000',
         verifiedOnly: 'true',
         maxDetourKm: '80',
+        sortBy: 'price',
+        sortOrder: 'desc',
         page: '2',
         limit: '5',
       })
@@ -192,6 +194,8 @@ describe('TripOfferController', () => {
       maxPrice: 150000,
       verifiedOnly: true,
       maxDetourKm: 80,
+      sortBy: 'price',
+      sortOrder: 'desc',
       page: 2,
       limit: 5,
     });
@@ -801,6 +805,68 @@ describe('TripOfferController', () => {
         date: '2026-05-01',
         requiredCapacity: '1',
         verifiedOnly: '1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when sortBy is invalid in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        sortBy: 'createdAt',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when sortOrder is invalid in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        sortBy: 'price',
+        sortOrder: 'sideways',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when sortOrder is sent for proximity in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        sortBy: 'proximity',
+        sortOrder: 'asc',
       })
       .expect(400);
 
