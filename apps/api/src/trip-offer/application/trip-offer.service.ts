@@ -6,10 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { TripOfferStatus } from '@logistica/database';
+import type { SearchTripOffersResponseDto } from '../dto/search-trip-offers.response.dto';
 import type { TripOfferResponseDto } from '../dto/trip-offer.response.dto';
 import { TripOfferRepository } from '../repositories/trip-offer.repository';
 import type {
   CreateTripOfferInput,
+  SearchTripOffersQuery,
   TripOfferRecord,
   UpdateTripOfferInput,
 } from '../types/trip-offer.types';
@@ -44,6 +46,26 @@ type TripOfferDraftState = Pick<
 @Injectable()
 export class TripOfferService {
   constructor(private readonly tripOfferRepository: TripOfferRepository) {}
+
+  async searchPublicTripOffers(
+    query: SearchTripOffersQuery,
+  ): Promise<SearchTripOffersResponseDto> {
+    const normalizedQuery = {
+      ...query,
+      origin: query.origin.trim(),
+      destination: query.destination.trim(),
+    };
+    const { items, total } =
+      await this.tripOfferRepository.searchPublic(normalizedQuery);
+
+    return {
+      items: items.map((tripOffer) => this.toPublicSearchItem(tripOffer)),
+      page: normalizedQuery.page,
+      limit: normalizedQuery.limit,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / normalizedQuery.limit),
+    };
+  }
 
   async listOwnTripOffers(accountId: string): Promise<TripOfferResponseDto[]> {
     await this.getTransporterProfileOrThrow(accountId);
@@ -563,6 +585,19 @@ export class TripOfferService {
       status: this.getEffectiveStatus(tripOffer),
       createdAt: tripOffer.createdAt,
       updatedAt: tripOffer.updatedAt,
+    };
+  }
+
+  private toPublicSearchItem(tripOffer: TripOfferRecord) {
+    return {
+      id: tripOffer.id,
+      originLabel: tripOffer.originLabel,
+      destinationLabel: tripOffer.destinationLabel,
+      departureDate: tripOffer.departureDate,
+      availableCapacity: tripOffer.availableCapacity,
+      pricePerSlot: tripOffer.pricePerSlot,
+      cargoType: tripOffer.cargoType,
+      status: this.getEffectiveStatus(tripOffer),
     };
   }
 }

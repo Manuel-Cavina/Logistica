@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +21,9 @@ import { RolesGuard } from '../identity/authentication/guards/roles.guard';
 import type { AuthenticatedAccount } from '../identity/authentication/types/authentication.types';
 import { TripOfferService } from './application/trip-offer.service';
 import type { CreateTripOfferDto } from './dto/create-trip-offer.dto';
+import type { SearchTripOffersQueryDto } from './dto/search-trip-offers.dto';
+import { SearchTripOffersQuerySchema } from './dto/search-trip-offers.dto';
+import type { SearchTripOffersResponseDto } from './dto/search-trip-offers.response.dto';
 import type {
   TripOfferParamsDto,
   UpdateTripOfferDto,
@@ -34,6 +38,14 @@ interface AuthenticatedHttpRequest {
 @Controller('trip-offers')
 export class TripOfferController {
   constructor(private readonly tripOfferService: TripOfferService) {}
+
+  @Get('search')
+  async searchTripOffers(
+    @Query(new ZodValidationPipe(SearchTripOffersQuerySchema))
+    query: SearchTripOffersQueryDto,
+  ): Promise<SearchTripOffersResponseDto> {
+    return this.tripOfferService.searchPublicTripOffers(query);
+  }
 
   @Get('my')
   @UseGuards(JwtAuthGuard, RolesGuard)

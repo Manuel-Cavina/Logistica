@@ -43,6 +43,7 @@ class TestJwtAuthGuard {
 
 describe('TripOfferController', () => {
   const tripOfferService = {
+    searchPublicTripOffers: jest.fn(),
     listOwnTripOffers: jest.fn(),
     createOwnTripOffer: jest.fn(),
     publishOwnTripOffer: jest.fn(),
@@ -121,6 +122,113 @@ describe('TripOfferController', () => {
     expect(tripOfferService.listOwnTripOffers).toHaveBeenCalledWith(
       'transporter-account-id',
     );
+
+    await app.close();
+  });
+
+  it('searches public trip offers with all query params', async () => {
+    tripOfferService.searchPublicTripOffers.mockResolvedValue({
+      items: [
+        {
+          id: 'cm9tripoffer0000wqz5oy7k8ph1',
+          originLabel: 'Buenos Aires',
+          destinationLabel: 'Rosario',
+          departureDate: new Date('2026-05-01T00:00:00.000Z'),
+          availableCapacity: 6,
+          pricePerSlot: 120000,
+          cargoType: 'EQUINE',
+          status: 'PUBLISHED',
+        },
+      ],
+      page: 2,
+      limit: 5,
+      total: 11,
+      totalPages: 3,
+    });
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '2',
+        page: '2',
+        limit: '5',
+      })
+      .expect(200)
+      .expect({
+        items: [
+          {
+            id: 'cm9tripoffer0000wqz5oy7k8ph1',
+            originLabel: 'Buenos Aires',
+            destinationLabel: 'Rosario',
+            departureDate: '2026-05-01T00:00:00.000Z',
+            availableCapacity: 6,
+            pricePerSlot: 120000,
+            cargoType: 'EQUINE',
+            status: 'PUBLISHED',
+          },
+        ],
+        page: 2,
+        limit: 5,
+        total: 11,
+        totalPages: 3,
+      });
+
+    expect(tripOfferService.searchPublicTripOffers).toHaveBeenCalledWith({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 2,
+      page: 2,
+      limit: 5,
+    });
+
+    await app.close();
+  });
+
+  it('searches public trip offers using pagination defaults', async () => {
+    tripOfferService.searchPublicTripOffers.mockResolvedValue({
+      items: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    });
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    const response = await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+      })
+      .expect(200);
+
+    expect(response.body).toEqual({
+      items: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    });
+
+    expect(tripOfferService.searchPublicTripOffers).toHaveBeenCalledWith({
+      origin: 'Buenos Aires',
+      destination: 'Rosario',
+      date: new Date('2026-05-01T00:00:00.000Z'),
+      requiredCapacity: 1,
+      page: 1,
+      limit: 10,
+    });
 
     await app.close();
   });
@@ -474,6 +582,120 @@ describe('TripOfferController', () => {
       .expect(400);
 
     expect(tripOfferService.createOwnTripOffer).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when origin is missing in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when destination is missing in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when the search date is invalid', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: 'not-a-date',
+        requiredCapacity: '1',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when requiredCapacity is not greater than zero', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '0',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when page is less than 1 in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        page: '0',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when limit is greater than 20 in search', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/trip-offers/search')
+      .query({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: '2026-05-01',
+        requiredCapacity: '1',
+        limit: '21',
+      })
+      .expect(400);
+
+    expect(tripOfferService.searchPublicTripOffers).not.toHaveBeenCalled();
 
     await app.close();
   });

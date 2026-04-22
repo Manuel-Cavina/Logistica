@@ -1,6 +1,8 @@
 import type { Prisma } from '@logistica/database';
 import type {
   ICreateTripOfferDto,
+  ITripOfferSearchQueryDto,
+  IPublicTripOfferSearchItem,
   IUpdateTripOfferDto,
 } from '@logistica/shared';
 
@@ -35,6 +37,8 @@ export const transporterProfileOwnerSelect = {
 
 export type CreateTripOfferInput = ICreateTripOfferDto;
 export type UpdateTripOfferInput = IUpdateTripOfferDto;
+export type SearchTripOffersQuery = ITripOfferSearchQueryDto;
+export type PublicTripOfferSearchItem = IPublicTripOfferSearchItem;
 export type TripOfferRecord = Prisma.TripOfferGetPayload<{
   select: typeof tripOfferSelect;
 }>;
@@ -44,3 +48,4 @@ export type TransporterProfileOwnerRecord =
   }>;
 export type TripOfferCreateData = Prisma.TripOfferCreateInput;
 export type TripOfferUpdateData = Prisma.TripOfferUpdateInput;
+export type TripOfferSearchWhereInput = Prisma.TripOfferWhereInput;

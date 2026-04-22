@@ -17,6 +17,9 @@ import {
 } from '../schemas/trailer.schema';
 import {
   CreateTripOfferSchema,
+  PublicTripOfferSearchItemSchema,
+  PublicTripOfferSearchResponseSchema,
+  TripOfferSearchQuerySchema,
   TripOfferParamsSchema,
   TripOfferViewSchema,
   UpdateTripOfferSchema,
@@ -136,8 +139,24 @@ export type IUpdateTripOfferDto = z.infer<typeof UpdateTripOfferDtoSchema>;
 export const TripOfferParamsDtoSchema = TripOfferParamsSchema;
 export type ITripOfferParamsDto = z.infer<typeof TripOfferParamsDtoSchema>;
 
+export const TripOfferSearchQueryDtoSchema = TripOfferSearchQuerySchema;
+export type ITripOfferSearchQueryDto = z.infer<
+  typeof TripOfferSearchQueryDtoSchema
+>;
+
 export const TripOfferViewDtoSchema = TripOfferViewSchema;
 export type ITripOfferView = z.infer<typeof TripOfferViewDtoSchema>;
+
+export const PublicTripOfferSearchItemDtoSchema = PublicTripOfferSearchItemSchema;
+export type IPublicTripOfferSearchItem = z.infer<
+  typeof PublicTripOfferSearchItemDtoSchema
+>;
+
+export const PublicTripOfferSearchResponseDtoSchema =
+  PublicTripOfferSearchResponseSchema;
+export type IPublicTripOfferSearchResponse = z.infer<
+  typeof PublicTripOfferSearchResponseDtoSchema
+>;
 
 export const AuthProfileViewSchema = z
   .union([UserProfileViewSchema, TransporterProfileViewSchema])

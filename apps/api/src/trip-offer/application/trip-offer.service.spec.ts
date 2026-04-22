@@ -37,6 +37,7 @@ const createTripOfferRecord = (
 
 describe('TripOfferService', () => {
   const tripOfferRepository = {
+    searchPublic: jest.fn(),
     findTransporterProfileByAccountId: jest.fn(),
     findById: jest.fn(),
     findOwnedByAccountId: jest.fn(),
@@ -50,6 +51,80 @@ describe('TripOfferService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tripOfferService = new TripOfferService(tripOfferRepository as never);
+  });
+
+  it('searches public trip offers with pagination metadata', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [
+        createTripOfferRecord({
+          id: 'trip-offer-search-id',
+          status: TripOfferStatus.PUBLISHED,
+        }),
+      ],
+      total: 11,
+    });
+
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: ' Buenos Aires ',
+        destination: ' Rosario ',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 2,
+        page: 2,
+        limit: 5,
+      }),
+    ).resolves.toEqual({
+      items: [
+        {
+          id: 'trip-offer-search-id',
+          originLabel: 'Buenos Aires',
+          destinationLabel: 'Rosario',
+          departureDate: new Date('2026-05-01T00:00:00.000Z'),
+          availableCapacity: 6,
+          pricePerSlot: 120000,
+          cargoType: 'EQUINE',
+          status: 'PUBLISHED',
+        },
+      ],
+      page: 2,
+      limit: 5,
+      total: 11,
+      totalPages: 3,
+    });
+
+    expect(tripOfferRepository.searchPublic).toHaveBeenCalledWith(
+      expect.objectContaining({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        requiredCapacity: 2,
+        page: 2,
+        limit: 5,
+      }),
+    );
+  });
+
+  it('returns totalPages as 0 when the public search has no results', async () => {
+    tripOfferRepository.searchPublic.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+
+    await expect(
+      tripOfferService.searchPublicTripOffers({
+        origin: 'Buenos Aires',
+        destination: 'Rosario',
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        requiredCapacity: 1,
+        page: 1,
+        limit: 10,
+      }),
+    ).resolves.toEqual({
+      items: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    });
   });
 
   it('creates a draft trip offer for the authenticated transporter', async () => {

@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaService, TripOfferStatus } from '@logistica/database';
 import type {
   CreateTripOfferInput,
+  SearchTripOffersQuery,
   TransporterProfileOwnerRecord,
   TripOfferRecord,
+  TripOfferSearchWhereInput,
   TripOfferUpdateData,
 } from '../types/trip-offer.types';
 import {
@@ -14,6 +16,25 @@ import {
 @Injectable()
 export class TripOfferRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async searchPublic(
+    query: SearchTripOffersQuery,
+  ): Promise<{ items: TripOfferRecord[]; total: number }> {
+    const where = this.buildSearchWhere(query);
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.tripOffer.findMany({
+        where,
+        orderBy: [{ departureDate: 'asc' }, { createdAt: 'desc' }],
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        select: tripOfferSelect,
+      }),
+      this.prisma.tripOffer.count({ where }),
+    ]);
+
+    return { items, total };
+  }
 
   async findTransporterProfileByAccountId(
     accountId: string,
@@ -99,5 +120,40 @@ export class TripOfferRepository {
       data: { status },
       select: tripOfferSelect,
     });
+  }
+
+  private buildSearchWhere(
+    query: SearchTripOffersQuery,
+  ): TripOfferSearchWhereInput {
+    const dayStart = new Date(
+      Date.UTC(
+        query.date.getUTCFullYear(),
+        query.date.getUTCMonth(),
+        query.date.getUTCDate(),
+      ),
+    );
+    const nextDayStart = new Date(dayStart);
+    nextDayStart.setUTCDate(nextDayStart.getUTCDate() + 1);
+
+    return {
+      status: {
+        in: [TripOfferStatus.PUBLISHED, TripOfferStatus.FULL],
+      },
+      originLabel: {
+        contains: query.origin,
+        mode: 'insensitive',
+      },
+      destinationLabel: {
+        contains: query.destination,
+        mode: 'insensitive',
+      },
+      availableCapacity: {
+        gte: query.requiredCapacity,
+      },
+      departureDate: {
+        gte: dayStart,
+        lt: nextDayStart,
+      },
+    };
   }
 }
