@@ -1,5 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { BookingStatus, TripOfferStatus } from '@logistica/database';
+import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './booking.errors';
 import { BookingService } from './booking.service';
 
 describe('BookingService', () => {
@@ -195,11 +196,14 @@ describe('BookingService', () => {
         tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
         requestedUnits: 2,
       }),
-    ).rejects.toThrow(
-      new ConflictException(
-        'Insufficient available capacity for the requested booking units.',
-      ),
-    );
+    ).rejects.toMatchObject({
+      response: {
+        error: 'Conflict',
+        message: BOOKING_INSUFFICIENT_CAPACITY_MESSAGE,
+        statusCode: 409,
+      },
+      status: 409,
+    });
 
     expect(bookingRepository.create).not.toHaveBeenCalled();
   });
