@@ -112,6 +112,17 @@ export const TripOfferStatusSchema = z.enum([
 ]);
 export type ITripOfferStatus = z.infer<typeof TripOfferStatusSchema>;
 
+export const BookingStatusSchema = z.enum([
+  'PENDING_PAYMENT',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'DELIVERED_PENDING_CONFIRMATION',
+  'COMPLETED',
+  'CANCELLED',
+  'DISPUTED',
+]);
+export type IBookingStatus = z.infer<typeof BookingStatusSchema>;
+
 export type IUpdateTransporterProfileDto = {
   displayName?: string;
   businessName?: string | null;

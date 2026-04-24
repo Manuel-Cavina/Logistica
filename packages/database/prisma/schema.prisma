@@ -49,6 +49,16 @@ enum TripOfferStatus {
   CANCELLED
 }
 
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  DELIVERED_PENDING_CONFIRMATION
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
 model Account {
   id                 String              @id @default(cuid())
   email              String              @unique
@@ -63,6 +73,7 @@ model Account {
   userProfile        UserProfile?
   transporterProfile TransporterProfile?
   sessions           Session[]
+  clientBookings     Booking[]           @relation("ClientBookings")
 
   @@index([role])
   @@index([status])
@@ -169,12 +180,37 @@ model TripOffer {
   updatedAt            DateTime         @updatedAt
 
   transporterProfile   TransporterProfile @relation(fields: [transporterProfileId], references: [id], onDelete: Cascade)
+  bookings             Booking[]
 
   @@index([transporterProfileId])
   @@index([transporterProfileId, status])
   @@index([status])
   @@index([cargoType, status])
   @@map("trip_offers")
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  tripOfferId        String
+  clientAccountId    String
+  requestedUnits     Int
+  unitPriceSnapshot  Int
+  totalPriceSnapshot Int
+  expiresAt          DateTime
+  status             BookingStatus @default(PENDING_PAYMENT)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  tripOffer          TripOffer     @relation(fields: [tripOfferId], references: [id], onDelete: Restrict)
+  clientAccount      Account       @relation("ClientBookings", fields: [clientAccountId], references: [id], onDelete: Restrict)
+
+  @@index([tripOfferId])
+  @@index([clientAccountId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([tripOfferId, status])
+  @@index([clientAccountId, createdAt])
+  @@map("bookings")
 }
 
 model Session {
