@@ -3,8 +3,10 @@ export { PrismaService } from './prisma.service';
 export {
   AccountRole,
   AccountStatus,
+  BookingStatus,
   CargoType,
   Prisma,
+  type Booking,
   TripOfferStatus,
   TransporterVerificationStatus,
   type Account,
