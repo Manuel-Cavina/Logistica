@@ -32,6 +32,11 @@ export class BookingService {
       );
     }
 
+    this.ensureAvailableCapacity(
+      tripOffer.availableCapacity,
+      input.requestedUnits,
+    );
+
     const unitPriceSnapshot = tripOffer.pricePerSlot;
     const totalPriceSnapshot = unitPriceSnapshot * input.requestedUnits;
     const expiresAt = new Date(Date.now() + BOOKING_PENDING_PAYMENT_TTL_MS);
@@ -46,6 +51,17 @@ export class BookingService {
     });
 
     return this.toBookingResponse(booking);
+  }
+
+  private ensureAvailableCapacity(
+    availableCapacity: number,
+    requestedUnits: number,
+  ): void {
+    if (requestedUnits > availableCapacity) {
+      throw new ConflictException(
+        'Insufficient available capacity for the requested booking units.',
+      );
+    }
   }
 
   private toBookingResponse(booking: BookingRecord): BookingResponseDto {

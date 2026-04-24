@@ -263,4 +263,26 @@ describe('BookingController', () => {
 
     await app.close();
   });
+
+  it('returns 409 when the requested units exceed available capacity', async () => {
+    bookingService.createBooking.mockRejectedValue(
+      new ConflictException(
+        'Insufficient available capacity for the requested booking units.',
+      ),
+    );
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings')
+      .set('Authorization', 'Bearer CLIENT')
+      .send({
+        tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+        requestedUnits: 2,
+      })
+      .expect(409);
+
+    await app.close();
+  });
 });
