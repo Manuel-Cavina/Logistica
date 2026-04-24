@@ -10,6 +10,7 @@ import request from 'supertest';
 import { JwtAuthGuard } from '../identity/authentication/guards/jwt-auth.guard';
 import { RolesGuard } from '../identity/authentication/guards/roles.guard';
 import { BookingService } from './application/booking.service';
+import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './application/booking.errors';
 import { BookingController } from './booking.controller';
 
 @Injectable()
@@ -266,9 +267,7 @@ describe('BookingController', () => {
 
   it('returns 409 when the requested units exceed available capacity', async () => {
     bookingService.createBooking.mockRejectedValue(
-      new ConflictException(
-        'Insufficient available capacity for the requested booking units.',
-      ),
+      new ConflictException(BOOKING_INSUFFICIENT_CAPACITY_MESSAGE),
     );
 
     const app = await createApp();
@@ -281,7 +280,12 @@ describe('BookingController', () => {
         tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
         requestedUnits: 2,
       })
-      .expect(409);
+      .expect(409)
+      .expect({
+        error: 'Conflict',
+        message: BOOKING_INSUFFICIENT_CAPACITY_MESSAGE,
+        statusCode: 409,
+      });
 
     await app.close();
   });

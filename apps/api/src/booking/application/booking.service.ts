@@ -7,6 +7,7 @@ import { BookingStatus, TripOfferStatus } from '@logistica/database';
 import type { BookingResponseDto } from '../dto/booking.response.dto';
 import { BookingRepository } from '../repositories/booking.repository';
 import type { BookingRecord, CreateBookingInput } from '../types/booking.types';
+import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './booking.errors';
 
 const BOOKING_PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000;
 
@@ -58,9 +59,7 @@ export class BookingService {
     requestedUnits: number,
   ): void {
     if (requestedUnits > availableCapacity) {
-      throw new ConflictException(
-        'Insufficient available capacity for the requested booking units.',
-      );
+      throw new ConflictException(BOOKING_INSUFFICIENT_CAPACITY_MESSAGE);
     }
   }
 
