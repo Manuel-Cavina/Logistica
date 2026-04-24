@@ -23,6 +23,7 @@ describe('BookingService', () => {
 
     bookingRepository.findTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 4,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
@@ -88,6 +89,7 @@ describe('BookingService', () => {
   it('throws when the trip offer is not published', async () => {
     bookingRepository.findTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 4,
       pricePerSlot: 120000,
       status: TripOfferStatus.DRAFT,
     });
@@ -110,6 +112,7 @@ describe('BookingService', () => {
 
     bookingRepository.findTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 5,
       pricePerSlot: 85000,
       status: TripOfferStatus.PUBLISHED,
     });
@@ -148,6 +151,7 @@ describe('BookingService', () => {
 
     bookingRepository.findTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 2,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
@@ -176,5 +180,27 @@ describe('BookingService', () => {
     );
 
     jest.useRealTimers();
+  });
+
+  it('throws when requested units exceed available capacity', async () => {
+    bookingRepository.findTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 1,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+
+    await expect(
+      bookingService.createBooking('client-account-id', {
+        tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+        requestedUnits: 2,
+      }),
+    ).rejects.toThrow(
+      new ConflictException(
+        'Insufficient available capacity for the requested booking units.',
+      ),
+    );
+
+    expect(bookingRepository.create).not.toHaveBeenCalled();
   });
 });
