@@ -1,4 +1,5 @@
 export * from './schemas/auth.schema';
+export * from './schemas/booking.schema';
 export * from './schemas/trailer.schema';
 export * from './schemas/trip-offer.schema';
 export * from './schemas/transporter-profile.schema';

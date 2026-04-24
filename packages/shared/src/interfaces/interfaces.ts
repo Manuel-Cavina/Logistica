@@ -26,6 +26,10 @@ import {
   TripOfferViewSchema,
   UpdateTripOfferSchema,
 } from '../schemas/trip-offer.schema';
+import {
+  BookingViewSchema,
+  CreateBookingSchema,
+} from '../schemas/booking.schema';
 
 const emailSchema = z.string().trim().email().max(320);
 const cuidSchema = z.string().cuid();
@@ -146,6 +150,9 @@ export type IUpdateTrailerDto = z.infer<typeof UpdateTrailerDtoSchema>;
 export const CreateTripOfferDtoSchema = CreateTripOfferSchema;
 export type ICreateTripOfferDto = z.infer<typeof CreateTripOfferDtoSchema>;
 
+export const CreateBookingDtoSchema = CreateBookingSchema;
+export type ICreateBookingDto = z.infer<typeof CreateBookingDtoSchema>;
+
 export const UpdateTripOfferDtoSchema = UpdateTripOfferSchema;
 export type IUpdateTripOfferDto = z.infer<typeof UpdateTripOfferDtoSchema>;
 
@@ -159,6 +166,9 @@ export type ITripOfferSearchQueryDto = z.infer<
 
 export const TripOfferViewDtoSchema = TripOfferViewSchema;
 export type ITripOfferView = z.infer<typeof TripOfferViewDtoSchema>;
+
+export const BookingViewDtoSchema = BookingViewSchema;
+export type IBookingView = z.infer<typeof BookingViewDtoSchema>;
 
 export const PublicTripOfferSearchItemDtoSchema =
   PublicTripOfferSearchItemSchema;
