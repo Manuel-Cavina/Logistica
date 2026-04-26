@@ -7,7 +7,9 @@ import {
   type Prisma as PrismaNamespace,
 } from '@logistica/database';
 import {
+  bookingDetailSelect,
   bookingSelect,
+  type BookingDetailRecord,
   type BookingRecord,
   tripOfferBookingSelect,
   type TripOfferBookingRecord,
@@ -25,6 +27,19 @@ interface CreateBookingRecordInput {
 @Injectable()
 export class BookingRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findOwnedDetailById(
+    clientAccountId: string,
+    bookingId: string,
+  ): Promise<BookingDetailRecord | null> {
+    return this.prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        clientAccountId,
+      },
+      select: bookingDetailSelect,
+    });
+  }
 
   async lockTripOfferById(
     tripOfferId: string,

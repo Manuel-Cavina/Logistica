@@ -9,9 +9,11 @@ import {
   PrismaService,
   TripOfferStatus,
 } from '@logistica/database';
+import type { BookingDetailResponseDto } from '../dto/booking-detail.response.dto';
 import type { BookingResponseDto } from '../dto/booking.response.dto';
 import { BookingRepository } from '../repositories/booking.repository';
 import type {
+  BookingDetailRecord,
   BookingRecord,
   CreateBookingInput,
   TripOfferBookingRecord,
@@ -107,6 +109,24 @@ export class BookingService {
     return this.toBookingResponse(booking);
   }
 
+  async getOwnBookingById(
+    clientAccountId: string,
+    bookingId: string,
+  ): Promise<BookingDetailResponseDto> {
+    const booking = await this.bookingRepository.findOwnedDetailById(
+      clientAccountId,
+      bookingId,
+    );
+
+    if (!booking) {
+      throw new NotFoundException(
+        'Booking not found for the authenticated account.',
+      );
+    }
+
+    return this.toBookingDetailResponse(booking);
+  }
+
   private getPendingPaymentTtlMilliseconds(
     configService: ConfigService,
   ): number {
@@ -193,6 +213,31 @@ export class BookingService {
       status: booking.status ?? BookingStatus.PENDING_PAYMENT,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
+    };
+  }
+
+  private toBookingDetailResponse(
+    booking: BookingDetailRecord,
+  ): BookingDetailResponseDto {
+    return {
+      id: booking.id,
+      tripOfferId: booking.tripOfferId,
+      requestedUnits: booking.requestedUnits,
+      unitPriceSnapshot: booking.unitPriceSnapshot,
+      totalPriceSnapshot: booking.totalPriceSnapshot,
+      expiresAt: booking.expiresAt,
+      status: booking.status ?? BookingStatus.PENDING_PAYMENT,
+      createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
+      tripOffer: {
+        id: booking.tripOffer.id,
+        originLabel: booking.tripOffer.originLabel,
+        destinationLabel: booking.tripOffer.destinationLabel,
+        departureDate: booking.tripOffer.departureDate,
+        departureWindowStart: booking.tripOffer.departureWindowStart,
+        departureWindowEnd: booking.tripOffer.departureWindowEnd,
+        status: booking.tripOffer.status,
+      },
     };
   }
 }

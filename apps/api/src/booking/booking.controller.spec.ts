@@ -44,6 +44,7 @@ class TestJwtAuthGuard {
 describe('BookingController', () => {
   const bookingService = {
     createBooking: jest.fn(),
+    getOwnBookingById: jest.fn(),
   };
 
   beforeEach(() => {
@@ -120,6 +121,64 @@ describe('BookingController', () => {
     await app.close();
   });
 
+  it('returns the requested booking detail for the authenticated client', async () => {
+    bookingService.getOwnBookingById.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 2,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 240000,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: 'PENDING_PAYMENT',
+      createdAt: new Date('2026-04-24T13:00:00.000Z'),
+      updatedAt: new Date('2026-04-24T13:00:00.000Z'),
+      tripOffer: {
+        id: 'cmatripoffer0000wqz5oy7k8ph1',
+        originLabel: 'Buenos Aires',
+        destinationLabel: 'Rosario',
+        departureDate: new Date('2026-04-25T10:00:00.000Z'),
+        departureWindowStart: null,
+        departureWindowEnd: null,
+        status: 'PUBLISHED',
+      },
+    });
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(200)
+      .expect({
+        id: 'cmabooking0000wqz5oy7k8ph1',
+        tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+        requestedUnits: 2,
+        unitPriceSnapshot: 120000,
+        totalPriceSnapshot: 240000,
+        expiresAt: '2026-04-24T13:30:00.000Z',
+        status: 'PENDING_PAYMENT',
+        createdAt: '2026-04-24T13:00:00.000Z',
+        updatedAt: '2026-04-24T13:00:00.000Z',
+        tripOffer: {
+          id: 'cmatripoffer0000wqz5oy7k8ph1',
+          originLabel: 'Buenos Aires',
+          destinationLabel: 'Rosario',
+          departureDate: '2026-04-25T10:00:00.000Z',
+          departureWindowStart: null,
+          departureWindowEnd: null,
+          status: 'PUBLISHED',
+        },
+      });
+
+    expect(bookingService.getOwnBookingById).toHaveBeenCalledWith(
+      'client-account-id',
+      'cmabooking0000wqz5oy7k8ph1',
+    );
+
+    await app.close();
+  });
+
   it('returns 400 when tripOfferId is invalid', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
@@ -134,6 +193,20 @@ describe('BookingController', () => {
       .expect(400);
 
     expect(bookingService.createBooking).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it('returns 400 when booking id is invalid', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/bookings/not-a-cuid')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(400);
+
+    expect(bookingService.getOwnBookingById).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -207,6 +280,17 @@ describe('BookingController', () => {
     await app.close();
   });
 
+  it('returns 401 when reading a booking without an access token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .expect(401);
+
+    await app.close();
+  });
+
   it('returns 403 when the authenticated role is not CLIENT', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
@@ -218,6 +302,18 @@ describe('BookingController', () => {
         tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
         requestedUnits: 2,
       })
+      .expect(403);
+
+    await app.close();
+  });
+
+  it('returns 403 when reading a booking with a non-client role', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .set('Authorization', 'Bearer TRANSPORTER')
       .expect(403);
 
     await app.close();
@@ -239,6 +335,27 @@ describe('BookingController', () => {
         requestedUnits: 2,
       })
       .expect(404);
+
+    await app.close();
+  });
+
+  it('returns 404 when the booking does not exist or is not accessible', async () => {
+    bookingService.getOwnBookingById.mockRejectedValue(
+      new NotFoundException('Booking not found for the authenticated account.'),
+    );
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(404)
+      .expect({
+        error: 'Not Found',
+        message: 'Booking not found for the authenticated account.',
+        statusCode: 404,
+      });
 
     await app.close();
   });
