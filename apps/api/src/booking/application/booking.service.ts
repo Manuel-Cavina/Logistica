@@ -3,7 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, TripOfferStatus } from '@logistica/database';
+import {
+  BookingStatus,
+  PrismaService,
+  TripOfferStatus,
+} from '@logistica/database';
 import type { BookingResponseDto } from '../dto/booking.response.dto';
 import { BookingRepository } from '../repositories/booking.repository';
 import type { BookingRecord, CreateBookingInput } from '../types/booking.types';
@@ -13,42 +17,62 @@ const BOOKING_PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000;
 
 @Injectable()
 export class BookingService {
-  constructor(private readonly bookingRepository: BookingRepository) {}
+  constructor(
+    private readonly bookingRepository: BookingRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async createBooking(
     clientAccountId: string,
     input: CreateBookingInput,
   ): Promise<BookingResponseDto> {
-    const tripOffer = await this.bookingRepository.findTripOfferById(
-      input.tripOfferId,
-    );
-
-    if (!tripOffer) {
-      throw new NotFoundException('Trip offer not found.');
-    }
-
-    if (tripOffer.status !== TripOfferStatus.PUBLISHED) {
-      throw new ConflictException(
-        'Bookings can only be created for trip offers in PUBLISHED status.',
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const tripOffer = await this.bookingRepository.lockTripOfferById(
+        input.tripOfferId,
+        tx,
       );
-    }
 
-    this.ensureAvailableCapacity(
-      tripOffer.availableCapacity,
-      input.requestedUnits,
-    );
+      if (!tripOffer) {
+        throw new NotFoundException('Trip offer not found.');
+      }
 
-    const unitPriceSnapshot = tripOffer.pricePerSlot;
-    const totalPriceSnapshot = unitPriceSnapshot * input.requestedUnits;
-    const expiresAt = new Date(Date.now() + BOOKING_PENDING_PAYMENT_TTL_MS);
+      if (tripOffer.status !== TripOfferStatus.PUBLISHED) {
+        throw new ConflictException(
+          'Bookings can only be created for trip offers in PUBLISHED status.',
+        );
+      }
 
-    const booking = await this.bookingRepository.create({
-      tripOfferId: tripOffer.id,
-      clientAccountId,
-      requestedUnits: input.requestedUnits,
-      unitPriceSnapshot,
-      totalPriceSnapshot,
-      expiresAt,
+      this.ensureAvailableCapacity(
+        tripOffer.availableCapacity,
+        input.requestedUnits,
+      );
+
+      const remainingCapacity =
+        tripOffer.availableCapacity - input.requestedUnits;
+      const unitPriceSnapshot = tripOffer.pricePerSlot;
+      const totalPriceSnapshot = unitPriceSnapshot * input.requestedUnits;
+      const expiresAt = new Date(Date.now() + BOOKING_PENDING_PAYMENT_TTL_MS);
+
+      await this.bookingRepository.updateTripOfferCapacity(
+        tripOffer.id,
+        input.requestedUnits,
+        remainingCapacity === 0
+          ? TripOfferStatus.FULL
+          : TripOfferStatus.PUBLISHED,
+        tx,
+      );
+
+      return this.bookingRepository.create(
+        {
+          tripOfferId: tripOffer.id,
+          clientAccountId,
+          requestedUnits: input.requestedUnits,
+          unitPriceSnapshot,
+          totalPriceSnapshot,
+          expiresAt,
+        },
+        tx,
+      );
     });
 
     return this.toBookingResponse(booking);
