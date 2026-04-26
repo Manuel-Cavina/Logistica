@@ -1,76 +1,125 @@
-- key: E5-FE
-  title: Búsqueda y exploración de ofertas frontend
-  milestone: Sprint 4
-  labels: [frontend, feature, busqueda-exploracion-ofertas, mvp]
+- key: E6-FE
+  title: Booking con anti-overbooking frontend
+  milestone: Sprint 5
+  labels: [frontend, feature, booking-anti-overbooking, mvp, critical]
   issues:
-    - title: Crear formulario de búsqueda de ofertas para cliente
-      objective: Dar al cliente un punto de entrada claro para buscar ofertas viables.
+    - title: Implementar acción de iniciar reserva desde el detalle de oferta
+      objective: Permitir que el cliente empiece el flujo de reserva desde una oferta disponible.
       implementation:
-        - Crear vista o bloque de búsqueda con origin, destination, date y requiredCapacity
-        - Validar campos obligatorios y formatos básicos
-        - Conectar el submit con el endpoint real de búsqueda
+        - Agregar CTA principal de reserva en la vista de detalle de oferta
+        - Validar que la oferta esté disponible y tenga capacidad visible
+        - Resolver navegación hacia el flujo o pantalla de creación de booking
       acceptance:
-        - Existe el formulario de búsqueda
-        - El formulario valida origen, destino, fecha y cupos
-        - La búsqueda se ejecuta contra la API real
-        - El usuario recibe feedback claro ante error de validación
+        - El detalle de oferta permite iniciar una reserva
+        - La acción solo está disponible para ofertas reservables
+        - La navegación al flujo de booking funciona correctamente
+        - La UI evita iniciar reserva sobre ofertas no disponibles
 
-    - title: Implementar vista de resultados de búsqueda
-      objective: Mostrar ofertas compatibles de forma clara y reutilizable.
+    - title: Crear formulario de booking con selección de cupos
+      objective: Permitir que el cliente defina cuántos cupos quiere reservar de forma clara y segura.
       implementation:
-        - Renderizar listado de ofertas desde la respuesta del backend
-        - Mostrar información mínima relevante en cada card o fila
-        - Manejar estados de loading, empty y error
+        - Crear vista o bloque de booking con selector de requestedUnits
+        - Mostrar capacidad disponible recibida desde la oferta
+        - Validar requestedUnits mayor a cero y no mayor a la capacidad visible
       acceptance:
-        - Existe la vista de resultados
+        - Existe el formulario de booking
+        - El usuario puede seleccionar requestedUnits
+        - La UI valida que requestedUnits sea mayor a cero
+        - La UI valida que requestedUnits no supere la capacidad disponible visible
+
+    - title: Mostrar snapshot de precio y resumen de reserva antes de confirmar
+      objective: Dar claridad al cliente sobre el costo y las condiciones de la reserva antes de crear el booking.
+      implementation:
+        - Mostrar unitPrice de la oferta y cálculo estimado de total
+        - Mostrar resumen con ruta, fecha, requestedUnits y precio total estimado
+        - Aclarar visualmente que el precio final queda congelado al crear la reserva
+      acceptance:
+        - El usuario ve un resumen claro antes de confirmar
+        - La UI muestra requestedUnits, precio unitario y total estimado
+        - La información de ruta y fecha es visible en el resumen
+        - La pantalla deja claro que la reserva genera un snapshot de precio
+
+    - title: Integrar creación de booking contra la API real
+      objective: Conectar la UI con el backend para crear bookings reales en estado PENDING_PAYMENT.
+      implementation:
+        - Consumir el endpoint POST /bookings
+        - Enviar offerId y requestedUnits según contrato real
+        - Manejar submit con loading, success y error
+      acceptance:
+        - La UI crea bookings usando la API real
+        - El submit refleja estado de carga correctamente
+        - La respuesta exitosa redirige o muestra el booking creado
+        - Los errores de creación se muestran de forma clara
+
+    - title: Manejar error semántico por falta de cupos en la UI
+      objective: Informar correctamente al cliente cuando la capacidad ya no está disponible al momento de reservar.
+      implementation:
+        - Detectar respuesta 409 Conflict del backend
+        - Mostrar mensaje claro de falta de cupos o capacidad insuficiente
+        - Permitir reintentar o volver al detalle de la oferta
+      acceptance:
+        - La UI interpreta correctamente el error 409
+        - El usuario recibe un mensaje claro cuando no hay cupos suficientes
+        - La interfaz no queda en estado inconsistente tras el error
+        - El usuario puede continuar el flujo sin recargar manualmente la app
+
+    - title: Implementar vista de detalle de booking
+      objective: Permitir que el cliente consulte la información principal de una reserva creada.
+      implementation:
+        - Crear pantalla o vista de detalle de booking
+        - Consumir endpoint GET /bookings/:id
+        - Mostrar estado, requestedUnits, snapshot de precio, expiración y resumen de oferta
+      acceptance:
+        - Existe la vista de detalle de booking
         - La vista consume la API real
-        - Cada resultado muestra información útil para decidir
-        - Los estados de loading, empty y error funcionan correctamente
+        - El booking muestra estado, cupos solicitados, precio y expiración
+        - El resumen de la oferta asociada es visible y entendible
 
-    - title: Implementar filtros de búsqueda en la UI
-      objective: Permitir refinar resultados sin abandonar el flujo de exploración.
+    - title: Mostrar estado PENDING_PAYMENT y tiempo de expiración del booking
+      objective: Hacer visible que la reserva bloquea cupos temporalmente y que tiene una vigencia definida.
       implementation:
-        - Agregar controles para precio mínimo y máximo
-        - Agregar control para solo verificados
-        - Agregar control para desvío máximo
-        - Sincronizar filtros con la consulta al backend
+        - Mostrar badge o estado visible PENDING_PAYMENT
+        - Mostrar expiresAt en formato entendible
+        - Agregar mensaje explicativo sobre la vigencia de la reserva
       acceptance:
-        - El usuario puede filtrar por precio
-        - El usuario puede filtrar por verificación
-        - El usuario puede filtrar por desvío
-        - La UI refleja correctamente los filtros aplicados
+        - El estado PENDING_PAYMENT se muestra claramente
+        - La expiración del booking es visible para el usuario
+        - La UI comunica que la reserva tiene duración limitada
+        - La información se presenta de forma clara y no ambigua
 
-    - title: Implementar ordenamiento y paginación en resultados
-      objective: Permitir navegar y priorizar resultados de forma cómoda y consistente.
+    - title: Implementar cancelación de booking desde la UI
+      objective: Permitir que el cliente cancele una reserva pendiente cuando la regla de negocio lo habilite.
       implementation:
-        - Agregar selector de orden por precio, cercanía y rating
-        - Implementar paginación con máximo 20 resultados por página
-        - Mantener estado de búsqueda, filtros y orden al cambiar de página
+        - Agregar acción de cancelación en bookings cancelables
+        - Consumir endpoint o acción real de cancelación
+        - Reflejar el nuevo estado y actualizar la vista tras cancelar
       acceptance:
-        - El usuario puede ordenar por precio, cercanía y rating
-        - El usuario puede navegar entre páginas de resultados
-        - La paginación respeta el máximo de 20 resultados por página
-        - La navegación conserva filtros y ordenamiento activos
+        - La UI permite cancelar un booking cuando corresponde
+        - La cancelación impacta contra la API real
+        - El nuevo estado del booking se refleja correctamente
+        - La vista no muestra acciones inválidas luego de cancelar
 
-    - title: Implementar navegación desde resultados al detalle de oferta
-      objective: Permitir profundizar en una oferta específica desde la exploración.
+    - title: Cubrir estados de loading, empty, error y éxito del flujo de booking
+      objective: Dar una experiencia robusta y profesional en todo el flujo visual de reserva.
       implementation:
-        - Agregar acción para abrir el detalle desde cada resultado
-        - Resolver el id de oferta y consumir el endpoint de detalle público
-        - Manejar errores de navegación o detalle no disponible
+        - Implementar estados de carga en creación y detalle de booking
+        - Manejar errores de red, booking inexistente y respuestas inválidas
+        - Mostrar feedback de éxito tras crear o cancelar una reserva
       acceptance:
-        - Cada resultado permite abrir su detalle
-        - La navegación al detalle funciona correctamente
-        - La UI maneja correctamente ofertas inexistentes o no disponibles
+        - El flujo muestra loading de forma consistente
+        - Los errores de red y negocio se manejan correctamente
+        - Un booking inexistente o inaccesible muestra feedback controlado
+        - El usuario recibe confirmación clara en acciones exitosas
 
-    - title: Implementar vista de detalle completo de oferta
-      objective: Mostrar toda la información necesaria para que el cliente entienda la oferta y pueda decidir.
+    - title: Agregar tests del flujo de booking frontend y validaciones de CI
+      objective: Asegurar que el flujo visual de booking funcione correctamente y no rompa el pipeline del proyecto.
       implementation:
-        - Renderizar ruta, fecha, precio, capacidad disponible, desvío y condiciones
-        - Mostrar resumen del transportista con verificación y rating
-        - Dejar preparada la vista para futura acción de reserva sin acoplarla todavía
+        - Crear tests de componentes y flujo para creación de booking
+        - Cubrir validaciones de requestedUnits y manejo del error 409
+        - Cubrir render de estado PENDING_PAYMENT, expiración y cancelación
+        - Asegurar que pasen lint, typecheck, test y build
       acceptance:
-        - El detalle de oferta muestra la información necesaria para decidir
-        - La verificación del transportista es visible
-        - El rating del transportista es visible
-        - La capacidad disponible, precio y desvío se muestran claramente
+        - Existen tests del flujo de creación de booking
+        - Existen tests del manejo de error por falta de cupos
+        - Existen tests de detalle y cancelación de booking
+        - Pasan lint, typecheck, tests y build para mantener CI/CD en verde
