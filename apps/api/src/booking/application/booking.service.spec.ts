@@ -5,6 +5,7 @@ import { BookingService } from './booking.service';
 
 describe('BookingService', () => {
   const bookingRepository = {
+    findOwnedDetailById: jest.fn(),
     lockTripOfferById: jest.fn(),
     expirePendingBookingsForTripOffer: jest.fn(),
     updateTripOfferAvailability: jest.fn(),
@@ -118,6 +119,94 @@ describe('BookingService', () => {
         expiresAt,
       },
       tx,
+    );
+  });
+
+  it('returns the detail for a booking owned by the authenticated client', async () => {
+    const createdAt = new Date('2026-04-24T13:00:00.000Z');
+    const expiresAt = new Date('2026-04-24T13:30:00.000Z');
+
+    bookingRepository.findOwnedDetailById.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 2,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 240000,
+      expiresAt,
+      status: BookingStatus.PENDING_PAYMENT,
+      createdAt,
+      updatedAt: createdAt,
+      tripOffer: {
+        id: 'cmatripoffer0000wqz5oy7k8ph1',
+        originLabel: 'Buenos Aires',
+        destinationLabel: 'Rosario',
+        departureDate: new Date('2026-04-25T10:00:00.000Z'),
+        departureWindowStart: null,
+        departureWindowEnd: null,
+        status: TripOfferStatus.PUBLISHED,
+      },
+    });
+
+    await expect(
+      bookingService.getOwnBookingById(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).resolves.toEqual({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 2,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 240000,
+      expiresAt,
+      status: BookingStatus.PENDING_PAYMENT,
+      createdAt,
+      updatedAt: createdAt,
+      tripOffer: {
+        id: 'cmatripoffer0000wqz5oy7k8ph1',
+        originLabel: 'Buenos Aires',
+        destinationLabel: 'Rosario',
+        departureDate: new Date('2026-04-25T10:00:00.000Z'),
+        departureWindowStart: null,
+        departureWindowEnd: null,
+        status: TripOfferStatus.PUBLISHED,
+      },
+    });
+
+    expect(bookingRepository.findOwnedDetailById).toHaveBeenCalledWith(
+      'client-account-id',
+      'cmabooking0000wqz5oy7k8ph1',
+    );
+  });
+
+  it('throws when the booking does not exist for the authenticated client', async () => {
+    bookingRepository.findOwnedDetailById.mockResolvedValue(null);
+
+    await expect(
+      bookingService.getOwnBookingById(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).rejects.toThrow(
+      new NotFoundException('Booking not found for the authenticated account.'),
+    );
+  });
+
+  it('throws the same not found response when the booking belongs to another client', async () => {
+    bookingRepository.findOwnedDetailById.mockResolvedValue(null);
+
+    await expect(
+      bookingService.getOwnBookingById(
+        'another-client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).rejects.toThrow(
+      new NotFoundException('Booking not found for the authenticated account.'),
+    );
+
+    expect(bookingRepository.findOwnedDetailById).toHaveBeenCalledWith(
+      'another-client-account-id',
+      'cmabooking0000wqz5oy7k8ph1',
     );
   });
 
@@ -420,7 +509,9 @@ describe('BookingService', () => {
       requestedUnits: 1,
     });
 
-    expect(bookingRepository.updateTripOfferAvailability).not.toHaveBeenCalled();
+    expect(
+      bookingRepository.updateTripOfferAvailability,
+    ).not.toHaveBeenCalled();
     expect(
       bookingRepository.expirePendingBookingsForTripOffer,
     ).toHaveBeenCalledTimes(1);

@@ -1,5 +1,5 @@
 import type { Prisma } from '@logistica/database';
-import type { ICreateBookingDto } from '@logistica/shared';
+import type { IBookingDetail, ICreateBookingDto } from '@logistica/shared';
 
 export const bookingSelect = {
   id: true,
@@ -22,9 +22,36 @@ export const tripOfferBookingSelect = {
   status: true,
 } satisfies Prisma.TripOfferSelect;
 
+export const bookingDetailSelect = {
+  id: true,
+  tripOfferId: true,
+  requestedUnits: true,
+  unitPriceSnapshot: true,
+  totalPriceSnapshot: true,
+  expiresAt: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  tripOffer: {
+    select: {
+      id: true,
+      originLabel: true,
+      destinationLabel: true,
+      departureDate: true,
+      departureWindowStart: true,
+      departureWindowEnd: true,
+      status: true,
+    },
+  },
+} satisfies Prisma.BookingSelect;
+
 export type CreateBookingInput = ICreateBookingDto;
+export type BookingDetail = IBookingDetail;
 export type BookingRecord = Prisma.BookingGetPayload<{
   select: typeof bookingSelect;
+}>;
+export type BookingDetailRecord = Prisma.BookingGetPayload<{
+  select: typeof bookingDetailSelect;
 }>;
 export type TripOfferBookingRecord = Prisma.TripOfferGetPayload<{
   select: typeof tripOfferBookingSelect;
