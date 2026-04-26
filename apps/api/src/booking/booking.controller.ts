@@ -42,6 +42,20 @@ export class BookingController {
     );
   }
 
+  @Post(':id/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CLIENT')
+  async cancelOwnBooking(
+    @Req() request: AuthenticatedHttpRequest,
+    @Param(new ZodValidationPipe(BookingParamsSchema))
+    params: BookingParamsDto,
+  ): Promise<BookingResponseDto> {
+    return this.bookingService.cancelOwnBooking(
+      request.user.accountId,
+      params.id,
+    );
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('CLIENT')

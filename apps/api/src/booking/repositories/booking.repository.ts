@@ -8,7 +8,9 @@ import {
 } from '@logistica/database';
 import {
   bookingDetailSelect,
+  bookingCancellationSelect,
   bookingSelect,
+  type BookingCancellationRecord,
   type BookingDetailRecord,
   type BookingRecord,
   tripOfferBookingSelect,
@@ -38,6 +40,20 @@ export class BookingRepository {
         clientAccountId,
       },
       select: bookingDetailSelect,
+    });
+  }
+
+  async findOwnedBookingForCancellation(
+    clientAccountId: string,
+    bookingId: string,
+    tx: PrismaNamespace.TransactionClient,
+  ): Promise<BookingCancellationRecord | null> {
+    return tx.booking.findFirst({
+      where: {
+        id: bookingId,
+        clientAccountId,
+      },
+      select: bookingCancellationSelect,
     });
   }
 
@@ -119,6 +135,44 @@ export class BookingRepository {
       },
       select: tripOfferBookingSelect,
     });
+  }
+
+  async releaseTripOfferCapacity(
+    tripOfferId: string,
+    releasedUnits: number,
+    status: TripOfferStatus,
+    tx: PrismaNamespace.TransactionClient,
+  ): Promise<TripOfferBookingRecord> {
+    return tx.tripOffer.update({
+      where: { id: tripOfferId },
+      data: {
+        availableCapacity: {
+          increment: releasedUnits,
+        },
+        status,
+      },
+      select: tripOfferBookingSelect,
+    });
+  }
+
+  async cancelPendingBooking(
+    bookingId: string,
+    now: Date,
+    tx: PrismaNamespace.TransactionClient,
+  ): Promise<BookingRecord | null> {
+    const result = await tx.booking.updateManyAndReturn({
+      where: {
+        id: bookingId,
+        status: BookingStatus.PENDING_PAYMENT,
+      },
+      data: {
+        status: BookingStatus.CANCELLED,
+        updatedAt: now,
+      },
+      select: bookingSelect,
+    });
+
+    return result[0] ?? null;
   }
 
   async create(
