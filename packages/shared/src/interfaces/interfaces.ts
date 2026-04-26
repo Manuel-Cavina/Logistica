@@ -118,6 +118,7 @@ export type ITripOfferStatus = z.infer<typeof TripOfferStatusSchema>;
 
 export const BookingStatusSchema = z.enum([
   'PENDING_PAYMENT',
+  'EXPIRED',
   'CONFIRMED',
   'IN_PROGRESS',
   'DELIVERED_PENDING_CONFIRMATION',
