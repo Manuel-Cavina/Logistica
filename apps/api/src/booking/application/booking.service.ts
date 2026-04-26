@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   BookingStatus,
   PrismaService,
@@ -10,61 +11,89 @@ import {
 } from '@logistica/database';
 import type { BookingResponseDto } from '../dto/booking.response.dto';
 import { BookingRepository } from '../repositories/booking.repository';
-import type { BookingRecord, CreateBookingInput } from '../types/booking.types';
+import type {
+  BookingRecord,
+  CreateBookingInput,
+  TripOfferBookingRecord,
+} from '../types/booking.types';
 import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './booking.errors';
-
-const BOOKING_PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000;
 
 @Injectable()
 export class BookingService {
+  private readonly pendingPaymentTtlMilliseconds: number;
+
   constructor(
     private readonly bookingRepository: BookingRepository,
     private readonly prisma: PrismaService,
-  ) {}
+    configService: ConfigService,
+  ) {
+    this.pendingPaymentTtlMilliseconds =
+      this.getPendingPaymentTtlMilliseconds(configService);
+  }
 
   async createBooking(
     clientAccountId: string,
     input: CreateBookingInput,
   ): Promise<BookingResponseDto> {
+    const now = new Date();
+    const expiresAt = new Date(
+      now.getTime() + this.pendingPaymentTtlMilliseconds,
+    );
+
     const booking = await this.prisma.$transaction(async (tx) => {
-      const tripOffer = await this.bookingRepository.lockTripOfferById(
+      const lockedTripOffer = await this.bookingRepository.lockTripOfferById(
         input.tripOfferId,
         tx,
       );
 
-      if (!tripOffer) {
+      if (!lockedTripOffer) {
         throw new NotFoundException('Trip offer not found.');
       }
 
-      if (tripOffer.status !== TripOfferStatus.PUBLISHED) {
-        throw new ConflictException(
-          'Bookings can only be created for trip offers in PUBLISHED status.',
+      const releasedUnits =
+        await this.bookingRepository.expirePendingBookingsForTripOffer(
+          lockedTripOffer.id,
+          now,
+          tx,
+        );
+      const effectiveTripOffer = this.applyReleasedCapacity(
+        lockedTripOffer,
+        releasedUnits,
+      );
+
+      if (releasedUnits > 0) {
+        await this.bookingRepository.updateTripOfferAvailability(
+          effectiveTripOffer.id,
+          effectiveTripOffer.availableCapacity,
+          effectiveTripOffer.status,
+          tx,
         );
       }
 
+      this.ensureTripOfferIsBookable(effectiveTripOffer);
       this.ensureAvailableCapacity(
-        tripOffer.availableCapacity,
+        effectiveTripOffer.availableCapacity,
         input.requestedUnits,
       );
 
-      const remainingCapacity =
-        tripOffer.availableCapacity - input.requestedUnits;
-      const unitPriceSnapshot = tripOffer.pricePerSlot;
+      const nextAvailableCapacity =
+        effectiveTripOffer.availableCapacity - input.requestedUnits;
+      const unitPriceSnapshot = effectiveTripOffer.pricePerSlot;
       const totalPriceSnapshot = unitPriceSnapshot * input.requestedUnits;
-      const expiresAt = new Date(Date.now() + BOOKING_PENDING_PAYMENT_TTL_MS);
 
       await this.bookingRepository.updateTripOfferCapacity(
-        tripOffer.id,
+        effectiveTripOffer.id,
         input.requestedUnits,
-        remainingCapacity === 0
-          ? TripOfferStatus.FULL
-          : TripOfferStatus.PUBLISHED,
+        this.resolveStatusForAvailableCapacity(
+          effectiveTripOffer.status,
+          nextAvailableCapacity,
+        ),
         tx,
       );
 
       return this.bookingRepository.create(
         {
-          tripOfferId: tripOffer.id,
+          tripOfferId: effectiveTripOffer.id,
           clientAccountId,
           requestedUnits: input.requestedUnits,
           unitPriceSnapshot,
@@ -78,6 +107,55 @@ export class BookingService {
     return this.toBookingResponse(booking);
   }
 
+  private getPendingPaymentTtlMilliseconds(
+    configService: ConfigService,
+  ): number {
+    const rawTtlMinutes =
+      configService.get<string>('BOOKING_PENDING_PAYMENT_TTL_MINUTES') ?? '30';
+    const ttlMinutes = Number.parseInt(rawTtlMinutes, 10);
+
+    if (!Number.isInteger(ttlMinutes) || ttlMinutes <= 0) {
+      throw new Error(
+        'BOOKING_PENDING_PAYMENT_TTL_MINUTES must be a positive integer.',
+      );
+    }
+
+    return ttlMinutes * 60 * 1000;
+  }
+
+  private applyReleasedCapacity(
+    tripOffer: TripOfferBookingRecord,
+    releasedUnits: number,
+  ): TripOfferBookingRecord {
+    if (releasedUnits === 0) {
+      return tripOffer;
+    }
+
+    const availableCapacity = Math.min(
+      tripOffer.capacityTotal,
+      tripOffer.availableCapacity + releasedUnits,
+    );
+
+    return {
+      ...tripOffer,
+      availableCapacity,
+      status: this.resolveStatusForAvailableCapacity(
+        tripOffer.status,
+        availableCapacity,
+      ),
+    };
+  }
+
+  private ensureTripOfferIsBookable(tripOffer: TripOfferBookingRecord): void {
+    if (tripOffer.status === TripOfferStatus.PUBLISHED) {
+      return;
+    }
+
+    throw new ConflictException(
+      'Bookings can only be created for trip offers in PUBLISHED status.',
+    );
+  }
+
   private ensureAvailableCapacity(
     availableCapacity: number,
     requestedUnits: number,
@@ -85,6 +163,22 @@ export class BookingService {
     if (requestedUnits > availableCapacity) {
       throw new ConflictException(BOOKING_INSUFFICIENT_CAPACITY_MESSAGE);
     }
+  }
+
+  private resolveStatusForAvailableCapacity(
+    currentStatus: TripOfferStatus,
+    availableCapacity: number,
+  ): TripOfferStatus {
+    if (
+      currentStatus !== TripOfferStatus.PUBLISHED &&
+      currentStatus !== TripOfferStatus.FULL
+    ) {
+      return currentStatus;
+    }
+
+    return availableCapacity === 0
+      ? TripOfferStatus.FULL
+      : TripOfferStatus.PUBLISHED;
   }
 
   private toBookingResponse(booking: BookingRecord): BookingResponseDto {

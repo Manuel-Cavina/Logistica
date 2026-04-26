@@ -77,6 +77,7 @@ describe('BookingRepository', () => {
       },
       select: {
         id: true,
+        capacityTotal: true,
         availableCapacity: true,
         pricePerSlot: true,
         status: true,

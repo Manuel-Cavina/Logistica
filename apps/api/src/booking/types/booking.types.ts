@@ -16,6 +16,7 @@ export const bookingSelect = {
 
 export const tripOfferBookingSelect = {
   id: true,
+  capacityTotal: true,
   availableCapacity: true,
   pricePerSlot: true,
   status: true,

@@ -6,11 +6,16 @@ import { BookingService } from './booking.service';
 describe('BookingService', () => {
   const bookingRepository = {
     lockTripOfferById: jest.fn(),
+    expirePendingBookingsForTripOffer: jest.fn(),
+    updateTripOfferAvailability: jest.fn(),
     updateTripOfferCapacity: jest.fn(),
     create: jest.fn(),
   };
   const prisma = {
     $transaction: jest.fn(),
+  };
+  const configService = {
+    get: jest.fn(),
   };
   const tx = {
     booking: {},
@@ -22,6 +27,7 @@ describe('BookingService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    configService.get.mockReturnValue('30');
     prisma.$transaction.mockImplementation(
       (callback: (transactionClient: typeof tx) => Promise<unknown>) =>
         callback(tx),
@@ -29,7 +35,12 @@ describe('BookingService', () => {
     bookingService = new BookingService(
       bookingRepository as never,
       prisma as never,
+      configService as never,
     );
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('creates a booking in pending payment with price snapshots', async () => {
@@ -40,10 +51,12 @@ describe('BookingService', () => {
 
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 4,
       availableCapacity: 4,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
     bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 2,
@@ -86,6 +99,9 @@ describe('BookingService', () => {
       'cmatripoffer0000wqz5oy7k8ph1',
       tx,
     );
+    expect(
+      bookingRepository.expirePendingBookingsForTripOffer,
+    ).toHaveBeenCalledWith('cmatripoffer0000wqz5oy7k8ph1', now, tx);
     expect(bookingRepository.updateTripOfferCapacity).toHaveBeenCalledWith(
       'cmatripoffer0000wqz5oy7k8ph1',
       2,
@@ -103,8 +119,6 @@ describe('BookingService', () => {
       },
       tx,
     );
-
-    jest.useRealTimers();
   });
 
   it('throws when the trip offer does not exist', async () => {
@@ -121,13 +135,15 @@ describe('BookingService', () => {
     expect(bookingRepository.create).not.toHaveBeenCalled();
   });
 
-  it('throws when the trip offer is not published', async () => {
+  it('throws when the trip offer is not published after cleanup', async () => {
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 4,
       availableCapacity: 4,
       pricePerSlot: 120000,
       status: TripOfferStatus.DRAFT,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
 
     await expect(
       bookingService.createBooking('client-account-id', {
@@ -142,16 +158,17 @@ describe('BookingService', () => {
 
   it('calculates totalPriceSnapshot from unit price and requested units', async () => {
     const now = new Date('2026-04-24T13:00:00.000Z');
-    const expiresAt = new Date('2026-04-24T13:30:00.000Z');
 
     jest.useFakeTimers().setSystemTime(now);
 
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 5,
       availableCapacity: 5,
       pricePerSlot: 85000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
     bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 2,
@@ -165,7 +182,7 @@ describe('BookingService', () => {
       requestedUnits: 3,
       unitPriceSnapshot: 85000,
       totalPriceSnapshot: 255000,
-      expiresAt,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
       status: BookingStatus.PENDING_PAYMENT,
       createdAt: now,
       updatedAt: now,
@@ -182,8 +199,6 @@ describe('BookingService', () => {
       }),
       tx,
     );
-
-    jest.useRealTimers();
   });
 
   it('sets expiresAt using the pending payment ttl', async () => {
@@ -194,10 +209,12 @@ describe('BookingService', () => {
 
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 2,
       availableCapacity: 2,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
     bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 1,
@@ -228,17 +245,125 @@ describe('BookingService', () => {
       }),
       tx,
     );
-
-    jest.useRealTimers();
   });
 
-  it('throws when requested units exceed available capacity', async () => {
+  it('uses the configured pending payment ttl', async () => {
+    const now = new Date('2026-04-24T13:00:00.000Z');
+    const expiresAt = new Date('2026-04-24T13:45:00.000Z');
+
+    configService.get.mockReturnValue('45');
+    bookingService = new BookingService(
+      bookingRepository as never,
+      prisma as never,
+      configService as never,
+    );
+    jest.useFakeTimers().setSystemTime(now);
+
     bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 2,
+      availableCapacity: 2,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
+    bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 1,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.create.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 1,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 120000,
+      expiresAt,
+      status: BookingStatus.PENDING_PAYMENT,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await bookingService.createBooking('client-account-id', {
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 1,
+    });
+
+    expect(bookingRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expiresAt,
+      }),
+      tx,
+    );
+  });
+
+  it('expires pending bookings before checking capacity and restores FULL offers to PUBLISHED', async () => {
+    const now = new Date('2026-04-24T13:00:00.000Z');
+
+    jest.useFakeTimers().setSystemTime(now);
+
+    bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 3,
+      availableCapacity: 0,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.FULL,
+    });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(2);
+    bookingRepository.updateTripOfferCapacity.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 3,
+      availableCapacity: 1,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.create.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 1,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 120000,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.PENDING_PAYMENT,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await bookingService.createBooking('client-account-id', {
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 1,
+    });
+
+    expect(
+      bookingRepository.updateTripOfferAvailability,
+    ).toHaveBeenNthCalledWith(
+      1,
+      'cmatripoffer0000wqz5oy7k8ph1',
+      2,
+      TripOfferStatus.PUBLISHED,
+      tx,
+    );
+    expect(bookingRepository.updateTripOfferCapacity).toHaveBeenNthCalledWith(
+      1,
+      'cmatripoffer0000wqz5oy7k8ph1',
+      1,
+      TripOfferStatus.PUBLISHED,
+      tx,
+    );
+  });
+
+  it('throws when requested units exceed available capacity after cleanup', async () => {
+    bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 3,
+      availableCapacity: 1,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
 
     await expect(
       bookingService.createBooking('client-account-id', {
@@ -258,6 +383,49 @@ describe('BookingService', () => {
     expect(bookingRepository.create).not.toHaveBeenCalled();
   });
 
+  it('does not release capacity when there are no expired pending bookings', async () => {
+    const now = new Date('2026-04-24T13:00:00.000Z');
+
+    jest.useFakeTimers().setSystemTime(now);
+
+    bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 2,
+      availableCapacity: 2,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
+    bookingRepository.updateTripOfferCapacity.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      availableCapacity: 1,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.create.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 1,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 120000,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.PENDING_PAYMENT,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await bookingService.createBooking('client-account-id', {
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      requestedUnits: 1,
+    });
+
+    expect(bookingRepository.updateTripOfferAvailability).not.toHaveBeenCalled();
+    expect(
+      bookingRepository.expirePendingBookingsForTripOffer,
+    ).toHaveBeenCalledTimes(1);
+  });
+
   it('marks the trip offer as FULL when the remaining capacity reaches zero', async () => {
     const now = new Date('2026-04-24T13:00:00.000Z');
 
@@ -265,10 +433,12 @@ describe('BookingService', () => {
 
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 2,
       availableCapacity: 2,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
     bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 0,
@@ -299,8 +469,6 @@ describe('BookingService', () => {
       TripOfferStatus.FULL,
       tx,
     );
-
-    jest.useRealTimers();
   });
 
   it('propagates transactional failures after capacity consumption so the transaction can roll back', async () => {
@@ -310,10 +478,12 @@ describe('BookingService', () => {
 
     bookingRepository.lockTripOfferById.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 2,
       availableCapacity: 2,
       pricePerSlot: 120000,
       status: TripOfferStatus.PUBLISHED,
     });
+    bookingRepository.expirePendingBookingsForTripOffer.mockResolvedValue(0);
     bookingRepository.updateTripOfferCapacity.mockResolvedValue({
       id: 'cmatripoffer0000wqz5oy7k8ph1',
       availableCapacity: 0,
@@ -337,7 +507,20 @@ describe('BookingService', () => {
       tx,
     );
     expect(bookingRepository.create).toHaveBeenCalledTimes(1);
+  });
 
-    jest.useRealTimers();
+  it('rejects invalid ttl configuration', () => {
+    configService.get.mockReturnValue('0');
+
+    expect(
+      () =>
+        new BookingService(
+          bookingRepository as never,
+          prisma as never,
+          configService as never,
+        ),
+    ).toThrow(
+      'BOOKING_PENDING_PAYMENT_TTL_MINUTES must be a positive integer.',
+    );
   });
 });

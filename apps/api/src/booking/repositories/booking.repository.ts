@@ -8,8 +8,8 @@ import {
 } from '@logistica/database';
 import {
   bookingSelect,
-  tripOfferBookingSelect,
   type BookingRecord,
+  tripOfferBookingSelect,
   type TripOfferBookingRecord,
 } from '../types/booking.types';
 
@@ -33,6 +33,7 @@ export class BookingRepository {
     const [tripOffer] = await tx.$queryRaw<TripOfferBookingRecord[]>(Prisma.sql`
       SELECT
         id,
+        "capacityTotal",
         "availableCapacity",
         "pricePerSlot",
         status
@@ -42,6 +43,49 @@ export class BookingRepository {
     `);
 
     return tripOffer ?? null;
+  }
+
+  async expirePendingBookingsForTripOffer(
+    tripOfferId: string,
+    now: Date,
+    tx: PrismaNamespace.TransactionClient,
+  ): Promise<number> {
+    const expiredBookings = await tx.$queryRaw<
+      Array<{ requestedUnits: number }>
+    >(
+      Prisma.sql`
+        UPDATE "bookings"
+        SET
+          "status" = ${BookingStatus.EXPIRED}::"BookingStatus",
+          "updatedAt" = ${now}
+        WHERE
+          "tripOfferId" = ${tripOfferId}
+          AND "status" = ${BookingStatus.PENDING_PAYMENT}::"BookingStatus"
+          AND "expiresAt" <= ${now}
+        RETURNING "requestedUnits"
+      `,
+    );
+
+    return expiredBookings.reduce(
+      (releasedUnits, booking) => releasedUnits + booking.requestedUnits,
+      0,
+    );
+  }
+
+  async updateTripOfferAvailability(
+    tripOfferId: string,
+    availableCapacity: number,
+    status: TripOfferStatus,
+    tx: PrismaNamespace.TransactionClient,
+  ): Promise<TripOfferBookingRecord> {
+    return tx.tripOffer.update({
+      where: { id: tripOfferId },
+      data: {
+        availableCapacity,
+        status,
+      },
+      select: tripOfferBookingSelect,
+    });
   }
 
   async updateTripOfferCapacity(

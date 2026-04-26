@@ -22,6 +22,7 @@ export const BookingViewSchema = z.object({
   expiresAt: z.date(),
   status: z.enum([
     'PENDING_PAYMENT',
+    'EXPIRED',
     'CONFIRMED',
     'IN_PROGRESS',
     'DELIVERED_PENDING_CONFIRMATION',
