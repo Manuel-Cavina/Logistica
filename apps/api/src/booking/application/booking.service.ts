@@ -13,12 +13,17 @@ import type { BookingDetailResponseDto } from '../dto/booking-detail.response.dt
 import type { BookingResponseDto } from '../dto/booking.response.dto';
 import { BookingRepository } from '../repositories/booking.repository';
 import type {
+  BookingCancellationRecord,
   BookingDetailRecord,
   BookingRecord,
   CreateBookingInput,
   TripOfferBookingRecord,
 } from '../types/booking.types';
 import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './booking.errors';
+import {
+  BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE,
+  BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE,
+} from './booking.errors';
 
 @Injectable()
 export class BookingService {
@@ -119,12 +124,71 @@ export class BookingService {
     );
 
     if (!booking) {
-      throw new NotFoundException(
-        'Booking not found for the authenticated account.',
-      );
+      throw new NotFoundException(BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE);
     }
 
     return this.toBookingDetailResponse(booking);
+  }
+
+  async cancelOwnBooking(
+    clientAccountId: string,
+    bookingId: string,
+  ): Promise<BookingResponseDto> {
+    const now = new Date();
+
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const existingBooking =
+        await this.bookingRepository.findOwnedBookingForCancellation(
+          clientAccountId,
+          bookingId,
+          tx,
+        );
+
+      if (!existingBooking) {
+        throw new NotFoundException(BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE);
+      }
+
+      this.ensureBookingCanBeCancelled(existingBooking);
+
+      const lockedTripOffer = await this.bookingRepository.lockTripOfferById(
+        existingBooking.tripOfferId,
+        tx,
+      );
+
+      if (!lockedTripOffer) {
+        throw new NotFoundException('Trip offer not found.');
+      }
+
+      const cancelledBooking =
+        await this.bookingRepository.cancelPendingBooking(
+          existingBooking.id,
+          now,
+          tx,
+        );
+
+      if (!cancelledBooking) {
+        throw new ConflictException(BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE);
+      }
+
+      const nextAvailableCapacity = Math.min(
+        lockedTripOffer.capacityTotal,
+        lockedTripOffer.availableCapacity + existingBooking.requestedUnits,
+      );
+
+      await this.bookingRepository.releaseTripOfferCapacity(
+        lockedTripOffer.id,
+        existingBooking.requestedUnits,
+        this.resolveStatusForAvailableCapacity(
+          lockedTripOffer.status,
+          nextAvailableCapacity,
+        ),
+        tx,
+      );
+
+      return cancelledBooking;
+    });
+
+    return this.toBookingResponse(booking);
   }
 
   private getPendingPaymentTtlMilliseconds(
@@ -183,6 +247,16 @@ export class BookingService {
     if (requestedUnits > availableCapacity) {
       throw new ConflictException(BOOKING_INSUFFICIENT_CAPACITY_MESSAGE);
     }
+  }
+
+  private ensureBookingCanBeCancelled(
+    booking: BookingCancellationRecord,
+  ): void {
+    if (booking.status === BookingStatus.PENDING_PAYMENT) {
+      return;
+    }
+
+    throw new ConflictException(BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE);
   }
 
   private resolveStatusForAvailableCapacity(

@@ -1,15 +1,22 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { BookingStatus, TripOfferStatus } from '@logistica/database';
-import { BOOKING_INSUFFICIENT_CAPACITY_MESSAGE } from './booking.errors';
+import {
+  BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE,
+  BOOKING_INSUFFICIENT_CAPACITY_MESSAGE,
+  BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE,
+} from './booking.errors';
 import { BookingService } from './booking.service';
 
 describe('BookingService', () => {
   const bookingRepository = {
     findOwnedDetailById: jest.fn(),
+    findOwnedBookingForCancellation: jest.fn(),
     lockTripOfferById: jest.fn(),
     expirePendingBookingsForTripOffer: jest.fn(),
     updateTripOfferAvailability: jest.fn(),
     updateTripOfferCapacity: jest.fn(),
+    releaseTripOfferCapacity: jest.fn(),
+    cancelPendingBooking: jest.fn(),
     create: jest.fn(),
   };
   const prisma = {
@@ -188,7 +195,7 @@ describe('BookingService', () => {
         'cmabooking0000wqz5oy7k8ph1',
       ),
     ).rejects.toThrow(
-      new NotFoundException('Booking not found for the authenticated account.'),
+      new NotFoundException(BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE),
     );
   });
 
@@ -201,7 +208,7 @@ describe('BookingService', () => {
         'cmabooking0000wqz5oy7k8ph1',
       ),
     ).rejects.toThrow(
-      new NotFoundException('Booking not found for the authenticated account.'),
+      new NotFoundException(BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE),
     );
 
     expect(bookingRepository.findOwnedDetailById).toHaveBeenCalledWith(
@@ -222,6 +229,150 @@ describe('BookingService', () => {
 
     expect(bookingRepository.updateTripOfferCapacity).not.toHaveBeenCalled();
     expect(bookingRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pending booking and releases its capacity atomically', async () => {
+    const now = new Date('2026-04-24T13:00:00.000Z');
+
+    jest.useFakeTimers().setSystemTime(now);
+
+    bookingRepository.findOwnedBookingForCancellation.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 2,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.PENDING_PAYMENT,
+    });
+    bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 4,
+      availableCapacity: 0,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.FULL,
+    });
+    bookingRepository.cancelPendingBooking.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 2,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 240000,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.CANCELLED,
+      createdAt: new Date('2026-04-24T12:50:00.000Z'),
+      updatedAt: now,
+    });
+    bookingRepository.releaseTripOfferCapacity.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 4,
+      availableCapacity: 2,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+
+    await expect(
+      bookingService.cancelOwnBooking(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).resolves.toMatchObject({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      status: BookingStatus.CANCELLED,
+      requestedUnits: 2,
+    });
+
+    expect(
+      bookingRepository.findOwnedBookingForCancellation,
+    ).toHaveBeenCalledWith(
+      'client-account-id',
+      'cmabooking0000wqz5oy7k8ph1',
+      tx,
+    );
+    expect(bookingRepository.cancelPendingBooking).toHaveBeenCalledWith(
+      'cmabooking0000wqz5oy7k8ph1',
+      now,
+      tx,
+    );
+    expect(bookingRepository.releaseTripOfferCapacity).toHaveBeenCalledWith(
+      'cmatripoffer0000wqz5oy7k8ph1',
+      2,
+      TripOfferStatus.PUBLISHED,
+      tx,
+    );
+  });
+
+  it('throws when the booking is not found for cancellation', async () => {
+    bookingRepository.findOwnedBookingForCancellation.mockResolvedValue(null);
+
+    await expect(
+      bookingService.cancelOwnBooking(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).rejects.toThrow(
+      new NotFoundException(BOOKING_NOT_FOUND_FOR_ACCOUNT_MESSAGE),
+    );
+
+    expect(bookingRepository.lockTripOfferById).not.toHaveBeenCalled();
+    expect(bookingRepository.cancelPendingBooking).not.toHaveBeenCalled();
+  });
+
+  it('throws when the booking status is not cancellable', async () => {
+    bookingRepository.findOwnedBookingForCancellation.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 2,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.CANCELLED,
+    });
+
+    await expect(
+      bookingService.cancelOwnBooking(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).rejects.toThrow(
+      new ConflictException(BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE),
+    );
+
+    expect(bookingRepository.lockTripOfferById).not.toHaveBeenCalled();
+    expect(bookingRepository.releaseTripOfferCapacity).not.toHaveBeenCalled();
+  });
+
+  it('throws when cancellation loses the race and the booking was already updated', async () => {
+    const now = new Date('2026-04-24T13:00:00.000Z');
+
+    jest.useFakeTimers().setSystemTime(now);
+
+    bookingRepository.findOwnedBookingForCancellation.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 2,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: BookingStatus.PENDING_PAYMENT,
+    });
+    bookingRepository.lockTripOfferById.mockResolvedValue({
+      id: 'cmatripoffer0000wqz5oy7k8ph1',
+      capacityTotal: 4,
+      availableCapacity: 1,
+      pricePerSlot: 120000,
+      status: TripOfferStatus.PUBLISHED,
+    });
+    bookingRepository.cancelPendingBooking.mockResolvedValue(null);
+
+    await expect(
+      bookingService.cancelOwnBooking(
+        'client-account-id',
+        'cmabooking0000wqz5oy7k8ph1',
+      ),
+    ).rejects.toThrow(
+      new ConflictException(BOOKING_CANCELLATION_NOT_ALLOWED_MESSAGE),
+    );
+
+    expect(bookingRepository.releaseTripOfferCapacity).not.toHaveBeenCalled();
   });
 
   it('throws when the trip offer is not published after cleanup', async () => {

@@ -45,6 +45,7 @@ describe('BookingController', () => {
   const bookingService = {
     createBooking: jest.fn(),
     getOwnBookingById: jest.fn(),
+    cancelOwnBooking: jest.fn(),
   };
 
   beforeEach(() => {
@@ -211,6 +212,48 @@ describe('BookingController', () => {
     await app.close();
   });
 
+  it('cancels a booking for the authenticated client', async () => {
+    bookingService.cancelOwnBooking.mockResolvedValue({
+      id: 'cmabooking0000wqz5oy7k8ph1',
+      tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+      clientAccountId: 'client-account-id',
+      requestedUnits: 2,
+      unitPriceSnapshot: 120000,
+      totalPriceSnapshot: 240000,
+      expiresAt: new Date('2026-04-24T13:30:00.000Z'),
+      status: 'CANCELLED',
+      createdAt: new Date('2026-04-24T13:00:00.000Z'),
+      updatedAt: new Date('2026-04-24T13:05:00.000Z'),
+    });
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings/cmabooking0000wqz5oy7k8ph1/cancel')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(201)
+      .expect({
+        id: 'cmabooking0000wqz5oy7k8ph1',
+        tripOfferId: 'cmatripoffer0000wqz5oy7k8ph1',
+        clientAccountId: 'client-account-id',
+        requestedUnits: 2,
+        unitPriceSnapshot: 120000,
+        totalPriceSnapshot: 240000,
+        expiresAt: '2026-04-24T13:30:00.000Z',
+        status: 'CANCELLED',
+        createdAt: '2026-04-24T13:00:00.000Z',
+        updatedAt: '2026-04-24T13:05:00.000Z',
+      });
+
+    expect(bookingService.cancelOwnBooking).toHaveBeenCalledWith(
+      'client-account-id',
+      'cmabooking0000wqz5oy7k8ph1',
+    );
+
+    await app.close();
+  });
+
   it('returns 400 when requestedUnits is zero', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
@@ -291,6 +334,17 @@ describe('BookingController', () => {
     await app.close();
   });
 
+  it('returns 401 when cancelling a booking without an access token', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings/cmabooking0000wqz5oy7k8ph1/cancel')
+      .expect(401);
+
+    await app.close();
+  });
+
   it('returns 403 when the authenticated role is not CLIENT', async () => {
     const app = await createApp();
     const server = app.getHttpServer() as Parameters<typeof request>[0];
@@ -313,6 +367,18 @@ describe('BookingController', () => {
 
     await request(server)
       .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .set('Authorization', 'Bearer TRANSPORTER')
+      .expect(403);
+
+    await app.close();
+  });
+
+  it('returns 403 when cancelling a booking with a non-client role', async () => {
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings/cmabooking0000wqz5oy7k8ph1/cancel')
       .set('Authorization', 'Bearer TRANSPORTER')
       .expect(403);
 
@@ -349,6 +415,27 @@ describe('BookingController', () => {
 
     await request(server)
       .get('/bookings/cmabooking0000wqz5oy7k8ph1')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(404)
+      .expect({
+        error: 'Not Found',
+        message: 'Booking not found for the authenticated account.',
+        statusCode: 404,
+      });
+
+    await app.close();
+  });
+
+  it('returns 404 when the booking to cancel does not exist or is not accessible', async () => {
+    bookingService.cancelOwnBooking.mockRejectedValue(
+      new NotFoundException('Booking not found for the authenticated account.'),
+    );
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings/cmabooking0000wqz5oy7k8ph1/cancel')
       .set('Authorization', 'Bearer CLIENT')
       .expect(404)
       .expect({
@@ -401,6 +488,29 @@ describe('BookingController', () => {
       .expect({
         error: 'Conflict',
         message: BOOKING_INSUFFICIENT_CAPACITY_MESSAGE,
+        statusCode: 409,
+      });
+
+    await app.close();
+  });
+
+  it('returns 409 when the booking cannot be cancelled', async () => {
+    bookingService.cancelOwnBooking.mockRejectedValue(
+      new ConflictException(
+        'Only bookings in PENDING_PAYMENT status can be cancelled.',
+      ),
+    );
+
+    const app = await createApp();
+    const server = app.getHttpServer() as Parameters<typeof request>[0];
+
+    await request(server)
+      .post('/bookings/cmabooking0000wqz5oy7k8ph1/cancel')
+      .set('Authorization', 'Bearer CLIENT')
+      .expect(409)
+      .expect({
+        error: 'Conflict',
+        message: 'Only bookings in PENDING_PAYMENT status can be cancelled.',
         statusCode: 409,
       });
 
