@@ -20,7 +20,10 @@
       "Bash(pnpm lint:*)",
       "Bash(npx eslint:*)",
       "Bash(gh pr create --title 'doc: documentación base — ADR 001, deuda técnica, glosario y contratos API' --body ':*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
+      "Bash(xargs grep *)",
+      "Bash(pnpm --filter web exec tsc --noEmit)"
     ]
   }
 }
