@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruta Directa — Córdoba → Buenos Aires · Equinos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c1:#fffdf0;--c2:#ffffff;--c3:#ac843e;--c3-light:#bf9651;--c3-dark:#8a6929;
+  --c4:#6c8473;--c4-light:#86a08c;--c4-dark:#536659;--c4-soft:#eef2ee;
+  --c5:#838891;--ink:#2a2d33;--ink-soft:#4a4d54;
+  --line:#e8e6dc;--line-soft:#f0eee4;
+  --shadow-sm:0 1px 3px rgba(42,45,51,0.06),0 1px 2px rgba(42,45,51,0.04);
+  --shadow-md:0 4px 16px rgba(42,45,51,0.08),0 2px 4px rgba(42,45,51,0.04);
+  --shadow-lg:0 12px 40px rgba(42,45,51,0.12),0 4px 12px rgba(42,45,51,0.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--c2);font-family:'DM Sans',sans-serif;color:var(--ink);font-size:14px;line-height:1.5}
+
+/* ═══ NAV ═══ */
+nav{position:sticky;top:0;z-index:100;background:var(--c2);border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.nav-top{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:24px}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;text-decoration:none}
+.logo-mark{width:38px;height:38px;border-radius:9px;background:var(--c4);color:white;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:18px;box-shadow:0 2px 8px rgba(108,132,115,0.30)}
+.logo-word{font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.4px}
+.logo-word em{color:var(--c4);font-weight:500;font-style:italic}
+.nav-search{flex:1;max-width:600px;display:flex;align-items:center;background:var(--c1);border:1.5px solid var(--line);border-radius:100px;padding:4px 6px 4px 18px;transition:all .2s}
+.nav-search:focus-within{border-color:var(--c4);background:white;box-shadow:0 0 0 4px rgba(108,132,115,0.10)}
+.nav-search svg{color:var(--c5);flex-shrink:0;margin-right:10px}
+.nav-search input{flex:1;border:none;background:transparent;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);padding:9px 0}
+.nav-search input::placeholder{color:var(--c5)}
+.nav-search-btn{background:var(--c4);color:white;border:none;border-radius:100px;padding:9px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap}
+.nav-search-btn:hover{background:var(--c4-dark)}
+.nav-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-link{font-size:14px;font-weight:500;color:var(--ink-soft);padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.nav-link:hover{background:var(--c4-soft);color:var(--c4-dark)}
+.nav-cta{background:var(--c3);color:white;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;border:none;text-decoration:none;box-shadow:0 2px 8px rgba(172,132,62,0.30)}
+.nav-cta:hover{background:var(--c3-dark)}
+
+/* ═══ BREADCRUMB ═══ */
+.breadcrumb{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c5)}
+.breadcrumb a{color:var(--c4);text-decoration:none;font-weight:500;cursor:pointer}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb span{color:var(--ink-soft);font-weight:500}
+
+/* ═══ MAIN LAYOUT ═══ */
+.detail-wrap{max-width:1280px;margin:0 auto;padding:0 32px 64px;display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
+
+/* ═══ GALLERY ═══ */
+.gallery{background:var(--c2);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.gal-main{position:relative;height:460px;overflow:hidden;background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);display:flex;align-items:center;justify-content:center}
+.gal-main-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .35s}
+.gal-main-img.active{opacity:1}
+.gal-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(0,0,0,0.45) 100%);pointer-events:none}
+.gal-route-overlay{position:absolute;bottom:24px;left:24px;color:white;z-index:2}
+.gal-route-overlay .gal-from-to{font-family:'Lora',serif;font-size:32px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,0.35)}
+.gal-route-overlay .gal-from-to em{font-style:normal;color:#f9e6c5;font-weight:500;margin:0 8px}
+.gal-route-overlay .gal-meta-line{font-size:14px;color:rgba(255,255,255,0.85);font-weight:500}
+
+.gal-tag{position:absolute;top:16px;left:16px;background:var(--c3);color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,0.20)}
+.gal-tag.warn{background:#dc2626}
+.gal-fav{position:absolute;top:16px;right:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.20);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.30);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;z-index:2}
+.gal-fav:hover{background:rgba(255,255,255,0.35)}
+
+.gal-arrows{position:absolute;top:50%;transform:translateY(-50%);z-index:2}
+.gal-arrow-l{left:16px}.gal-arrow-r{right:16px}
+.gal-arrow-btn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.22);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.30);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.gal-arrow-btn:hover{background:rgba(255,255,255,0.40)}
+
+.gal-thumbs{display:flex;gap:8px;padding:14px;background:var(--c1);overflow-x:auto;scrollbar-width:thin}
+.gal-thumb{width:78px;height:60px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:2px solid transparent;transition:all .18s;background-size:cover;background-position:center;background-color:var(--c4-soft)}
+.gal-thumb:hover{border-color:var(--c4-light);transform:translateY(-2px)}
+.gal-thumb.active{border-color:var(--c4);box-shadow:0 0 0 3px rgba(108,132,115,0.20)}
+
+/* ═══ TITLE BLOCK ═══ */
+.title-block{background:var(--c2);border:1px solid var(--line);border-radius:14px;padding:24px 28px;margin-top:20px;box-shadow:var(--shadow-sm)}
+.tb-tag-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.tb-tag{font-size:11px;font-weight:600;color:var(--c4-dark);background:var(--c4-soft);padding:3px 10px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
+.tb-tag-orange{color:var(--c3-dark);background:#fef3c7}
+.tb-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#166534;background:#dcfce7;padding:3px 10px;border-radius:5px}
+.tb-status .live-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.6)}50%{box-shadow:0 0 0 5px rgba(22,163,74,0)}}
+
+.tb-title{font-family:'Lora',serif;font-size:clamp(24px,3vw,32px);font-weight:700;color:var(--ink);letter-spacing:-0.4px;line-height:1.20;margin-bottom:8px}
+.tb-loc{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--c5);margin-bottom:18px}
+.tb-loc svg{color:var(--c4)}
+
+.tb-quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;border-top:1px solid var(--line);padding-top:18px}
+.tb-quick-item{display:flex;flex-direction:column;gap:3px}
+.tb-quick-label{font-size:11px;color:var(--c5);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.tb-quick-value{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-0.3px}
+.tb-quick-value.sage{color:var(--c4-dark)}
+.tb-quick-sub{font-size:12px;color:var(--c5)}
+
+/* ═══ TABS ═══ */
+.tabs{background:var(--c2);border:1px solid var(--line);border-radius:14px;margin-top:20px;box-shadow:var(--shadow-sm);overflow:hidden}
+.tabs-head{display:flex;border-bottom:1px solid var(--line);background:var(--c1)}
+.tab{flex:1;padding:14px 20px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--c5);cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;text-align:center}
+.tab:hover{color:var(--ink-soft);background:white}
+.tab.active{color:var(--c4-dark);border-bottom-color:var(--c4);background:white}
+.tab-body{padding:28px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* descripción */
+.desc-block h3{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:12px}
+.desc-block p{font-size:14px;color:var(--ink-soft);line-height:1.75;margin-bottom:14px}
+.desc-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.desc-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink-soft);line-height:1.6}
+.desc-list li svg{color:var(--c4);flex-shrink:0;margin-top:2px}
+.desc-list li strong{color:var(--ink);font-weight:600;display:block;margin-bottom:2px;font-family:'Lora',serif}
+
+/* especificaciones grid */
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.spec-row{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line-soft);background:var(--c2)}
+.spec-row:nth-child(odd){background:var(--c1)}
+.spec-row:nth-last-child(-n+2){border-bottom:none}
+.spec-label{font-size:13px;color:var(--c5);font-weight:500}
+.spec-value{font-size:13px;color:var(--ink);font-weight:600;text-align:right}
+
+/* condiciones */
+.cond-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cond-item{padding:18px;border:1px solid var(--line);border-radius:10px;background:var(--c1);display:flex;gap:12px;align-items:flex-start}
+.cond-icon{width:36px;height:36px;border-radius:8px;background:var(--c4-soft);color:var(--c4-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(108,132,115,0.2)}
+.cond-text strong{display:block;font-family:'Lora',serif;font-size:14px;color:var(--ink);margin-bottom:4px}
+.cond-text p{font-size:13px;color:var(--c5);line-height:1.6}
+
+/* transportista perfil */
+.driver-block{display:flex;gap:18px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.driver-avatar{width:64px;height:64px;border-radius:50%;background:var(--c4);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:22px;color:white;flex-shrink:0;box-shadow:0 4px 14px rgba(108,132,115,0.30)}
+.driver-info h4{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.driver-verified{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:5px}
+.driver-rating{font-size:14px;color:var(--c5);margin-bottom:6px}
+.driver-rating strong{color:var(--c3);font-weight:700}
+.driver-since{font-size:12px;color:var(--c5)}
+
+.driver-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.driver-stat{text-align:center;padding:14px;background:var(--c1);border:1px solid var(--line);border-radius:10px}
+.driver-stat-n{font-family:'Lora',serif;font-size:22px;font-weight:700;color:var(--ink);line-height:1}
+.driver-stat-l{font-size:11px;color:var(--c5);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;font-weight:600}
+
+/* ═══ SIDEBAR — STICKY BOOKING CARD ═══ */
+.book-sidebar{position:sticky;top:90px}
+.book-card{background:var(--c2);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow-md)}
+.book-price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.book-price{font-family:'Lora',serif;font-size:32px;font-weight:700;color:var(--ink);letter-spacing:-0.5px;line-height:1}
+.book-price-old{font-size:13px;color:var(--c5);text-decoration:line-through;margin-bottom:4px}
+.book-price-off{font-size:11px;background:#fef3c7;color:#92400e;font-weight:700;padding:3px 8px;border-radius:5px;margin-left:6px}
+.book-price-sub{font-size:13px;color:var(--c5);margin-bottom:18px}
+
+.book-cupos-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--c4-soft);border-radius:10px;margin-bottom:16px}
+.book-cupos-label{font-size:12px;color:var(--c4-dark);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.book-cupos-n{font-family:'Lora',serif;font-size:22px;font-weight:700;color:var(--c4-dark)}
+
+/* selector cupos */
+.cupos-selector{margin-bottom:18px}
+.cs-label{font-size:12px;color:var(--c5);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.cs-row{display:flex;align-items:center;gap:12px}
+.cs-btn{width:38px;height:38px;border-radius:50%;background:white;border:1.5px solid var(--line);color:var(--ink-soft);font-size:18px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Lora',serif}
+.cs-btn:hover{border-color:var(--c4);color:var(--c4-dark);background:var(--c4-soft)}
+.cs-num{font-family:'Lora',serif;font-size:22px;font-weight:700;color:var(--ink);min-width:36px;text-align:center}
+.cs-max{font-size:12px;color:var(--c5);margin-left:auto}
+
+/* totales */
+.totals-block{padding:16px;background:var(--c1);border-radius:10px;margin-bottom:16px}
+.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--ink-soft)}
+.totals-row.big{padding-top:10px;margin-top:8px;border-top:1px dashed var(--line);font-weight:700;color:var(--ink)}
+.totals-row .totals-val{font-family:'Lora',serif;font-weight:700}
+.totals-row.big .totals-val{font-size:20px;color:var(--c4-dark)}
+
+/* booking buttons */
+.book-btn-primary{width:100%;padding:14px;background:var(--c3);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(172,132,62,0.30);margin-bottom:8px}
+.book-btn-primary:hover{background:var(--c3-dark);transform:translateY(-1px)}
+.book-btn-secondary{width:100%;padding:12px;background:white;color:var(--c4-dark);border:1.5px solid var(--c4);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:14px}
+.book-btn-secondary:hover{background:var(--c4-soft)}
+
+.book-trust{display:flex;flex-direction:column;gap:9px;padding-top:16px;border-top:1px solid var(--line)}
+.book-trust-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--c5)}
+.book-trust-item svg{color:var(--c4);flex-shrink:0}
+.book-trust-item strong{color:var(--ink-soft);font-weight:600}
+
+/* ═══ BOOKING MODAL FLOW ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(42,45,51,0.65);backdrop-filter:blur(6px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:var(--c2);border-radius:18px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,0.30);overflow:hidden;animation:modalIn .25s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+.modal-head{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--c1)}
+.modal-back{background:none;border:none;color:var(--c5);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;transition:all .15s}
+.modal-back:hover{background:var(--c4-soft);color:var(--ink-soft)}
+.modal-back:disabled{opacity:.3;cursor:not-allowed}
+.modal-close{background:none;border:none;color:var(--c5);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:var(--line);color:var(--ink)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;padding:18px 24px;background:var(--c1);border-bottom:1px solid var(--line)}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.step::after{content:'';position:absolute;top:13px;left:calc(50% + 16px);right:calc(-50% + 16px);height:1px;background:var(--line)}
+.step:last-child::after{display:none}
+.step.done::after{background:var(--c4)}
+.step-circle{width:26px;height:26px;border-radius:50%;background:var(--c2);border:2px solid var(--line);color:var(--c5);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:11px;font-weight:700;position:relative;z-index:1;transition:all .25s}
+.step.active .step-circle{background:var(--c4);border-color:var(--c4);color:white;box-shadow:0 0 0 4px rgba(108,132,115,0.20)}
+.step.done .step-circle{background:var(--c4-dark);border-color:var(--c4-dark);color:white}
+.step-label{font-size:10px;color:var(--c5);text-transform:uppercase;letter-spacing:.5px;font-weight:600;text-align:center}
+.step.active .step-label{color:var(--c4-dark)}
+.step.done .step-label{color:var(--c4)}
+
+.modal-body{padding:28px;max-height:calc(100vh - 280px);overflow-y:auto}
+.modal-pane{display:none}
+.modal-pane.active{display:block}
+
+.pane-title{font-family:'Lora',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:-0.3px}
+.pane-sub{font-size:13px;color:var(--c5);line-height:1.6;margin-bottom:22px}
+
+/* paso 1 — resumen viaje */
+.summary-card{background:var(--c1);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.summary-route{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.summary-route em{color:var(--c4);font-style:italic;margin:0 6px}
+.summary-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--c5)}
+.summary-meta span{display:flex;align-items:center;gap:4px}
+
+/* paso 2 — cupos */
+.cupos-big{text-align:center;padding:24px;background:var(--c1);border:1px solid var(--line);border-radius:12px;margin-bottom:18px}
+.cupos-big-label{font-size:12px;color:var(--c5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:14px}
+.cupos-big-row{display:flex;align-items:center;justify-content:center;gap:18px}
+.cupos-big-btn{width:48px;height:48px;border-radius:50%;background:white;border:2px solid var(--line);color:var(--ink-soft);font-size:22px;font-weight:300;cursor:pointer;transition:all .15s;font-family:'Lora',serif}
+.cupos-big-btn:hover{border-color:var(--c4);color:var(--c4);background:var(--c4-soft)}
+.cupos-big-num{font-family:'Lora',serif;font-size:48px;font-weight:700;color:var(--ink);min-width:64px;text-align:center;line-height:1;letter-spacing:-1px}
+.cupos-big-sub{font-size:12px;color:var(--c5);margin-top:10px}
+
+.totals-modal{padding:16px;background:white;border:1px solid var(--line);border-radius:10px;margin-bottom:18px}
+.totals-modal .totals-row{padding:6px 0;font-size:13px}
+.totals-modal .totals-row.big{font-size:14px;color:var(--ink);padding-top:10px;margin-top:8px;border-top:1px solid var(--line)}
+.totals-modal .totals-row.big .totals-val{font-size:22px;color:var(--c4-dark);font-family:'Lora',serif}
+
+/* paso 3 — chat opciones */
+.chat-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chat-opt{padding:24px 20px;background:var(--c1);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:all .2s;text-align:center}
+.chat-opt:hover{border-color:var(--c4);background:var(--c4-soft);transform:translateY(-2px)}
+.chat-opt.selected{border-color:var(--c4);background:var(--c4-soft);box-shadow:0 0 0 3px rgba(108,132,115,0.20)}
+.chat-opt-icon{width:46px;height:46px;border-radius:11px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.chat-opt-icon.wsp{background:#dcfce7}
+.chat-opt-icon.app{background:var(--c4-soft)}
+.chat-opt-name{font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.chat-opt-desc{font-size:12px;color:var(--c5);line-height:1.5}
+
+.note-card{margin-top:16px;padding:14px;background:#fef9e7;border:1px solid #fde68a;border-radius:10px;display:flex;gap:11px;align-items:flex-start}
+.note-card svg{color:#a16207;flex-shrink:0;margin-top:1px}
+.note-card-text{font-size:12px;color:#78350f;line-height:1.6}
+.note-card-text strong{display:block;font-weight:700;margin-bottom:2px;color:#713f12}
+
+/* paso 4 — confirmación dual */
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.dual-card{padding:22px 18px;background:var(--c1);border:1.5px solid var(--line);border-radius:12px;text-align:center}
+.dual-av{width:50px;height:50px;border-radius:50%;background:var(--c4);color:white;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:16px;margin:0 auto 10px}
+.dual-name{font-family:'Lora',serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.dual-role{font-size:11px;color:var(--c5);margin-bottom:14px}
+.dual-btn{width:100%;padding:10px;border-radius:8px;border:1.5px solid var(--c4);background:white;color:var(--c4-dark);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.dual-btn:hover:not(:disabled){background:var(--c4-soft)}
+.dual-btn.confirmed{background:var(--c4);color:white;border-color:var(--c4);cursor:default}
+.dual-pending{text-align:center;font-size:12px;color:var(--c5);font-style:italic;padding:8px 0}
+
+/* paso 5 — recibo */
+.receipt-icon-wrap{text-align:center;padding:24px 0 16px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.receipt-circle{width:64px;height:64px;border-radius:50%;background:#dcfce7;color:#166534;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.receipt-title{font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.receipt-subtitle{font-size:13px;color:var(--c5);margin-bottom:8px}
+.receipt-id{display:inline-block;background:var(--c4-soft);color:var(--c4-dark);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;font-family:'DM Sans',sans-serif;letter-spacing:1px}
+
+.receipt-table{display:flex;flex-direction:column;gap:0}
+.receipt-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+.receipt-row:last-child{border-bottom:none}
+.receipt-label{color:var(--c5)}
+.receipt-val{color:var(--ink);font-weight:600;text-align:right}
+.receipt-val.green{color:#166534}
+
+/* modal footer botones */
+.modal-foot{padding:18px 24px;border-top:1px solid var(--line);background:var(--c1);display:flex;gap:10px}
+.modal-btn-primary{flex:1;padding:13px;background:var(--c3);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(172,132,62,0.30)}
+.modal-btn-primary:hover{background:var(--c3-dark)}
+.modal-btn-ghost{padding:13px 22px;background:white;color:var(--c5);border:1.5px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.modal-btn-ghost:hover{border-color:var(--c4);color:var(--c4-dark)}
+
+/* ═══ FOOTER ═══ */
+footer{background:#1a1d22;padding:56px 32px 28px;margin-top:64px}
+.footer-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.footer-brand{font-family:'Lora',serif;font-size:24px;font-weight:700;color:white;letter-spacing:-0.4px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.footer-brand .logo-mark{width:36px;height:36px}
+.footer-tag{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.65;margin-bottom:18px;max-width:300px}
+.footer-socials{display:flex;gap:8px}
+.fs{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,0.65);text-decoration:none;transition:all .18s}
+.fs:hover{background:var(--c4);color:white}
+.footer-col h5{font-family:'Lora',serif;font-size:13px;font-weight:700;color:white;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:8px}
+.footer-col ul li a{font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;cursor:pointer;transition:color .15s}
+.footer-col ul li a:hover{color:white}
+.footer-bottom{max-width:1280px;margin:0 auto;padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-copy,.footer-legal a{font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none}
+.footer-legal{display:flex;gap:18px}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:980px){
+  .detail-wrap{grid-template-columns:1fr}
+  .book-sidebar{position:static}
+  .footer-inner{grid-template-columns:1fr 1fr}
+  .nav-search{display:none}
+  .nav-actions .nav-link{display:none}
+}
+@media(max-width:640px){
+  .gal-main{height:320px}
+  .gal-route-overlay .gal-from-to{font-size:22px}
+  .tb-quick-grid{grid-template-columns:1fr 1fr}
+  .spec-grid{grid-template-columns:1fr}
+  .cond-grid{grid-template-columns:1fr}
+  .dual-grid,.chat-options{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-top">
+    <a class="nav-logo" href="pagina_Agroads.html">
+      <div class="logo-mark">R</div>
+      <div class="logo-word">Ruta<em> Directa</em></div>
+    </a>
+    <div class="nav-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Buscá tu próximo viaje · Córdoba → Buenos Aires...">
+      <button class="nav-search-btn">Buscar</button>
+    </div>
+    <div class="nav-actions">
+      <a class="nav-link">Publicar</a>
+      <a class="nav-link" href="pagina_login.html">Ingresá</a>
+      <a class="nav-cta" href="pagina_register.html">Registrate</a>
+    </div>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="pagina_Agroads.html">Inicio</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  <a>Viajes</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  <a>Equinos</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  <span>Córdoba → Buenos Aires</span>
+</div>
+
+<!-- MAIN -->
+<div class="detail-wrap">
+
+  <!-- LEFT — gallery + content -->
+  <div>
+    <!-- gallery -->
+    <div class="gallery">
+      <div class="gal-main">
+        <span class="gal-tag">15% OFF</span>
+        <button class="gal-fav">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="gal-main-img active" style="background-image:url('https://images.unsplash.com/photo-1553284966-19b8815c7817?w=1600&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-main-img" style="background-image:url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=1600&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-main-img" style="background-image:url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5b?w=1600&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-main-img" style="background-image:url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1600&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-main-img" style="background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-overlay"></div>
+        <div class="gal-route-overlay">
+          <div class="gal-from-to">Córdoba <em>→</em> Buenos Aires</div>
+          <div class="gal-meta-line">700 km · Sábado 26 de abril · Salida 07:00 hs</div>
+        </div>
+        <div class="gal-arrows gal-arrow-l">
+          <button class="gal-arrow-btn" onclick="changeImg(-1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="gal-arrows gal-arrow-r">
+          <button class="gal-arrow-btn" onclick="changeImg(1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="gal-thumbs">
+        <div class="gal-thumb active" onclick="setImg(0)" style="background-image:url('https://images.unsplash.com/photo-1553284966-19b8815c7817?w=200&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-thumb" onclick="setImg(1)" style="background-image:url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=200&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-thumb" onclick="setImg(2)" style="background-image:url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5b?w=200&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-thumb" onclick="setImg(3)" style="background-image:url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=200&q=80&auto=format&fit=crop')"></div>
+        <div class="gal-thumb" onclick="setImg(4)" style="background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200&q=80&auto=format&fit=crop')"></div>
+      </div>
+    </div>
+
+    <!-- title block -->
+    <div class="title-block">
+      <div class="tb-tag-row">
+        <span class="tb-tag">🐴 Equinos</span>
+        <span class="tb-tag tb-tag-orange">15% OFF</span>
+        <span class="tb-status"><span class="live-dot"></span>Disponible ahora</span>
+      </div>
+      <h1 class="tb-title">Traslado de equinos · Córdoba a Buenos Aires</h1>
+      <div class="tb-loc">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Salida desde Córdoba Capital · Llegada Capital Federal
+      </div>
+      <div class="tb-quick-grid">
+        <div class="tb-quick-item">
+          <div class="tb-quick-label">Distancia</div>
+          <div class="tb-quick-value">700 km</div>
+          <div class="tb-quick-sub">Ruta directa</div>
+        </div>
+        <div class="tb-quick-item">
+          <div class="tb-quick-label">Cupos libres</div>
+          <div class="tb-quick-value sage">3 de 3</div>
+          <div class="tb-quick-sub">Sin reservas aún</div>
+        </div>
+        <div class="tb-quick-item">
+          <div class="tb-quick-label">Desvío máximo</div>
+          <div class="tb-quick-value">50 km</div>
+          <div class="tb-quick-sub">Configurable</div>
+        </div>
+        <div class="tb-quick-item">
+          <div class="tb-quick-label">Tipo carga</div>
+          <div class="tb-quick-value">Equinos</div>
+          <div class="tb-quick-sub">Hasta 3 caballos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tabs-head">
+        <button class="tab active" onclick="setTab('desc')">Descripción</button>
+        <button class="tab" onclick="setTab('spec')">Características</button>
+        <button class="tab" onclick="setTab('cond')">Condiciones</button>
+        <button class="tab" onclick="setTab('drv')">Transportista</button>
+      </div>
+      <div class="tab-body">
+
+        <div class="tab-pane active" id="pane-desc">
+          <div class="desc-block">
+            <h3>Sobre este viaje</h3>
+            <p>Viaje directo Córdoba Capital a Buenos Aires Capital con trailer profesional especializado en transporte equino. Salida temprano para llegar el mismo día. El trailer cuenta con piso antideslizante, ventilación cruzada, separadores acolchados y sistema de aireación regulable.</p>
+            <p>Jorge es transportista hace más de 10 años, especializado en equinos de alta competición. Trabajó con haras, studs y centros ecuestres de todo el país. El viaje incluye seguro de carga y atención permanente durante todo el traslado.</p>
+            <ul class="desc-list">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <div><strong>Seguro de carga incluido</strong>Cubre hasta $5.000.000 por traslado</div>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <div><strong>Trailer especializado equino</strong>Piso antideslizante, ventilación regulable, separadores</div>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <div><strong>Check-in y check-out con foto</strong>Recibís evidencia visual al cargar y al entregar</div>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <div><strong>Atención durante el viaje</strong>Chat disponible 24/7 con el transportista</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-spec">
+          <div class="desc-block">
+            <h3>Características del trailer</h3>
+            <div class="spec-grid">
+              <div class="spec-row"><span class="spec-label">Capacidad</span><span class="spec-value">3 caballos</span></div>
+              <div class="spec-row"><span class="spec-label">Tipo trailer</span><span class="spec-value">Para equinos</span></div>
+              <div class="spec-row"><span class="spec-label">Año modelo</span><span class="spec-value">2022</span></div>
+              <div class="spec-row"><span class="spec-label">Piso</span><span class="spec-value">Antideslizante</span></div>
+              <div class="spec-row"><span class="spec-label">Ventilación</span><span class="spec-value">Cruzada regulable</span></div>
+              <div class="spec-row"><span class="spec-label">Separadores</span><span class="spec-value">Acolchados</span></div>
+              <div class="spec-row"><span class="spec-label">Sistema aireación</span><span class="spec-value">Regulable</span></div>
+              <div class="spec-row"><span class="spec-label">Iluminación interior</span><span class="spec-value">LED</span></div>
+              <div class="spec-row"><span class="spec-label">Cámaras</span><span class="spec-value">Sí, monitoreo continuo</span></div>
+              <div class="spec-row"><span class="spec-label">Ramp-load</span><span class="spec-value">Hidráulica</span></div>
+              <div class="spec-row"><span class="spec-label">Verificación trailer</span><span class="spec-value">Vigente</span></div>
+              <div class="spec-row"><span class="spec-label">Patente</span><span class="spec-value">AC-XXX</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-cond">
+          <div class="desc-block">
+            <h3>Condiciones del viaje</h3>
+            <div class="cond-grid">
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Cancelación gratuita 24hs antes</strong>
+                  <p>100% de la seña reembolsada si cancelás con anticipación</p>
+                </div>
+              </div>
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Seña 20% al reservar</strong>
+                  <p>Saldo restante antes de la salida del transporte</p>
+                </div>
+              </div>
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Pago protegido</strong>
+                  <p>Dinero retenido hasta confirmación de entrega</p>
+                </div>
+              </div>
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Comprobante PDF</strong>
+                  <p>Documentación oficial del traslado al finalizar</p>
+                </div>
+              </div>
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Chat con transportista</strong>
+                  <p>Coordinación directa por WhatsApp o chat interno</p>
+                </div>
+              </div>
+              <div class="cond-item">
+                <div class="cond-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                </div>
+                <div class="cond-text">
+                  <strong>Reportar problema</strong>
+                  <p>Botón directo si hay incidentes durante el viaje</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-drv">
+          <div class="desc-block">
+            <div class="driver-block">
+              <div class="driver-avatar">JR</div>
+              <div class="driver-info">
+                <h4>Jorge Ramírez <span class="driver-verified">✓ Verificado</span></h4>
+                <div class="driver-rating">★ <strong>4.9</strong> · 84 viajes completados · 0 cancelaciones</div>
+                <div class="driver-since">Miembro desde 2023 · DNI verificado · Licencia profesional vigente</div>
+              </div>
+            </div>
+            <div class="driver-stats-row">
+              <div class="driver-stat">
+                <div class="driver-stat-n">84</div>
+                <div class="driver-stat-l">Viajes</div>
+              </div>
+              <div class="driver-stat">
+                <div class="driver-stat-n">10+</div>
+                <div class="driver-stat-l">Años exp.</div>
+              </div>
+              <div class="driver-stat">
+                <div class="driver-stat-n">0</div>
+                <div class="driver-stat-l">Cancelaciones</div>
+              </div>
+            </div>
+            <p style="margin-top:18px;font-size:14px;color:var(--ink-soft);line-height:1.75">Especialista en transporte equino con más de 10 años de experiencia. Trabajó con haras de alta gama, studs y centros ecuestres en todo el país. Cobertura por todo el norte y centro de Argentina.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT — sticky booking card -->
+  <aside class="book-sidebar">
+    <div class="book-card">
+      <div class="book-price-old"><s>$ 100.000</s><span class="book-price-off">15% OFF</span></div>
+      <div class="book-price-row">
+        <div class="book-price">$ 85.000</div>
+      </div>
+      <div class="book-price-sub">por cupo · seña $17.000</div>
+
+      <div class="book-cupos-row">
+        <span class="book-cupos-label">Cupos disponibles</span>
+        <span class="book-cupos-n">3</span>
+      </div>
+
+      <div class="cupos-selector">
+        <span class="cs-label">¿Cuántos cupos necesitás?</span>
+        <div class="cs-row">
+          <button class="cs-btn" onclick="cChange(-1)">−</button>
+          <span class="cs-num" id="csNum">1</span>
+          <button class="cs-btn" onclick="cChange(1)">+</button>
+          <span class="cs-max">de 3 disponibles</span>
+        </div>
+      </div>
+
+      <div class="totals-block">
+        <div class="totals-row"><span>Precio por cupo</span><span class="totals-val">$85.000</span></div>
+        <div class="totals-row"><span>Cupos × <span id="totN">1</span></span><span class="totals-val" id="totSub">$85.000</span></div>
+        <div class="totals-row big"><span>Total</span><span class="totals-val" id="totTot">$85.000</span></div>
+        <div class="totals-row"><span>Seña a pagar (20%)</span><span class="totals-val" id="totSena" style="color:var(--c4-dark)">$17.000</span></div>
+      </div>
+
+      <button class="book-btn-primary" onclick="openModal()">Reservar viaje</button>
+      <button class="book-btn-secondary">💬 Consultar al transportista</button>
+
+      <div class="book-trust">
+        <div class="book-trust-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span><strong>Pago protegido</strong> hasta entrega confirmada</span>
+        </div>
+        <div class="book-trust-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span><strong>Cancelación gratis</strong> hasta 24hs antes</span>
+        </div>
+        <div class="book-trust-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <span><strong>Comprobante PDF</strong> al finalizar</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ═══ BOOKING MODAL ═══ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="modal-back" id="modalBack" onclick="prevStep()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Volver
+      </button>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="stepper" id="stepper">
+      <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Detalle</div></div>
+      <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Cupos</div></div>
+      <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Chat</div></div>
+      <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Confirmar</div></div>
+      <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Listo</div></div>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- PASO 1 — Detalle -->
+      <div class="modal-pane active" id="pane-1">
+        <h2 class="pane-title">Confirmá los detalles</h2>
+        <p class="pane-sub">Revisá el viaje antes de continuar.</p>
+        <div class="summary-card">
+          <div class="summary-route">Córdoba <em>→</em> Buenos Aires</div>
+          <div class="summary-meta">
+            <span>📅 Sáb 26 abr</span>
+            <span>📏 700 km</span>
+            <span>🐴 Equinos</span>
+            <span>⏰ 07:00 hs</span>
+          </div>
+        </div>
+        <div class="summary-card" style="display:flex;gap:14px;align-items:center">
+          <div class="dual-av" style="margin:0">JR</div>
+          <div>
+            <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--ink)">Jorge Ramírez ✓</div>
+            <div style="font-size:12px;color:var(--c5)">★ 4.9 · 84 viajes · 0 cancelaciones</div>
+          </div>
+        </div>
+        <div class="note-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div class="note-card-text"><strong>Cancelación gratuita</strong>Tenés hasta 24hs antes del viaje para cancelar y recuperar el 100% de la seña.</div>
+        </div>
+      </div>
+
+      <!-- PASO 2 — Cupos -->
+      <div class="modal-pane" id="pane-2">
+        <h2 class="pane-title">¿Cuántos cupos necesitás?</h2>
+        <p class="pane-sub">Hay 3 cupos disponibles en este viaje.</p>
+        <div class="cupos-big">
+          <div class="cupos-big-label">Cupos a reservar</div>
+          <div class="cupos-big-row">
+            <button class="cupos-big-btn" onclick="mChange(-1)">−</button>
+            <span class="cupos-big-num" id="mNum">1</span>
+            <button class="cupos-big-btn" onclick="mChange(1)">+</button>
+          </div>
+          <div class="cupos-big-sub">Máximo 3 cupos disponibles</div>
+        </div>
+        <div class="totals-modal">
+          <div class="totals-row"><span>Cupos seleccionados</span><span class="totals-val" id="mCupos">1 cupo</span></div>
+          <div class="totals-row"><span>Precio por cupo</span><span class="totals-val">$85.000</span></div>
+          <div class="totals-row big"><span>Total del viaje</span><span class="totals-val" id="mTot">$85.000</span></div>
+          <div class="totals-row" style="color:var(--c4-dark);font-weight:700"><span>Seña ahora (20%)</span><span class="totals-val" id="mSena">$17.000</span></div>
+          <div class="totals-row"><span>Saldo antes de salir</span><span class="totals-val" id="mSaldo" style="color:var(--c5)">$68.000</span></div>
+        </div>
+      </div>
+
+      <!-- PASO 3 — Chat -->
+      <div class="modal-pane" id="pane-3">
+        <h2 class="pane-title">¿Cómo querés coordinar?</h2>
+        <p class="pane-sub">Después de pagar la seña podés contactar al transportista para coordinar detalles.</p>
+        <div class="chat-options">
+          <div class="chat-opt" onclick="selectChat(this,'wsp')">
+            <div class="chat-opt-icon wsp">💬</div>
+            <div class="chat-opt-name">WhatsApp</div>
+            <div class="chat-opt-desc">Coordiná con el número verificado de Jorge.</div>
+          </div>
+          <div class="chat-opt selected" onclick="selectChat(this,'app')">
+            <div class="chat-opt-icon app">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c4-dark)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="chat-opt-name">Chat de la app</div>
+            <div class="chat-opt-desc">Historial guardado y soporte en disputas.</div>
+          </div>
+        </div>
+        <div class="note-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          <div class="note-card-text"><strong>¿Qué viene después?</strong>Tras coordinar, vos y Jorge confirman el viaje. Al confirmar ambos, se generan los comprobantes oficiales.</div>
+        </div>
+      </div>
+
+      <!-- PASO 4 — Confirmación dual -->
+      <div class="modal-pane" id="pane-4">
+        <h2 class="pane-title">Aceptación de ambas partes</h2>
+        <p class="pane-sub">Cuando los dos confirmen, se genera el comprobante oficial.</p>
+        <div class="dual-grid">
+          <div class="dual-card">
+            <div class="dual-av">MA</div>
+            <div class="dual-name">María Alfonzo</div>
+            <div class="dual-role">Cliente</div>
+            <button class="dual-btn" id="confC" onclick="confirm('C')">✓ Acepto</button>
+          </div>
+          <div class="dual-card">
+            <div class="dual-av">JR</div>
+            <div class="dual-name">Jorge Ramírez</div>
+            <div class="dual-role">Transportista</div>
+            <button class="dual-btn" id="confD" onclick="confirm('D')">✓ Acepto</button>
+          </div>
+        </div>
+        <div class="dual-pending" id="dualMsg">Ambas partes deben aceptar para finalizar.</div>
+        <div class="note-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="note-card-text"><strong>Generación de comprobante</strong>PDF con datos del viaje, partes, monto, condiciones y QR de seguimiento.</div>
+        </div>
+      </div>
+
+      <!-- PASO 5 — Recibo -->
+      <div class="modal-pane" id="pane-5">
+        <div class="receipt-icon-wrap">
+          <div class="receipt-circle">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="receipt-title">¡Viaje confirmado!</div>
+          <div class="receipt-subtitle">Ambas partes aceptaron · Comprobante generado</div>
+          <div class="receipt-id">RD-2025-04-26-00847</div>
+        </div>
+        <div class="receipt-table">
+          <div class="receipt-row"><span class="receipt-label">Ruta</span><span class="receipt-val">Córdoba → Buenos Aires</span></div>
+          <div class="receipt-row"><span class="receipt-label">Fecha del viaje</span><span class="receipt-val">Sáb 26 de abril 2025</span></div>
+          <div class="receipt-row"><span class="receipt-label">Transportista</span><span class="receipt-val">Jorge Ramírez ★ 4.9</span></div>
+          <div class="receipt-row"><span class="receipt-label">Cupos reservados</span><span class="receipt-val green" id="rCupos">1 cupo</span></div>
+          <div class="receipt-row"><span class="receipt-label">Total</span><span class="receipt-val green" id="rTot">$85.000</span></div>
+          <div class="receipt-row"><span class="receipt-label">Seña pagada</span><span class="receipt-val green" id="rSena">$17.000 ✓</span></div>
+          <div class="receipt-row"><span class="receipt-label">Saldo pendiente</span><span class="receipt-val" id="rSaldo">$68.000</span></div>
+          <div class="receipt-row"><span class="receipt-label">Estado</span><span class="receipt-val green">CONFIRMADO ✓</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-foot">
+      <button class="modal-btn-ghost" id="btnSec" onclick="closeModal()">Cancelar</button>
+      <button class="modal-btn-primary" id="btnPri" onclick="nextStep()">Continuar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <div class="logo-mark">R</div>
+        Ruta Directa
+      </div>
+      <p class="footer-tag">El marketplace de transporte equino más confiable de Argentina.</p>
+      <div class="footer-socials">
+        <a class="fs">IG</a><a class="fs">FB</a><a class="fs">WA</a><a class="fs">YT</a>
+      </div>
+    </div>
+    <div class="footer-col"><h5>Plataforma</h5><ul><li><a href="pagina_Agroads.html">Buscar viajes</a></li><li><a>Para camioneros</a></li><li><a href="pagina_como_funciona.html">Cómo funciona</a></li></ul></div>
+    <div class="footer-col"><h5>Ayuda</h5><ul><li><a>Preguntas frecuentes</a></li><li><a>Soporte</a></li><li><a>Contacto</a></li></ul></div>
+    <div class="footer-col"><h5>Legal</h5><ul><li><a>Términos</a></li><li><a>Privacidad</a></li><li><a>Cancelaciones</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 Ruta Directa — Argentina</span>
+    <div class="footer-legal"><a>Términos</a><a>Privacidad</a></div>
+  </div>
+</footer>
+
+<script>
+// gallery
+let curImg = 0;
+const totalImgs = 5;
+function setImg(i){
+  curImg = i;
+  document.querySelectorAll('.gal-main-img').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  document.querySelectorAll('.gal-thumb').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+}
+function changeImg(d){
+  setImg((curImg + d + totalImgs) % totalImgs);
+}
+
+// tabs
+function setTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('pane-'+id).classList.add('active');
+}
+
+// sidebar cupos
+let cupos = 1;
+const PRICE = 85000;
+function cChange(d){
+  cupos = Math.max(1, Math.min(3, cupos+d));
+  document.getElementById('csNum').textContent = cupos;
+  document.getElementById('totN').textContent = cupos;
+  const sub = PRICE * cupos;
+  const sena = Math.round(sub * 0.20);
+  document.getElementById('totSub').textContent = '$'+sub.toLocaleString('es-AR');
+  document.getElementById('totTot').textContent = '$'+sub.toLocaleString('es-AR');
+  document.getElementById('totSena').textContent = '$'+sena.toLocaleString('es-AR');
+}
+
+// modal flow
+let curStep = 1;
+const TOTAL_STEPS = 5;
+function openModal(){
+  document.getElementById('modal').classList.add('active');
+  // sync mNum with sidebar
+  mCupos = cupos;
+  document.getElementById('mNum').textContent = mCupos;
+  updateModalTotals();
+  goStep(1);
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+  curStep = 1;
+  goStep(1);
+  // reset confirms
+  document.getElementById('confC').classList.remove('confirmed');
+  document.getElementById('confC').textContent = '✓ Acepto';
+  document.getElementById('confD').classList.remove('confirmed');
+  document.getElementById('confD').textContent = '✓ Acepto';
+  document.getElementById('dualMsg').textContent = 'Ambas partes deben aceptar para finalizar.';
+}
+function goStep(n){
+  curStep = n;
+  document.querySelectorAll('.step').forEach(s=>{
+    const num = parseInt(s.dataset.step);
+    s.classList.toggle('active', num===n);
+    s.classList.toggle('done', num<n);
+  });
+  document.querySelectorAll('.modal-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+n).classList.add('active');
+  document.getElementById('modalBack').disabled = (n===1);
+  // button label
+  const btn = document.getElementById('btnPri');
+  if(n===1) btn.textContent = 'Continuar →';
+  else if(n===2) btn.textContent = 'Pagar seña →';
+  else if(n===3) btn.textContent = 'Continuar →';
+  else if(n===4) btn.style.display = 'none';
+  else if(n===5){btn.textContent='Descargar comprobante PDF';btn.style.display='block'}
+  if(n!==4 && n!==5) btn.style.display = 'block';
+  if(n===4) btn.style.display='none';
+}
+function nextStep(){
+  if(curStep===5){closeModal();return}
+  if(curStep<5) goStep(curStep+1);
+}
+function prevStep(){if(curStep>1) goStep(curStep-1)}
+
+// modal cupos
+let mCupos = 1;
+function mChange(d){
+  mCupos = Math.max(1, Math.min(3, mCupos+d));
+  document.getElementById('mNum').textContent = mCupos;
+  updateModalTotals();
+}
+function updateModalTotals(){
+  const sub = PRICE * mCupos;
+  const sena = Math.round(sub * 0.20);
+  const saldo = sub - sena;
+  document.getElementById('mCupos').textContent = mCupos+' cupo'+(mCupos>1?'s':'');
+  document.getElementById('mTot').textContent = '$'+sub.toLocaleString('es-AR');
+  document.getElementById('mSena').textContent = '$'+sena.toLocaleString('es-AR');
+  document.getElementById('mSaldo').textContent = '$'+saldo.toLocaleString('es-AR');
+  document.getElementById('rCupos').textContent = mCupos+' cupo'+(mCupos>1?'s':'');
+  document.getElementById('rTot').textContent = '$'+sub.toLocaleString('es-AR');
+  document.getElementById('rSena').textContent = '$'+sena.toLocaleString('es-AR')+' ✓';
+  document.getElementById('rSaldo').textContent = '$'+saldo.toLocaleString('es-AR');
+}
+
+// chat select
+function selectChat(el, type){
+  document.querySelectorAll('.chat-opt').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// dual confirm
+let confs = {C:false, D:false};
+function confirm(role){
+  confs[role] = true;
+  const btn = document.getElementById('conf'+role);
+  btn.classList.add('confirmed');
+  btn.textContent = '✓ Confirmado';
+  btn.disabled = true;
+  if(confs.C && confs.D){
+    document.getElementById('dualMsg').textContent = '¡Ambas partes confirmaron! Generando comprobante...';
+    setTimeout(()=>goStep(5), 1000);
+  }
+}
+
+// click outside modal
+document.getElementById('modal').addEventListener('click',(e)=>{
+  if(e.target.id==='modal') closeModal();
+});
+</script>
+</body>
+</html>
