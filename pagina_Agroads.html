@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruta Directa — Marketplace de transporte equino</title>
+<meta name="description" content="Encontrá transportistas verificados, reservá cupos con pago protegido y movéte con respaldo. El marketplace argentino de transporte equino.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════ */
+:root{
+  /* paleta */
+  --c1:#fffdf0;          /* cream — cards y elementos elevados */
+  --c2:#ffffff;          /* fondo principal */
+  --c3:#ac843e;          /* dorado — CTA principal */
+  --c3-light:#bf9651;
+  --c3-dark:#8a6929;
+  --c4:#6c8473;          /* sage — color de marca */
+  --c4-light:#86a08c;
+  --c4-dark:#536659;
+  --c4-soft:#eef2ee;     /* sage muy suave */
+  --c5:#838891;          /* texto secundario */
+
+  --ink:#2a2d33;
+  --ink-soft:#4a4d54;
+  --line:#e8e6dc;
+  --line-soft:#f0eee4;
+
+  /* sombras */
+  --shadow-xs:0 1px 2px rgba(42,45,51,0.04);
+  --shadow-sm:0 1px 3px rgba(42,45,51,0.06),0 1px 2px rgba(42,45,51,0.04);
+  --shadow-md:0 4px 16px rgba(42,45,51,0.08),0 2px 4px rgba(42,45,51,0.04);
+  --shadow-lg:0 12px 40px rgba(42,45,51,0.12),0 4px 12px rgba(42,45,51,0.06);
+  --shadow-xl:0 24px 60px rgba(42,45,51,0.16),0 8px 20px rgba(42,45,51,0.08);
+
+  /* radio */
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+  --r-xl:24px;
+  --r-pill:100px;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--c2);
+  font-family:'DM Sans',sans-serif;
+  color:var(--ink);
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img{max-width:100%;display:block}
+
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+
+/* ═══════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════ */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--c2);
+  border-bottom:1px solid var(--line);
+  box-shadow:var(--shadow-sm);
+}
+
+.nav-inner{
+  max-width:1280px;margin:0 auto;
+  padding:14px 32px;
+  display:flex;align-items:center;gap:20px;
+}
+
+.nav-logo{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer;
+}
+
+.logo-mark{
+  width:38px;height:38px;
+  border-radius:9px;background:var(--c4);color:white;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-weight:700;font-size:18px;
+  box-shadow:0 2px 8px rgba(108,132,115,0.30);
+}
+
+.logo-word{
+  font-family:'Lora',serif;font-size:20px;font-weight:700;
+  color:var(--ink);letter-spacing:-0.4px;
+}
+.logo-word em{color:var(--c4);font-weight:500;font-style:italic}
+
+.nav-search{
+  flex:1;max-width:600px;
+  display:flex;align-items:center;
+  background:var(--c1);
+  border:1.5px solid var(--line);
+  border-radius:var(--r-pill);
+  padding:4px 6px 4px 18px;
+  transition:all .2s;
+}
+.nav-search:focus-within{
+  border-color:var(--c4);
+  background:white;
+  box-shadow:0 0 0 4px rgba(108,132,115,0.10);
+}
+.nav-search svg{color:var(--c5);flex-shrink:0;margin-right:10px}
+.nav-search input{
+  flex:1;border:none;background:transparent;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  color:var(--ink);padding:9px 0;
+}
+.nav-search input::placeholder{color:var(--c5)}
+.nav-search-btn{
+  background:var(--c4);color:white;border:none;
+  border-radius:var(--r-pill);padding:9px 22px;
+  font-size:13px;font-weight:600;
+  transition:background .2s;white-space:nowrap;
+}
+.nav-search-btn:hover{background:var(--c4-dark)}
+
+.nav-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-link{
+  font-size:14px;font-weight:500;color:var(--ink-soft);
+  padding:8px 14px;border-radius:var(--r-sm);
+  transition:all .15s;
+}
+.nav-link:hover{background:var(--c4-soft);color:var(--c4-dark)}
+.nav-cta{
+  background:var(--c3);color:white;
+  padding:9px 18px;border-radius:var(--r-sm);
+  font-size:14px;font-weight:600;
+  box-shadow:0 2px 8px rgba(172,132,62,0.30);
+  transition:background .2s;
+}
+.nav-cta:hover{background:var(--c3-dark)}
+
+/* ═══════════════════════════════════════════════
+   HERO BANNER
+═══════════════════════════════════════════════ */
+.hero{padding:24px 32px 0;max-width:1280px;margin:0 auto}
+
+.hero-banner{
+  position:relative;
+  background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);
+  border-radius:var(--r-xl);overflow:hidden;
+  min-height:380px;
+  display:flex;align-items:center;
+  padding:56px 64px;
+  box-shadow:var(--shadow-md);
+}
+.hero-banner::before{
+  content:'';position:absolute;
+  right:-100px;top:-50px;bottom:-50px;width:60%;
+  background:url("https://images.unsplash.com/photo-1553284966-19b8815c7817?w=1400&q=80&auto=format&fit=crop") center/cover no-repeat;
+  clip-path:polygon(20% 0,100% 0,100% 100%,0 100%);
+  opacity:0.85;
+}
+.hero-banner::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--c4) 0%,var(--c4) 32%,transparent 60%);
+  pointer-events:none;
+}
+
+.hero-content{position:relative;z-index:1;max-width:480px}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.25);
+  color:white;padding:6px 14px;
+  border-radius:var(--r-pill);
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1.5px;
+  margin-bottom:20px;
+}
+.hero-eyebrow .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#bef264;animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(190,242,100,.6)}
+  50%{box-shadow:0 0 0 5px rgba(190,242,100,0)}
+}
+
+.hero-content h1{
+  font-family:'Lora',serif;
+  font-size:clamp(32px,4.4vw,52px);
+  font-weight:700;color:white;
+  line-height:1.08;letter-spacing:-0.5px;
+  margin-bottom:18px;
+}
+.hero-content h1 em{font-style:italic;color:#f9e6c5;font-weight:500}
+
+.hero-content p{
+  font-size:16px;color:rgba(255,255,255,0.90);
+  line-height:1.65;margin-bottom:30px;
+  max-width:420px;
+}
+
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+.btn-arrow{
+  width:54px;height:54px;border-radius:50%;
+  background:white;color:var(--c4-dark);
+  display:flex;align-items:center;justify-content:center;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,0.18);
+  transition:all .25s;
+}
+.btn-arrow:hover{
+  background:var(--c1);transform:translateX(4px) scale(1.05);
+  box-shadow:0 6px 20px rgba(0,0,0,0.22);
+}
+.btn-arrow svg{transition:transform .25s}
+
+.btn-pill-outline{
+  background:transparent;color:white;
+  border:2px solid rgba(255,255,255,0.40);
+  border-radius:var(--r-pill);
+  padding:13px 30px;
+  font-size:15px;font-weight:600;
+  transition:all .2s;
+}
+.btn-pill-outline:hover{
+  border-color:white;
+  background:rgba(255,255,255,0.10);
+}
+
+.hero-arrows-controls{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:2;
+}
+.hero-arrows-controls.left{left:16px}
+.hero-arrows-controls.right{right:16px}
+.hero-arrow-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.30);
+  color:white;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .18s;
+}
+.hero-arrow-btn:hover{background:rgba(255,255,255,0.32)}
+
+.hero-dots{
+  position:absolute;bottom:24px;left:64px;
+  display:flex;gap:6px;z-index:2;
+}
+.hd-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,0.40);
+  border:none;cursor:pointer;
+  transition:all .25s;
+}
+.hd-dot.active{background:white;width:24px;border-radius:4px}
+
+/* ═══════════════════════════════════════════════
+   TRUST STRIP
+═══════════════════════════════════════════════ */
+.trust-strip{
+  background:var(--c1);
+  margin-top:36px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.trust-inner{
+  max-width:1280px;margin:0 auto;
+  padding:28px 32px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:24px;
+}
+.trust-item{display:flex;align-items:center;gap:14px}
+.trust-icon{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--c4-soft);color:var(--c4-dark);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;border:1px solid rgba(108,132,115,0.18);
+}
+.trust-text{display:flex;flex-direction:column;gap:1px}
+.trust-text strong{
+  font-family:'Lora',serif;font-size:14px;
+  color:var(--ink);font-weight:700;
+}
+.trust-text span{font-size:12px;color:var(--c5)}
+
+/* ═══════════════════════════════════════════════
+   SECTION (común)
+═══════════════════════════════════════════════ */
+.section{max-width:1280px;margin:0 auto;padding:64px 32px}
+.section-alt{background:var(--c1)}
+.section-alt .section{padding-top:64px;padding-bottom:64px}
+
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;gap:16px;flex-wrap:wrap;
+}
+.section-title-wrap{flex:1;min-width:0}
+.section-title{
+  font-family:'Lora',serif;
+  font-size:clamp(22px,2.6vw,30px);
+  font-weight:700;color:var(--ink);
+  background:#fef3c7;
+  padding:2px 12px;border-radius:6px;
+  display:inline-block;letter-spacing:-0.3px;
+}
+.section-sub{
+  font-size:14px;color:var(--c5);
+  margin-top:10px;max-width:680px;line-height:1.65;
+}
+.section-link{
+  font-size:14px;color:var(--c4);font-weight:600;
+  white-space:nowrap;
+  transition:color .15s;
+}
+.section-link:hover{color:var(--c4-dark);text-decoration:underline}
+
+/* ═══════════════════════════════════════════════
+   TRANSPORTISTA CARDS
+═══════════════════════════════════════════════ */
+.tr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+
+.tr-card{
+  background:var(--c2);
+  border:1px solid var(--line);
+  border-radius:var(--r-lg);
+  overflow:hidden;cursor:pointer;
+  transition:all .25s;
+  display:flex;flex-direction:column;
+}
+.tr-card:hover{
+  border-color:var(--c4-light);
+  box-shadow:var(--shadow-lg);
+  transform:translateY(-3px);
+}
+
+.tr-photo{
+  height:160px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);
+}
+.tr-photo.alt-1{background:linear-gradient(135deg,#7d9d8a 0%,#5a6f63 100%)}
+.tr-photo.alt-2{background:linear-gradient(135deg,#a39172 0%,#7d6c54 100%)}
+.tr-photo.alt-3{background:linear-gradient(135deg,#8a9aa3 0%,#6d7a82 100%)}
+.tr-photo.alt-4{background:linear-gradient(135deg,#a89171 0%,#7d6648 100%)}
+.tr-photo::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,0.50) 100%);
+}
+
+.tr-verified-badge{
+  position:absolute;top:12px;left:12px;z-index:2;
+  background:rgba(255,255,255,0.95);color:var(--c4-dark);
+  font-size:10px;font-weight:700;
+  padding:4px 9px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:4px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+.tr-fav-btn{
+  position:absolute;top:12px;right:12px;z-index:2;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,0.20);
+  backdrop-filter:blur(6px);
+  border:none;cursor:pointer;color:white;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.tr-fav-btn:hover{background:rgba(255,255,255,0.35)}
+
+.tr-avatar{
+  position:absolute;bottom:-22px;left:18px;z-index:2;
+  width:64px;height:64px;border-radius:50%;
+  background:var(--c4);color:white;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-weight:700;font-size:20px;
+  border:4px solid var(--c2);
+  box-shadow:0 4px 14px rgba(0,0,0,0.18);
+}
+
+.tr-body{padding:32px 18px 18px;flex:1;display:flex;flex-direction:column}
+.tr-name{
+  font-family:'Lora',serif;font-size:16px;font-weight:700;
+  color:var(--ink);letter-spacing:-0.2px;margin-bottom:5px;
+}
+.tr-rating{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--c5);margin-bottom:12px;
+}
+.tr-rating .star{color:var(--c3);font-size:14px}
+.tr-rating strong{color:var(--ink);font-weight:700}
+.tr-rating .sep{color:var(--line)}
+
+.tr-zone{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--c5);
+  padding:10px 0;
+  border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft);
+  margin-bottom:12px;
+}
+.tr-zone svg{color:var(--c4);flex-shrink:0}
+.tr-zone strong{color:var(--ink-soft);font-weight:600}
+
+.tr-routes-label{
+  font-size:10px;font-weight:700;color:var(--c5);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;
+}
+.tr-routes{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tr-route-pill{
+  font-size:11px;color:var(--c4-dark);
+  background:var(--c4-soft);
+  padding:3px 8px;border-radius:5px;font-weight:600;
+}
+
+.tr-stats{
+  display:flex;gap:6px;margin-bottom:14px;
+  padding:10px;background:var(--c1);
+  border-radius:var(--r-sm);border:1px solid var(--line-soft);
+}
+.tr-stat{flex:1;text-align:center}
+.tr-stat-n{
+  font-family:'Lora',serif;font-size:14px;font-weight:700;
+  color:var(--ink);line-height:1;
+}
+.tr-stat-l{
+  font-size:9px;color:var(--c5);
+  text-transform:uppercase;letter-spacing:.4px;
+  margin-top:3px;font-weight:600;
+}
+
+.tr-btn{
+  width:100%;padding:10px;
+  background:var(--c3);color:white;
+  border:none;border-radius:var(--r-sm);
+  font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  margin-top:auto;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tr-btn:hover{background:var(--c3-dark)}
+.tr-btn svg{transition:transform .2s}
+.tr-btn:hover svg{transform:translateX(3px)}
+
+/* ═══════════════════════════════════════════════
+   PRODUCT CARDS (Ofertas)
+═══════════════════════════════════════════════ */
+.prod-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:18px;
+}
+.prod-grid + .prod-grid{margin-top:18px}
+
+.prod-card{
+  background:var(--c2);
+  border:1px solid var(--line);
+  border-radius:var(--r-md);
+  overflow:hidden;cursor:pointer;
+  transition:all .25s;
+  display:flex;flex-direction:column;
+}
+.prod-card:hover{
+  border-color:var(--c4-light);
+  box-shadow:var(--shadow-lg);
+  transform:translateY(-3px);
+}
+
+.prod-img{
+  height:170px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;padding:20px;
+}
+.prod-img.alt-1{background:linear-gradient(135deg,#7d9d8a,#5a6f63)}
+.prod-img.alt-2{background:linear-gradient(135deg,#a39172,#7d6c54)}
+.prod-img.alt-3{background:linear-gradient(135deg,#8a9aa3,#6d7a82)}
+.prod-img.alt-4{background:linear-gradient(135deg,#a89171,#7d6648)}
+.prod-img.alt-5{background:linear-gradient(135deg,#7d8e9a,#5a6973)}
+
+.prod-route-from,.prod-route-to{
+  font-family:'Lora',serif;font-size:18px;font-weight:600;
+  color:white;text-align:center;letter-spacing:-0.3px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.20);
+}
+.prod-route-arrow{
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(255,255,255,0.20);
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+
+.prod-img-tag{
+  position:absolute;top:10px;left:10px;
+  background:var(--c3);color:white;
+  font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:5px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.prod-img-tag.warn{background:#dc2626}
+
+.prod-img-fav{
+  position:absolute;top:10px;right:10px;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,0.20);
+  backdrop-filter:blur(6px);
+  border:none;cursor:pointer;color:white;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.prod-img-fav:hover{background:rgba(255,255,255,0.35)}
+
+.prod-body{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column}
+
+.prod-tag-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.prod-tag{
+  font-size:10px;font-weight:600;color:var(--c4-dark);
+  background:var(--c4-soft);
+  padding:2px 8px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.4px;
+}
+
+.prod-name{
+  font-size:14px;font-weight:600;color:var(--ink);
+  line-height:1.35;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.prod-meta{font-size:12px;color:var(--c5);margin-bottom:4px}
+.prod-loc{
+  display:flex;align-items:center;gap:4px;
+  font-size:12px;color:var(--c5);margin-bottom:3px;
+}
+.prod-driver{font-size:12px;color:var(--c5);margin-bottom:10px}
+.prod-driver strong{color:var(--ink-soft);font-weight:500}
+
+.prod-price-old{
+  font-size:11px;color:var(--c5);
+  text-decoration:line-through;margin-right:6px;
+}
+.prod-price-off{
+  font-size:11px;color:var(--c4);font-weight:700;
+}
+.prod-price{
+  font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;
+  color:var(--ink);letter-spacing:-0.3px;line-height:1;margin-bottom:2px;
+}
+.prod-price-sub{font-size:11px;color:var(--c5);margin-bottom:10px}
+
+.prod-badges{display:flex;flex-direction:column;gap:5px;margin-top:auto}
+.prod-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;
+  padding:4px 8px;border-radius:5px;
+  align-self:flex-start;
+}
+.prod-badge svg{flex-shrink:0}
+.pb-yellow{background:#fef3c7;color:#92400e}
+.pb-green{background:#dcfce7;color:#166534}
+.pb-blue{background:#dbeafe;color:#1e40af}
+
+/* ver todas */
+.ver-todas-wrap{display:flex;justify-content:center;margin-top:36px}
+.ver-todas{
+  background:var(--c3);color:white;
+  padding:13px 36px;border-radius:var(--r-pill);border:none;
+  font-size:14px;font-weight:600;
+  box-shadow:0 4px 14px rgba(172,132,62,0.30);
+  transition:all .2s;
+}
+.ver-todas:hover{
+  background:var(--c3-dark);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(172,132,62,0.42);
+}
+
+/* ═══════════════════════════════════════════════
+   CATEGORÍAS
+═══════════════════════════════════════════════ */
+.cat-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:12px;
+  background:var(--c1);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:24px;
+}
+.cat-item{
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  padding:14px 8px;border-radius:var(--r-md);cursor:pointer;
+  transition:all .18s;text-align:center;
+}
+.cat-item:hover{background:var(--c4-soft);transform:translateY(-2px)}
+.cat-item-img{
+  width:60px;height:60px;border-radius:50%;
+  background:white;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  transition:all .18s;
+}
+.cat-item:hover .cat-item-img{
+  border-color:var(--c4-light);
+  box-shadow:var(--shadow-sm);
+}
+.cat-item-name{font-size:12px;font-weight:600;color:var(--ink-soft)}
+
+/* ═══════════════════════════════════════════════
+   FEATURED BANNERS
+═══════════════════════════════════════════════ */
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+.feat-card{
+  position:relative;border-radius:var(--r-lg);overflow:hidden;
+  min-height:220px;padding:36px 40px;
+  display:flex;align-items:center;
+  background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);
+  cursor:pointer;
+  transition:all .25s;
+}
+.feat-card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-lg);
+}
+.feat-card.alt{
+  background:linear-gradient(135deg,var(--c3) 0%,var(--c3-dark) 100%);
+}
+
+.feat-text{position:relative;z-index:1;max-width:300px}
+.feat-eyebrow{
+  font-size:11px;font-weight:700;
+  color:rgba(255,255,255,0.85);
+  text-transform:uppercase;letter-spacing:2px;
+  margin-bottom:10px;
+}
+.feat-title{
+  font-family:'Lora',serif;font-size:24px;font-weight:700;
+  color:white;line-height:1.20;letter-spacing:-0.3px;margin-bottom:10px;
+}
+.feat-sub{
+  font-size:14px;color:rgba(255,255,255,0.85);
+  line-height:1.55;margin-bottom:18px;
+}
+.feat-link{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(6px);
+  color:white;padding:9px 18px;
+  border-radius:var(--r-pill);
+  font-size:13px;font-weight:600;
+  border:1px solid rgba(255,255,255,0.25);
+  transition:background .18s;
+}
+.feat-link:hover{background:rgba(255,255,255,0.30)}
+.feat-link svg{transition:transform .2s}
+.feat-link:hover svg{transform:translateX(3px)}
+
+.feat-decor{
+  position:absolute;right:-20px;bottom:-30px;
+  font-family:'Lora',serif;font-size:170px;font-weight:700;
+  color:rgba(255,255,255,0.10);line-height:1;
+  pointer-events:none;
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+footer{
+  background:#1a1d22;
+  padding:56px 32px 28px;
+  margin-top:64px;
+}
+.footer-inner{
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;
+  padding-bottom:32px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.footer-brand{
+  font-family:'Lora',serif;font-size:24px;font-weight:700;
+  color:white;letter-spacing:-0.4px;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.footer-brand .logo-mark{width:36px;height:36px}
+.footer-tag{
+  font-size:13px;color:rgba(255,255,255,0.55);
+  line-height:1.65;margin-bottom:18px;max-width:300px;
+}
+.footer-socials{display:flex;gap:8px}
+.fs{
+  width:34px;height:34px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  color:rgba(255,255,255,0.65);
+  transition:all .18s;
+}
+.fs:hover{background:var(--c4);color:white}
+
+.footer-col h5{
+  font-family:'Lora',serif;font-size:13px;font-weight:700;
+  color:white;text-transform:uppercase;letter-spacing:1.5px;
+  margin-bottom:14px;
+}
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:8px}
+.footer-col ul li a{
+  font-size:13px;color:rgba(255,255,255,0.55);
+  transition:color .15s;
+}
+.footer-col ul li a:hover{color:white}
+
+.footer-bottom{
+  max-width:1280px;margin:0 auto;
+  padding-top:24px;
+  display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+.footer-copy,.footer-legal a{
+  font-size:12px;color:rgba(255,255,255,0.32);
+}
+.footer-legal{display:flex;gap:18px}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media(max-width:1100px){
+  .prod-grid{grid-template-columns:repeat(3,1fr)}
+  .tr-grid{grid-template-columns:repeat(2,1fr)}
+  .cat-grid{grid-template-columns:repeat(4,1fr)}
+}
+
+@media(max-width:768px){
+  .nav-search{display:none}
+  .nav-actions .nav-link{display:none}
+  .hero-banner{padding:36px 28px;min-height:300px}
+  .hero-banner::before{display:none}
+  .hero-banner::after{background:transparent}
+  .trust-inner{grid-template-columns:1fr 1fr}
+  .prod-grid{grid-template-columns:repeat(2,1fr)}
+  .tr-grid{grid-template-columns:1fr}
+  .cat-grid{grid-template-columns:repeat(3,1fr)}
+  .feat-grid{grid-template-columns:1fr}
+  .footer-inner{grid-template-columns:1fr 1fr;gap:32px}
+}
+
+@media(max-width:480px){
+  .prod-grid{grid-template-columns:1fr}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .section{padding:48px 20px}
+  .hero{padding:16px 20px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="pagina_Agroads.html">
+      <div class="logo-mark">R</div>
+      <div class="logo-word">Ruta<em> Directa</em></div>
+    </a>
+    <div class="nav-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="¿Qué transporte equino necesitás?">
+      <button class="nav-search-btn">Buscar</button>
+    </div>
+    <div class="nav-actions">
+      <a class="nav-link" href="pagina_como_funciona.html">Cómo funciona</a>
+      <a class="nav-link" href="pagina_login.html">Ingresá</a>
+      <a class="nav-cta" href="pagina_register.html">Registrate</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-eyebrow"><span class="dot"></span>+1.200 viajes verificados</div>
+      <h1>Encontrá tu<br>transporte equino<br><em>de confianza.</em></h1>
+      <p>Reservá cupos en viajes programados o contratá un transportista para tu propia ruta. Pago protegido y comprobante digital.</p>
+      <div class="hero-actions">
+        <button class="btn-arrow">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-pill-outline">Buscar viajes</button>
+      </div>
+    </div>
+    <div class="hero-arrows-controls left">
+      <button class="hero-arrow-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="hero-arrows-controls right">
+      <button class="hero-arrow-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="hero-dots">
+      <button class="hd-dot active"></button>
+      <button class="hd-dot"></button>
+      <button class="hd-dot"></button>
+      <button class="hd-dot"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TRUST STRIP
+═══════════════════════════════════════════════ -->
+<div class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="trust-text"><strong>Verificación manual</strong><span>Cada transportista revisado</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <div class="trust-text"><strong>Pago protegido</strong><span>Seña retenida hasta entrega</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <div class="trust-text"><strong>Comprobante digital</strong><span>PDF al finalizar</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="trust-text"><strong>Cancelación gratis</strong><span>Hasta 24hs antes</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     CONTRATÁ UN TRANSPORTISTA
+═══════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-title-wrap">
+      <h2 class="section-title">Contratá un transportista</h2>
+      <p class="section-sub">¿No encontrás un viaje programado que te sirva? Elegí un transportista verificado y propónele tu propio traslado con la fecha y ruta que necesites.</p>
+    </div>
+    <a class="section-link">Ver todos →</a>
+  </div>
+
+  <div class="tr-grid">
+
+    <a class="tr-card" href="publicacion_transportista.html">
+      <div class="tr-photo" style="background-image:linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.55)),url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80&auto=format&fit=crop');background-size:cover;background-position:center">
+        <span class="tr-verified-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          Verificado
+        </span>
+        <button class="tr-fav-btn" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="tr-avatar">JR</div>
+      </div>
+      <div class="tr-body">
+        <div class="tr-name">Jorge Ramírez</div>
+        <div class="tr-rating">
+          <span class="star">★</span><strong>4.9</strong>(84 viajes)<span class="sep">·</span><span>10+ años</span>
+        </div>
+        <div class="tr-zone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Base en <strong>Córdoba</strong>
+        </div>
+        <div class="tr-routes-label">Rutas que cubre</div>
+        <div class="tr-routes">
+          <span class="tr-route-pill">Córdoba ↔ Bs. As.</span>
+          <span class="tr-route-pill">Córdoba ↔ Rosario</span>
+          <span class="tr-route-pill">Norte AR</span>
+        </div>
+        <div class="tr-stats">
+          <div class="tr-stat"><div class="tr-stat-n">3</div><div class="tr-stat-l">Cupos</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">0</div><div class="tr-stat-l">Cancela</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">24h</div><div class="tr-stat-l">Responde</div></div>
+        </div>
+        <span class="tr-btn">
+          Proponer viaje
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="tr-card" href="publicacion_transportista.html">
+      <div class="tr-photo alt-1" style="background-image:linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.55)),url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=80&auto=format&fit=crop');background-size:cover;background-position:center">
+        <span class="tr-verified-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          Verificado
+        </span>
+        <button class="tr-fav-btn" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="tr-avatar" style="background:#163A5F">ML</div>
+      </div>
+      <div class="tr-body">
+        <div class="tr-name">Marcelo López</div>
+        <div class="tr-rating">
+          <span class="star">★</span><strong>4.7</strong>(51 viajes)<span class="sep">·</span><span>7 años</span>
+        </div>
+        <div class="tr-zone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Base en <strong>Mendoza</strong>
+        </div>
+        <div class="tr-routes-label">Rutas que cubre</div>
+        <div class="tr-routes">
+          <span class="tr-route-pill">Mendoza ↔ Rosario</span>
+          <span class="tr-route-pill">Mendoza ↔ Bs. As.</span>
+          <span class="tr-route-pill">Cuyo</span>
+        </div>
+        <div class="tr-stats">
+          <div class="tr-stat"><div class="tr-stat-n">2</div><div class="tr-stat-l">Cupos</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">1</div><div class="tr-stat-l">Cancela</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">12h</div><div class="tr-stat-l">Responde</div></div>
+        </div>
+        <span class="tr-btn">
+          Proponer viaje
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="tr-card" href="publicacion_transportista.html">
+      <div class="tr-photo alt-2" style="background-image:linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.55)),url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=600&q=80&auto=format&fit=crop');background-size:cover;background-position:center">
+        <span class="tr-verified-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          Verificado
+        </span>
+        <button class="tr-fav-btn" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="tr-avatar" style="background:#7A4A15">CP</div>
+      </div>
+      <div class="tr-body">
+        <div class="tr-name">Carlos Pedraza</div>
+        <div class="tr-rating">
+          <span class="star">★</span><strong>5.0</strong>(130 viajes)<span class="sep">·</span><span>15 años</span>
+        </div>
+        <div class="tr-zone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Base en <strong>Tucumán</strong>
+        </div>
+        <div class="tr-routes-label">Rutas que cubre</div>
+        <div class="tr-routes">
+          <span class="tr-route-pill">NOA</span>
+          <span class="tr-route-pill">Tucumán ↔ Córdoba</span>
+          <span class="tr-route-pill">Salta ↔ Bs. As.</span>
+        </div>
+        <div class="tr-stats">
+          <div class="tr-stat"><div class="tr-stat-n">4</div><div class="tr-stat-l">Cupos</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">0</div><div class="tr-stat-l">Cancela</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">6h</div><div class="tr-stat-l">Responde</div></div>
+        </div>
+        <span class="tr-btn">
+          Proponer viaje
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="tr-card" href="publicacion_transportista.html">
+      <div class="tr-photo alt-3" style="background-image:linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.55)),url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5b?w=600&q=80&auto=format&fit=crop');background-size:cover;background-position:center">
+        <span class="tr-verified-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          Verificado
+        </span>
+        <button class="tr-fav-btn" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="tr-avatar" style="background:#1A4A2A">FP</div>
+      </div>
+      <div class="tr-body">
+        <div class="tr-name">Fernando Pereyra</div>
+        <div class="tr-rating">
+          <span class="star">★</span><strong>4.6</strong>(43 viajes)<span class="sep">·</span><span>5 años</span>
+        </div>
+        <div class="tr-zone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Base en <strong>Santa Fe</strong>
+        </div>
+        <div class="tr-routes-label">Rutas que cubre</div>
+        <div class="tr-routes">
+          <span class="tr-route-pill">Litoral</span>
+          <span class="tr-route-pill">Santa Fe ↔ Mendoza</span>
+          <span class="tr-route-pill">Bs. As. ↔ Córdoba</span>
+        </div>
+        <div class="tr-stats">
+          <div class="tr-stat"><div class="tr-stat-n">3</div><div class="tr-stat-l">Cupos</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">2</div><div class="tr-stat-l">Cancela</div></div>
+          <div class="tr-stat"><div class="tr-stat-n">8h</div><div class="tr-stat-l">Responde</div></div>
+        </div>
+        <span class="tr-btn">
+          Proponer viaje
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     OFERTAS DE LA SEMANA
+═══════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-title-wrap">
+      <h2 class="section-title">Ofertas de la semana</h2>
+    </div>
+    <a class="section-link">Ver más →</a>
+  </div>
+
+  <div class="prod-grid">
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img">
+        <span class="prod-img-tag">15% OFF</span>
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Córdoba</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Buenos Aires</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">3 cupos disponibles · Sáb 26 abr</div>
+        <div class="prod-meta">700 km · Salida 07:00 hs</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Córdoba Capital
+        </div>
+        <div class="prod-driver">Jorge Ramírez · <strong>★ 4.9</strong></div>
+        <div class="prod-price"><span class="prod-price-old">$100.000</span><span class="prod-price-off">15% OFF</span></div>
+        <div class="prod-price">$ 85.000</div>
+        <div class="prod-price-sub">Seña $17.000 · saldo antes de salir</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-yellow">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+            12 cuotas sin interés
+          </span>
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Verificado
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-1">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Mendoza</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Rosario</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">2 cupos disponibles · Lun 28 abr</div>
+        <div class="prod-meta">1.100 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Mendoza Capital
+        </div>
+        <div class="prod-driver">Marcelo López · <strong>★ 4.7</strong></div>
+        <div class="prod-price">$ 120.000</div>
+        <div class="prod-price-sub">Seña $24.000 · cancelación gratis 48hs</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-blue">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Salida inmediata
+          </span>
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Verificado
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-2">
+        <span class="prod-img-tag">25% OFF</span>
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Tucumán</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Córdoba</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">4 cupos disponibles · Vie 25 abr</div>
+        <div class="prod-meta">680 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          San Miguel de Tucumán
+        </div>
+        <div class="prod-driver">Carlos Pedraza · <strong>★ 5.0</strong></div>
+        <div class="prod-price"><span class="prod-price-old">$96.000</span><span class="prod-price-off">25% OFF</span></div>
+        <div class="prod-price">$ 72.000</div>
+        <div class="prod-price-sub">Seña $14.400</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-yellow">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+            4 cuotas sin interés
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-3">
+        <span class="prod-img-tag warn">⚡ Último cupo</span>
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Salta</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Bs. Aires</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">1 cupo disponible · Dom 27 abr</div>
+        <div class="prod-meta">1.600 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Salta Capital
+        </div>
+        <div class="prod-driver">Roberto García · <strong>★ 4.8</strong></div>
+        <div class="prod-price">$ 190.000</div>
+        <div class="prod-price-sub">Seña $38.000 · saldo antes de salir</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-blue">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Salida inmediata
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-4">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Córdoba</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Rosario</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">5 cupos disponibles · Jue 24 abr</div>
+        <div class="prod-meta">390 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Córdoba Capital
+        </div>
+        <div class="prod-driver">Alejandro González · <strong>★ 4.9</strong></div>
+        <div class="prod-price">$ 48.000</div>
+        <div class="prod-price-sub">Seña $9.600 · cancelación gratis 48hs</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-yellow">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+            6 cuotas sin interés
+          </span>
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Verificado
+          </span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="ver-todas-wrap">
+    <button class="ver-todas">Ver todas las ofertas</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORÍAS
+═══════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-title-wrap">
+      <h2 class="section-title">Encontrá viajes cerca de vos</h2>
+    </div>
+  </div>
+
+  <div class="cat-grid">
+    <a class="cat-item">
+      <div class="cat-item-img">🐴</div>
+      <div class="cat-item-name">Equinos</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">🐄</div>
+      <div class="cat-item-name">Ganado</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">🐖</div>
+      <div class="cat-item-name">Porcinos</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">📦</div>
+      <div class="cat-item-name">Mercadería</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">🌾</div>
+      <div class="cat-item-name">Agro general</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">↩️</div>
+      <div class="cat-item-name">Retornos</div>
+    </a>
+    <a class="cat-item">
+      <div class="cat-item-img">🚛</div>
+      <div class="cat-item-name">Camioneros</div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     FEATURED BANNERS
+═══════════════════════════════════════════════ -->
+<section class="section">
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-text">
+        <div class="feat-eyebrow">Para clientes</div>
+        <div class="feat-title">¿Tenés caballos para trasladar?</div>
+        <div class="feat-sub">Encontrá transportistas verificados con cupos compartidos. Pagás menos, llegan seguros.</div>
+        <a class="feat-link">
+          Buscar viajes
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="feat-decor">🐴</div>
+    </div>
+    <div class="feat-card alt">
+      <div class="feat-text">
+        <div class="feat-eyebrow">Para camioneros</div>
+        <div class="feat-title">¿Tenés cupos vacíos?</div>
+        <div class="feat-sub">Publicá tu viaje y llená retornos. +480 transportistas activos cobrando con seña protegida.</div>
+        <a class="feat-link" href="pagina_register.html">
+          Publicar mi viaje
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="feat-decor">🚛</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     ÚLTIMOS PUBLICADOS
+═══════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-title-wrap">
+      <h2 class="section-title">Últimos publicados</h2>
+    </div>
+    <a class="section-link">Ver más →</a>
+  </div>
+
+  <div class="prod-grid">
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">La Plata</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Mar del Plata</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">3 cupos · Vie 2 may</div>
+        <div class="prod-meta">405 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          La Plata
+        </div>
+        <div class="prod-driver">Sergio Méndez · <strong>★ 4.7</strong></div>
+        <div class="prod-price">$ 55.000</div>
+        <div class="prod-price-sub">Seña $11.000</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Nuevo
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-1">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Neuquén</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Bahía Blanca</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">2 cupos · Sáb 3 may</div>
+        <div class="prod-meta">560 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Neuquén Capital
+        </div>
+        <div class="prod-driver">Luciana Méndez · <strong>★ 4.8</strong></div>
+        <div class="prod-price">$ 78.000</div>
+        <div class="prod-price-sub">Seña $15.600</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Nuevo
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-2">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Córdoba</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">San Juan</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">3 cupos · Lun 5 may</div>
+        <div class="prod-meta">580 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Córdoba Capital
+        </div>
+        <div class="prod-driver">Diego Sosa · <strong>★ 4.5</strong></div>
+        <div class="prod-price">$ 68.000</div>
+        <div class="prod-price-sub">Seña $13.600</div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-3">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Bs. Aires</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Posadas</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">2 cupos · Mié 7 may</div>
+        <div class="prod-meta">1.080 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Buenos Aires
+        </div>
+        <div class="prod-driver">María Cordero · <strong>★ 4.9</strong></div>
+        <div class="prod-price">$ 145.000</div>
+        <div class="prod-price-sub">Seña $29.000</div>
+      </div>
+    </a>
+
+    <a class="prod-card" href="publicacion_viaje.html">
+      <div class="prod-img alt-4">
+        <button class="prod-img-fav" onclick="event.preventDefault();event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="prod-route-from">Mendoza</div>
+        <div class="prod-route-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+        <div class="prod-route-to">Bariloche</div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-tag-row"><span class="prod-tag">Equinos</span></div>
+        <div class="prod-name">4 cupos · Jue 1 may</div>
+        <div class="prod-meta">1.180 km</div>
+        <div class="prod-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Mendoza Capital
+        </div>
+        <div class="prod-driver">Pablo Iturri · <strong>★ 4.8</strong></div>
+        <div class="prod-price">$ 132.000</div>
+        <div class="prod-price-sub">Seña $26.400</div>
+        <div class="prod-badges">
+          <span class="prod-badge pb-green">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            Verificado
+          </span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <div class="logo-mark">R</div>
+        Ruta Directa
+      </div>
+      <p class="footer-tag">El marketplace de transporte equino más confiable de Argentina. Conectamos carga con destinos reales.</p>
+      <div class="footer-socials">
+        <a class="fs">IG</a>
+        <a class="fs">FB</a>
+        <a class="fs">WA</a>
+        <a class="fs">YT</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h5>Plataforma</h5>
+      <ul>
+        <li><a>Buscar viajes</a></li>
+        <li><a>Para camioneros</a></li>
+        <li><a href="pagina_como_funciona.html">Cómo funciona</a></li>
+        <li><a>Verificación</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Ayuda</h5>
+      <ul>
+        <li><a>Preguntas frecuentes</a></li>
+        <li><a>Soporte</a></li>
+        <li><a>Reportar problema</a></li>
+        <li><a>Contacto</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a>Términos</a></li>
+        <li><a>Privacidad</a></li>
+        <li><a>Cancelaciones</a></li>
+        <li><a>Cookies</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 Ruta Directa — Argentina</span>
+    <div class="footer-legal">
+      <a>Términos</a>
+      <a>Privacidad</a>
+      <a>Cookies</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
