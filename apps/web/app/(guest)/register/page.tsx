@@ -1,1 +1,5 @@
-export { default } from "@/features/auth/pages/register-page";
+import { RegisterPageView } from "@/features/auth/pages/register-page";
+
+export default function RegisterPage() {
+  return <RegisterPageView />;
+}

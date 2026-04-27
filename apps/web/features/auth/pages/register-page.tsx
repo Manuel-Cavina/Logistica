@@ -1,426 +1,233 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
-import { startTransition, useEffect, useState } from "react";
-import { RegisterForm } from "../components/forms/register-form";
+import { useState } from 'react';
+import Link from 'next/link';
 
-type RegisterSlide = {
-  backgroundImage: string;
-  backgroundPosition?: string;
-  description: string;
-  emphasis: string;
-  eyebrow: string;
-  highlights: TrustHighlight[];
-  title: string;
-};
+type Role = 'client' | 'driver';
 
-type TrustHighlight = {
-  description: string;
-  icon: ReactNode;
-  title: string;
-};
-
-const sharedImageOverlay =
-  "radial-gradient(circle at 18% 18%, rgba(108,196,255,0.18), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,204,92,0.18), transparent 18%), linear-gradient(180deg, rgba(30,92,128,0.18), rgba(42,130,114,0.3), rgba(38,88,78,0.5))";
-
-function GreenIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M18.5 5.5c-5.8.35-9.8 3.4-11.8 9.15"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M8.75 18.5c4.55-.25 7.65-2.5 9.25-6.75.6-1.6.8-3.45.5-5.5-2.05-.3-3.9-.1-5.5.5-4.25 1.6-6.5 4.7-6.75 9.25.8 1.05 1.45 1.7 2.5 2.5Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
+function getPwScore(v: string) {
+  if (!v) return 0;
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  return score;
 }
 
-function TruckIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M3.75 7.25h10.5v7.5H3.75v-7.5Zm10.5 2.25h3.3l2.2 2.45v2.8h-5.5V9.5Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M7.25 17.75a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
+function getPwClass(score: number): string {
+  if (score <= 1) return 'weak';
+  if (score === 2) return 'med';
+  return 'good';
 }
 
-function ShieldIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M12 3.5 5.5 6v5.2c0 4.35 2.78 8.4 6.5 9.8 3.72-1.4 6.5-5.45 6.5-9.8V6L12 3.5Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-      <path
-        d="m9.3 12.1 1.8 1.8 3.6-4"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
+function getPwHint(score: number, empty: boolean): string {
+  if (empty) return 'Usá al menos 8 caracteres con números y mayúsculas';
+  if (score <= 1) return 'Contraseña débil';
+  if (score === 2) return 'Contraseña regular';
+  if (score === 3) return 'Contraseña buena';
+  return 'Contraseña fuerte';
 }
 
-const registerSlides: RegisterSlide[] = [
-  {
-    backgroundImage: "url('/images/auth/register-green.jpg')",
-    backgroundPosition: "center",
-    description:
-      "Green software aplicado a la operacion para mover mejor cada viaje, ocupar retornos y bajar el desperdicio logistico.",
-    emphasis: "Menos impacto, mas eficiencia real.",
-    eyebrow: "Green software",
-    highlights: [
-      {
-        title: "Operacion mas eficiente",
-        description: "Menos vacio y mejor uso de capacidad para reducir impacto operativo.",
-        icon: <GreenIcon />,
-      },
-      {
-        title: "Huella mas baja",
-        description: "Retornos mejor coordinados para mover mejor cada viaje desde el origen.",
-        icon: <TruckIcon />,
-      },
-    ],
-    title: "Disena una logistica que reduzca vacio y huella desde el origen.",
-  },
-  {
-    backgroundImage: "url('/images/auth/register-truck.jpg')",
-    backgroundPosition: "center",
-    description:
-      "Convierte free millas en oportunidades visibles para publicar capacidad, activar retornos y capturar demanda con mejor timing.",
-    emphasis: "Menos free millas, mas ocupacion util.",
-    eyebrow: "Retornos y cupos",
-    highlights: [
-      {
-        title: "Capacidad visible",
-        description: "Publica cupos disponibles y transforma trayectos libres en oferta real.",
-        icon: <TruckIcon />,
-      },
-      {
-        title: "Mejor ocupacion",
-        description: "Los retornos aparecen con contexto para capturar reservas mejor aprovechadas.",
-        icon: <GreenIcon />,
-      },
-    ],
-    title: "Cada tramo libre puede transformarse en una reserva que si se mueve.",
-  },
-  {
-    backgroundImage: "url('/images/auth/register-security.jpg')",
-    backgroundPosition: "center",
-    description:
-      "Seguridad operativa, sena confirmada y trazabilidad visible para entrar a una plataforma pensada para confianza desde el primer click.",
-    emphasis: "Mas control, menos incertidumbre.",
-    eyebrow: "Seguridad y confianza",
-    highlights: [
-      {
-        title: "Acceso protegido",
-        description: "Ingreso y coordinacion dentro de un flujo preparado para ambos perfiles.",
-        icon: <ShieldIcon />,
-      },
-      {
-        title: "Trazabilidad visible",
-        description: "Estados claros y seguimiento operativo para reducir incertidumbre.",
-        icon: <TruckIcon />,
-      },
-    ],
-    title: "Reserva dentro de un flujo protegido para clientes y transportistas.",
-  },
-];
+export function RegisterPageView() {
+  const [role, setRole] = useState<Role>('client');
+  const [showPw, setShowPw] = useState(false);
+  const [pwValue, setPwValue] = useState('');
 
-function RegisterInfoPanel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      startTransition(() => {
-        setActiveIndex((currentIndex) => (currentIndex + 1) % registerSlides.length);
-      });
-    }, 6000);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
+  const pwScore = getPwScore(pwValue);
+  const pwClass = getPwClass(pwScore);
+  const pwHint = getPwHint(pwScore, !pwValue);
+  const pwHintColor = !pwValue ? 'var(--c5)' : pwScore <= 1 ? '#ef4444' : pwScore === 2 ? '#eab308' : 'var(--c4-dark)';
 
   return (
-    <div className="grid h-full grid-rows-[3fr_1fr] overflow-hidden bg-primary">
-      <div className="relative overflow-hidden">
-        {registerSlides.map((slide, index) => {
-          const isActive = index === activeIndex;
-          const transitionClassName =
-            index === 0
-              ? isActive
-                ? "translate-y-0 scale-100 opacity-100"
-                : "-translate-y-8 scale-[1.02] opacity-0"
-              : index === 1
-                ? isActive
-                  ? "translate-x-0 scale-100 opacity-100"
-                  : "-translate-x-12 scale-[1.01] opacity-0"
-                : isActive
-                  ? "scale-100 opacity-100"
-                  : "scale-[1.08] opacity-0";
+    <div className="auth-wrap">
 
-          return (
-            <article
-              key={slide.title}
-              aria-hidden={!isActive}
-              className={`absolute inset-0 transition-[opacity,transform] duration-1000 ease-out ${transitionClassName}`}
-              style={{ zIndex: isActive ? 20 : 10 }}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: `${sharedImageOverlay}, ${slide.backgroundImage}`,
-                  backgroundPosition: slide.backgroundPosition ?? "center",
-                }}
-              />
+      {/* LEFT — panel de marca */}
+      <div className="auth-left">
+        <Link className="auth-brand" href="/">
+          <div className="auth-brand-mark">R</div>
+          <div className="auth-brand-word">Ruta<em> Directa</em></div>
+        </Link>
 
-              <div className="relative flex h-full flex-col justify-end bg-[linear-gradient(180deg,rgba(6,16,13,0.04),rgba(6,16,13,0.14),rgba(6,16,13,0.34))] p-5 sm:p-6">
-                <div className="max-w-xl rounded-[2rem]  px-5 py-6 text-primary-foreground   sm:px-6">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary-foreground/66">
-                    {slide.eyebrow}
-                  </p>
-                  <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight text-primary-foreground sm:text-4xl sm:leading-tight">
-                    {slide.title}
-                  </h1>
-                  <p className="mt-4 max-w-lg text-sm leading-6 text-primary-foreground/82 sm:text-[15px]">
-                    {slide.description}
-                  </p>
-                  <p className="mt-5 text-sm font-semibold text-primary-foreground">
-                    {slide.emphasis}
-                  </p>
-                </div>
+        <div className="auth-quote">
+          <div className="auth-quote-eyebrow"><span className="dot"></span>Crear cuenta</div>
+          <h2>Sumate a la red de transporte equino más <em>confiable.</em></h2>
+          <p>Empezá gratis. Sin tarjeta, sin permanencia.</p>
+
+          <div className="bens">
+            <div className="ben">
+              <div className="ben-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-            </article>
-          );
-        })}
-
-        <div className="relative z-30 flex h-full flex-col justify-between p-5 sm:p-6">
-          <div className="inline-flex w-fit items-center gap-3 rounded-[1.5rem] px-4 py-3 text-primary-foreground">
-            <div className="flex size-10 items-center justify-center border-full bg-transparent text-sm font-semibold tracking-[0.18em]">
-              ET
+              <div className="ben-text">
+                <strong>Acceso completo gratis</strong>
+                <span>Buscá viajes, reservá cupos y coordiná directo con transportistas.</span>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-foreground/62">
-                Equine Terra
-              </p>
-              <p className="text-sm font-medium text-primary-foreground/90">
-                Cupos y retornos para transporte equino
-              </p>
+            <div className="ben">
+              <div className="ben-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div className="ben-text">
+                <strong>Pago siempre protegido</strong>
+                <span>Seña retenida hasta que confirmás la entrega del traslado.</span>
+              </div>
+            </div>
+            <div className="ben">
+              <div className="ben-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              </div>
+              <div className="ben-text">
+                <strong>Comprobante digital</strong>
+                <span>PDF oficial con todos los datos del viaje al finalizar.</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-end justify-between gap-4"></div>
+        <Link className="auth-foot-link" href="/">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Volver al inicio
+        </Link>
+      </div>
+
+      {/* RIGHT — formulario */}
+      <div className="auth-right" style={{ overflowY: 'auto' }}>
+        <div className="auth-form-wrap" style={{ maxWidth: '440px' }}>
+          <div className="auth-form-head">
+            <div className="auth-form-eyebrow">Crear cuenta</div>
+            <h1 className="auth-form-title">Empezá ahora</h1>
+            <p className="auth-form-sub">¿Ya tenés cuenta? <Link href="/login">Iniciá sesión</Link></p>
+          </div>
+
+          {/* Role selector */}
+          <div className="role-tabs">
+            <button
+              type="button"
+              className={`role-tab${role === 'client' ? ' active' : ''}`}
+              onClick={() => setRole('client')}
+            >
+              <span className="role-tab-icon">🐴</span>
+              <span className="role-tab-name">Tengo caballos</span>
+              <span className="role-tab-desc">Cliente</span>
+            </button>
+            <button
+              type="button"
+              className={`role-tab${role === 'driver' ? ' active' : ''}`}
+              onClick={() => setRole('driver')}
+            >
+              <span className="role-tab-icon">🚛</span>
+              <span className="role-tab-name">Soy camionero</span>
+              <span className="role-tab-desc">Transportista</span>
+            </button>
+          </div>
+
+          {/* Social */}
+          <div className="social-btns">
+            <button type="button" className="social-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continuar con Google
+            </button>
+          </div>
+
+          <div className="divider">
+            <div className="divider-line"></div>
+            <span className="divider-text">o con email</span>
+            <div className="divider-line"></div>
+          </div>
+
+          <form onSubmit={(e) => e.preventDefault()}>
+            {/* Nombre + Apellido */}
+            <div className="field-row-2">
+              <div>
+                <label className="field-label">Nombre</label>
+                <div className="field-wrap">
+                  <span className="field-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <input type="text" className="field-input" placeholder="María" required />
+                </div>
+              </div>
+              <div>
+                <label className="field-label">Apellido</label>
+                <div className="field-wrap">
+                  <span className="field-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <input type="text" className="field-input" placeholder="Alfonzo" required />
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="field">
+              <label className="field-label">Email</label>
+              <div className="field-wrap">
+                <span className="field-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </span>
+                <input type="email" className="field-input" placeholder="tu@email.com" required />
+              </div>
+            </div>
+
+            {/* Teléfono */}
+            <div className="field">
+              <label className="field-label">Teléfono</label>
+              <div className="field-wrap">
+                <span className="field-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <input type="tel" className="field-input" placeholder="+54 9 351..." required />
+              </div>
+            </div>
+
+            {/* Contraseña */}
+            <div className="field">
+              <label className="field-label">Contraseña</label>
+              <div className="field-wrap">
+                <span className="field-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  className="field-input"
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                  value={pwValue}
+                  onChange={e => setPwValue(e.target.value)}
+                />
+                <button type="button" className="field-toggle" onClick={() => setShowPw(p => !p)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div className="pw-strength">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className={`pw-bar${pwValue && i <= pwScore ? ` ${pwClass}` : ''}`} />
+                ))}
+              </div>
+              <div className="pw-hint" style={{ color: pwHintColor }}>{pwHint}</div>
+            </div>
+
+            {/* Terms */}
+            <div className="terms-row">
+              <input type="checkbox" id="terms" required />
+              <label htmlFor="terms">
+                Acepto los <a>Términos</a> y la <a>Política de Privacidad</a>. Quiero recibir novedades por email.
+              </label>
+            </div>
+
+            <button type="submit" className="submit-btn">
+              Crear cuenta
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </form>
+
+          <div className="auth-help">
+            ¿Ya tenés cuenta? <Link href="/login">Iniciá sesión</Link>
+          </div>
         </div>
       </div>
 
-      <div className="relative overflow-hidden bg-primary px-5 py-5 text-primary-foreground sm:px-6 sm:py-6">
-        {registerSlides.map((slide, index) => {
-          const isActive = index === activeIndex;
-
-          return (
-            <div
-              key={`${slide.title}-highlights`}
-              aria-hidden={!isActive}
-              className={`absolute inset-0 px-5 py-5 transition-[opacity,transform] duration-700 ease-out sm:px-6 sm:py-6 ${
-                isActive ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-              }`}
-              style={{ zIndex: isActive ? 20 : 10 }}
-            >
-              <div className="mx-auto flex h-full max-w-5xl flex-col justify-center">
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {slide.highlights.map((highlight) => (
-                    <article
-                      key={highlight.title}
-                      className="rounded-[1.6rem] border border-white/10 bg-[rgba(20,52,40,0.96)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                    >
-                      <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-primary-foreground">
-                        {highlight.icon}
-                      </div>
-                      <h2 className="mt-4 text-sm font-semibold">{highlight.title}</h2>
-                      <p className="mt-2 text-sm leading-6 text-primary-foreground/72">
-                        {highlight.description}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
-  );
-}
-
-function RegisterMobilePanel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      startTransition(() => {
-        setActiveIndex((currentIndex) => (currentIndex + 1) % registerSlides.length);
-      });
-    }, 6000);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  const activeSlide: RegisterSlide = registerSlides[activeIndex] ?? registerSlides[0]!;
-
-  return (
-    <div className="overflow-hidden rounded-[2rem] bg-primary text-primary-foreground">
-      <div className="relative min-h-[28rem] overflow-hidden">
-        {registerSlides.map((slide, index) => {
-          const isActive = index === activeIndex;
-          const transitionClassName =
-            index === 0
-              ? isActive
-                ? "translate-y-0 scale-100 opacity-100"
-                : "-translate-y-8 scale-[1.02] opacity-0"
-              : index === 1
-                ? isActive
-                  ? "translate-x-0 scale-100 opacity-100"
-                  : "-translate-x-12 scale-[1.01] opacity-0"
-                : isActive
-                  ? "scale-100 opacity-100"
-                  : "scale-[1.08] opacity-0";
-
-          return (
-            <article
-              key={`${slide.title}-mobile`}
-              aria-hidden={!isActive}
-              className={`absolute inset-0 transition-[opacity,transform] duration-1000 ease-out ${transitionClassName}`}
-              style={{ zIndex: isActive ? 20 : 10 }}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: `${sharedImageOverlay}, ${slide.backgroundImage}`,
-                  backgroundPosition: slide.backgroundPosition ?? "center",
-                }}
-              />
-              <div className="relative flex h-full flex-col justify-between bg-[linear-gradient(180deg,rgba(6,16,13,0.04),rgba(6,16,13,0.14),rgba(6,16,13,0.34))] p-5">
-                <div className="inline-flex w-fit items-center gap-3 rounded-[1.5rem] px-4 py-3 text-primary-foreground">
-                  <div className="flex size-10 items-center justify-center border-full bg-transparent text-sm font-semibold tracking-[0.18em]">
-                    ET
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-foreground/62">
-                      Equine Terra
-                    </p>
-                    <p className="text-sm font-medium text-primary-foreground/90">
-                      Cupos y retornos para transporte equino
-                    </p>
-                  </div>
-                </div>
-
-                <div className="max-w-xl px-2 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary-foreground/66">
-                    {slide.eyebrow}
-                  </p>
-                  <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight text-primary-foreground">
-                    {slide.title}
-                  </h1>
-                  <p className="mt-4 max-w-lg text-sm leading-6 text-primary-foreground/82">
-                    {slide.description}
-                  </p>
-                  <p className="mt-5 text-sm font-semibold text-primary-foreground">
-                    {slide.emphasis}
-                  </p>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="bg-primary px-4 pb-5 pt-4">
-        <div className="grid gap-3">
-          {activeSlide.highlights.map((highlight) => (
-            <article
-              key={`${activeSlide.title}-${highlight.title}`}
-              className="rounded-[1.6rem] border border-white/10 bg-[rgba(20,52,40,0.96)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-            >
-              <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-primary-foreground">
-                {highlight.icon}
-              </div>
-              <h2 className="mt-4 text-sm font-semibold">{highlight.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-primary-foreground/72">
-                {highlight.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function RegisterPage() {
-  return (
-    <>
-      <main className="hidden h-screen overflow-hidden bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))] lg:grid lg:grid-cols-[1.1fr_0.9fr]">
-        <aside className="h-screen bg-primary">
-          <RegisterInfoPanel />
-        </aside>
-
-        <main className="h-screen overflow-hidden bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))]">
-          <div className="flex h-full items-center justify-center px-8 py-10 xl:px-12 xl:py-12">
-            <div className="flex w-full items-center justify-center">
-              <RegisterForm />
-            </div>
-          </div>
-        </main>
-      </main>
-
-      <main className="bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))] lg:hidden">
-        <section className="px-4 pb-4 pt-4 sm:px-6">
-          <RegisterMobilePanel />
-        </section>
-
-        <section className="px-4 pb-6 pt-2 sm:px-6 sm:pb-8">
-          <div className="mx-auto max-w-md">
-            <RegisterForm />
-          </div>
-        </section>
-      </main>
-    </>
   );
 }
