@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruta Directa — Cómo funciona</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c1:#fffdf0;--c2:#ffffff;--c3:#ac843e;--c3-light:#bf9651;--c3-dark:#8a6929;
+  --c4:#6c8473;--c4-light:#86a08c;--c4-dark:#536659;--c4-soft:#eef2ee;
+  --c5:#838891;--ink:#2a2d33;--ink-soft:#4a4d54;
+  --line:#e8e6dc;--line-soft:#f0eee4;
+  --shadow-sm:0 1px 3px rgba(42,45,51,0.06),0 1px 2px rgba(42,45,51,0.04);
+  --shadow-md:0 4px 16px rgba(42,45,51,0.08),0 2px 4px rgba(42,45,51,0.04);
+  --shadow-lg:0 12px 40px rgba(42,45,51,0.12),0 4px 12px rgba(42,45,51,0.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--c2);font-family:'DM Sans',sans-serif;color:var(--ink);font-size:14px;line-height:1.5}
+
+/* NAV (idéntico a publicación) */
+nav{position:sticky;top:0;z-index:100;background:var(--c2);border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.nav-top{max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:24px}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;text-decoration:none}
+.logo-mark{width:38px;height:38px;border-radius:9px;background:var(--c4);color:white;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:18px;box-shadow:0 2px 8px rgba(108,132,115,0.30)}
+.logo-word{font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.4px}
+.logo-word em{color:var(--c4);font-weight:500;font-style:italic}
+.nav-search{flex:1;max-width:600px;display:flex;align-items:center;background:var(--c1);border:1.5px solid var(--line);border-radius:100px;padding:4px 6px 4px 18px}
+.nav-search svg{color:var(--c5);flex-shrink:0;margin-right:10px}
+.nav-search input{flex:1;border:none;background:transparent;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);padding:9px 0}
+.nav-search input::placeholder{color:var(--c5)}
+.nav-search-btn{background:var(--c4);color:white;border:none;border-radius:100px;padding:9px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.nav-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-link{font-size:14px;font-weight:500;color:var(--ink-soft);padding:8px 14px;border-radius:8px;cursor:pointer;text-decoration:none}
+.nav-link:hover{background:var(--c4-soft);color:var(--c4-dark)}
+.nav-cta{background:var(--c3);color:white;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 2px 8px rgba(172,132,62,0.30)}
+.nav-cta:hover{background:var(--c3-dark)}
+
+/* HERO */
+.cf-hero{background:linear-gradient(135deg,var(--c4) 0%,var(--c4-dark) 100%);padding:80px 32px 100px;position:relative;overflow:hidden}
+.cf-hero::before{content:'';position:absolute;right:-100px;top:-50px;width:50%;height:120%;background:url("https://images.unsplash.com/photo-1553284966-19b8815c7817?w=1400&q=80&auto=format&fit=crop") center/cover no-repeat;opacity:0.20;clip-path:polygon(20% 0,100% 0,100% 100%,0 100%)}
+.cf-hero-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1;max-width:680px}
+.cf-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);color:white;padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px}
+.cf-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#bef264;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(190,242,100,.6)}50%{box-shadow:0 0 0 5px rgba(190,242,100,0)}}
+.cf-hero h1{font-family:'Lora',serif;font-size:clamp(36px,5vw,56px);font-weight:700;color:white;line-height:1.10;letter-spacing:-0.5px;margin-bottom:18px}
+.cf-hero h1 em{font-style:italic;color:#f9e6c5;font-weight:500}
+.cf-hero p{font-size:17px;color:rgba(255,255,255,0.90);line-height:1.65;max-width:540px;margin-bottom:32px}
+.cf-hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.cf-btn-primary{background:white;color:var(--c4-dark);padding:14px 28px;border-radius:100px;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,0.18);transition:all .2s;text-decoration:none}
+.cf-btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,0.25)}
+.cf-btn-secondary{background:transparent;color:white;border:2px solid rgba(255,255,255,0.40);padding:13px 26px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
+.cf-btn-secondary:hover{border-color:white;background:rgba(255,255,255,0.10)}
+
+/* TRUST STRIP */
+.cf-trust{background:var(--c1);padding:32px}
+.cf-trust-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.cf-trust-item{display:flex;align-items:center;gap:14px}
+.cf-trust-icon{width:48px;height:48px;border-radius:12px;background:var(--c4-soft);color:var(--c4-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(108,132,115,0.18)}
+.cf-trust-text strong{display:block;font-family:'Lora',serif;font-size:15px;color:var(--ink);font-weight:700;margin-bottom:2px}
+.cf-trust-text span{font-size:12px;color:var(--c5)}
+
+/* SECTION */
+.section{max-width:1280px;margin:0 auto;padding:80px 32px}
+.section-eyebrow{font-size:12px;font-weight:700;color:var(--c3);text-transform:uppercase;letter-spacing:3px;margin-bottom:14px}
+.section-title{font-family:'Lora',serif;font-size:clamp(28px,3.5vw,42px);font-weight:700;color:var(--ink);line-height:1.15;letter-spacing:-0.5px;margin-bottom:14px;max-width:680px}
+.section-title em{font-style:italic;color:var(--c4)}
+.section-sub{font-size:16px;color:var(--c5);line-height:1.7;max-width:560px;margin-bottom:48px}
+
+/* DUAL FLOWS */
+.flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px}
+.flow-col{background:var(--c1);border:1px solid var(--line);border-radius:18px;padding:36px;box-shadow:var(--shadow-sm)}
+.flow-col-tag{display:inline-flex;align-items:center;gap:8px;background:var(--c4);color:white;padding:7px 16px;border-radius:100px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
+.flow-col-tag.driver{background:var(--c3)}
+.flow-col-title{font-family:'Lora',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:24px;letter-spacing:-0.3px}
+.flow-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+.flow-step:last-child{border-bottom:none}
+.flow-num{width:34px;height:34px;border-radius:8px;background:white;border:1.5px solid var(--c4-soft);color:var(--c4-dark);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:14px;font-weight:700;flex-shrink:0}
+.flow-col.driver-flow .flow-num{border-color:#fef3c7;color:var(--c3-dark)}
+.flow-step-text strong{display:block;font-family:'Lora',serif;font-size:15px;color:var(--ink);margin-bottom:4px}
+.flow-step-text p{font-size:13px;color:var(--c5);line-height:1.65}
+
+/* TRUST CARDS */
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
+.trust-card{background:var(--c2);border:1px solid var(--line);border-radius:14px;padding:28px;transition:all .22s;cursor:default;box-shadow:var(--shadow-sm)}
+.trust-card:hover{border-color:var(--c4-light);transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.trust-card-icon{width:48px;height:48px;border-radius:12px;background:var(--c4-soft);color:var(--c4-dark);display:flex;align-items:center;justify-content:center;margin-bottom:18px;border:1px solid rgba(108,132,115,0.18)}
+.trust-card h3{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px;letter-spacing:-0.3px}
+.trust-card p{font-size:14px;color:var(--c5);line-height:1.7}
+
+/* TESTIMONIOS */
+.testi-section{background:var(--c1);padding:80px 32px}
+.testi-inner{max-width:1280px;margin:0 auto}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
+.testi-card{background:var(--c2);border:1px solid var(--line);border-radius:14px;padding:28px;transition:all .22s;box-shadow:var(--shadow-sm)}
+.testi-card:hover{border-color:var(--c4-light);transform:translateY(-3px)}
+.testi-stars{color:var(--c3);font-size:15px;letter-spacing:2px;margin-bottom:14px}
+.testi-text{font-family:'Lora',serif;font-style:italic;font-size:16px;color:var(--ink);line-height:1.7;margin-bottom:20px}
+.testi-author{display:flex;align-items:center;gap:11px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.testi-av{width:42px;height:42px;border-radius:50%;background:var(--c4);color:white;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:13px;flex-shrink:0}
+.testi-name{font-family:'Lora',serif;font-size:14px;font-weight:700;color:var(--ink)}
+.testi-role{font-size:12px;color:var(--c5);margin-top:2px}
+.testi-result{margin-top:14px;padding:10px 14px;background:var(--c4-soft);border-radius:8px;border-left:3px solid var(--c4);font-size:13px;color:var(--c4-dark);font-weight:600}
+
+/* CTA FINAL */
+.cta-final{background:linear-gradient(135deg,var(--c3) 0%,var(--c3-dark) 100%);padding:80px 32px;text-align:center;position:relative;overflow:hidden}
+.cta-final::before{content:'RUTA';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Lora',serif;font-size:clamp(160px,18vw,260px);font-weight:700;color:rgba(255,255,255,0.08);letter-spacing:-3px;line-height:1;pointer-events:none}
+.cta-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.cta-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.30);color:white;padding:6px 14px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:24px}
+.cta-tag .dot{width:6px;height:6px;border-radius:50%;background:#bef264;animation:pulse 2s infinite}
+.cta-final h2{font-family:'Lora',serif;font-size:clamp(34px,4.5vw,52px);font-weight:700;color:white;line-height:1.10;letter-spacing:-0.5px;margin-bottom:18px}
+.cta-final h2 em{font-style:italic;color:#fef3c7}
+.cta-final p{font-size:17px;color:rgba(255,255,255,0.92);line-height:1.65;max-width:540px;margin:0 auto 36px}
+.cta-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.cta-btn-pri{background:white;color:var(--c3-dark);padding:16px 36px;border-radius:100px;border:none;font-family:'Lora',serif;font-size:17px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.20);transition:all .2s;text-decoration:none}
+.cta-btn-pri:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.28)}
+.cta-btn-sec{background:transparent;color:white;border:2px solid rgba(255,255,255,0.45);padding:15px 28px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
+.cta-btn-sec:hover{border-color:white;background:rgba(255,255,255,0.10)}
+.cta-proof{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:32px;font-size:13px;color:rgba(255,255,255,0.70)}
+.cta-proof span{display:flex;align-items:center;gap:6px}
+
+/* FOOTER */
+footer{background:#1a1d22;padding:56px 32px 28px}
+.footer-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.footer-brand{font-family:'Lora',serif;font-size:24px;font-weight:700;color:white;letter-spacing:-0.4px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.footer-brand .logo-mark{width:36px;height:36px}
+.footer-tag{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.65;margin-bottom:18px;max-width:300px}
+.footer-socials{display:flex;gap:8px}
+.fs{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,0.65);text-decoration:none;transition:all .18s}
+.fs:hover{background:var(--c4);color:white}
+.footer-col h5{font-family:'Lora',serif;font-size:13px;font-weight:700;color:white;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:8px}
+.footer-col ul li a{font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;cursor:pointer}
+.footer-col ul li a:hover{color:white}
+.footer-bottom{max-width:1280px;margin:0 auto;padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-copy,.footer-legal a{font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none}
+.footer-legal{display:flex;gap:18px}
+
+@media(max-width:980px){
+  .flow-grid{grid-template-columns:1fr}
+  .trust-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .cf-trust-inner{grid-template-columns:1fr 1fr}
+  .footer-inner{grid-template-columns:1fr 1fr}
+  .nav-search{display:none}
+  .nav-actions .nav-link{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-top">
+    <a class="nav-logo" href="pagina_Agroads.html">
+      <div class="logo-mark">R</div>
+      <div class="logo-word">Ruta<em> Directa</em></div>
+    </a>
+    <div class="nav-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Buscá tu próximo viaje · Córdoba → Buenos Aires...">
+      <button class="nav-search-btn">Buscar</button>
+    </div>
+    <div class="nav-actions">
+      <a class="nav-link">Publicar</a>
+      <a class="nav-link" href="pagina_login.html">Ingresá</a>
+      <a class="nav-cta" href="pagina_register.html">Registrate</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="cf-hero">
+  <div class="cf-hero-inner">
+    <div class="cf-eyebrow"><span class="dot"></span>Cómo funciona</div>
+    <h1>Reservar transporte equino<br>nunca fue tan <em>simple.</em></h1>
+    <p>Encontrá viajes con cupos disponibles, reservá tu lugar con seña protegida y coordiná directamente con transportistas verificados. Todo desde un solo lugar, con respaldo y comprobante digital.</p>
+    <div class="cf-hero-actions">
+      <a class="cf-btn-primary" href="pagina_Agroads.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Buscar viajes
+      </a>
+      <a class="cf-btn-secondary" href="pagina_register.html">Soy transportista →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<div class="cf-trust">
+  <div class="cf-trust-inner">
+    <div class="cf-trust-item">
+      <div class="cf-trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="cf-trust-text"><strong>Verificación manual</strong><span>Cada transportista revisado</span></div>
+    </div>
+    <div class="cf-trust-item">
+      <div class="cf-trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <div class="cf-trust-text"><strong>Pago protegido</strong><span>Seña retenida hasta entrega</span></div>
+    </div>
+    <div class="cf-trust-item">
+      <div class="cf-trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <div class="cf-trust-text"><strong>Comprobante digital</strong><span>PDF al finalizar</span></div>
+    </div>
+    <div class="cf-trust-item">
+      <div class="cf-trust-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="cf-trust-text"><strong>Cancelación gratis</strong><span>Hasta 24hs antes</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- DUAL FLOWS -->
+<section class="section">
+  <div class="section-eyebrow">El proceso</div>
+  <h2 class="section-title">Funciona para los <em>dos lados</em><br>del transporte equino.</h2>
+  <p class="section-sub">Sea que tengas caballos para mover o que seas transportista con cupos vacíos, el proceso es claro y sin sorpresas.</p>
+
+  <div class="flow-grid">
+
+    <div class="flow-col client-flow">
+      <div class="flow-col-tag">🐴 Si tenés que trasladar</div>
+      <h3 class="flow-col-title">Para clientes</h3>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-step-text">
+          <strong>Buscá tu viaje</strong>
+          <p>Filtrá por origen, destino, fecha y cantidad de cupos. Solo ves transportistas verificados.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-step-text">
+          <strong>Elegí y reservá</strong>
+          <p>Mirá el detalle, condiciones, transportista y precio. Reservá los cupos que necesites.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-step-text">
+          <strong>Pagá la seña (20%)</strong>
+          <p>Tu dinero queda protegido. Solo se libera al transportista cuando confirmás la entrega.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-step-text">
+          <strong>Coordiná por chat</strong>
+          <p>WhatsApp directo o chat interno con el transportista. Recibís fotos del check-in y check-out.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-step-text">
+          <strong>Confirmá y calificá</strong>
+          <p>Cuando llegue todo bien, confirmás y se libera el pago. Calificás al transportista.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-col driver-flow">
+      <div class="flow-col-tag driver">🚛 Si transportás</div>
+      <h3 class="flow-col-title">Para camioneros</h3>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-step-text">
+          <strong>Registrate y verificate</strong>
+          <p>DNI, licencia, patente, fotos del trailer y seguro. Verificación manual en menos de 24hs.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-step-text">
+          <strong>Publicá tu viaje</strong>
+          <p>Definí ruta, fecha, cupos disponibles, precio por cupo y condiciones. En 5 minutos online.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-step-text">
+          <strong>Recibí reservas con seña</strong>
+          <p>Cada reserva incluye 20% de seña pagada. Llegás al día del viaje con cupos confirmados.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-step-text">
+          <strong>Hacé check-in y check-out</strong>
+          <p>Subís fotos al cargar y al entregar. Esto te protege ante cualquier reclamo.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-step-text">
+          <strong>Cobrá el saldo</strong>
+          <p>Cuando el cliente confirma la entrega, recibís el pago completo. Tu reputación crece con cada viaje.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TRUST CARDS -->
+<section class="section" style="padding-top:0">
+  <div class="section-eyebrow">¿Por qué elegirnos?</div>
+  <h2 class="section-title">Pensado para <em>resolver</em> los problemas reales del transporte equino.</h2>
+
+  <div class="trust-grid">
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>Verificación de verdad</h3>
+      <p>Cada transportista pasa por verificación manual: DNI, licencia profesional, fotos del trailer, seguro vigente. No es solo un formulario.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <h3>Pago siempre protegido</h3>
+      <p>La seña queda retenida hasta que vos confirmás que la carga llegó bien. Si hay un problema, el dinero no se libera.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <h3>Comprobante oficial</h3>
+      <p>Generamos un PDF con todos los datos del traslado, las partes, el monto y las condiciones. Vale como respaldo.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <h3>Cancelación clara</h3>
+      <p>Hasta 24hs antes del viaje cancelás sin costo y recuperás el 100% de la seña. Sin letra chica.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <h3>Chat sin intermediarios</h3>
+      <p>Hablás directo con el transportista. WhatsApp o chat interno. Coordinás todo lo que necesites.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+      </div>
+      <h3>Reputación real</h3>
+      <p>Cada viaje completado deja calificación de las dos partes. La trayectoria se acumula y se ve.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="testi-section">
+  <div class="testi-inner">
+    <div class="section-eyebrow">Lo que dicen</div>
+    <h2 class="section-title">Cientos de traslados, <em>cero</em> sorpresas.</h2>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★ ★ ★ ★ ★</div>
+        <div class="testi-text">"Tenía que trasladar tres caballos de Salta a Buenos Aires y siempre me daba miedo. Acá fue todo claro: vi al transportista verificado, pagué la seña y me llegaron fotos en cada momento."</div>
+        <div class="testi-author">
+          <div class="testi-av">MA</div>
+          <div>
+            <div class="testi-name">María Alfonzo</div>
+            <div class="testi-role">Cliente · Salta</div>
+          </div>
+        </div>
+        <div class="testi-result">+ Ahorró 30% vs cotización particular</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★ ★ ★ ★ ★</div>
+        <div class="testi-text">"Soy camionero hace 12 años. Antes los retornos quedaban vacíos. Acá publico el viaje y llego con cupos vendidos. Los pagos llegan en tiempo, sin perseguir a nadie."</div>
+        <div class="testi-author">
+          <div class="testi-av">JR</div>
+          <div>
+            <div class="testi-name">Jorge Ramírez</div>
+            <div class="testi-role">Transportista · Córdoba</div>
+          </div>
+        </div>
+        <div class="testi-result">+ 40% más viajes completos al mes</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★ ★ ★ ★ ★</div>
+        <div class="testi-text">"Coordinaba por WhatsApp y siempre había algún malentendido. Con el comprobante PDF tengo todo claro: ruta, condiciones, precio. Para mi haras es indispensable."</div>
+        <div class="testi-author">
+          <div class="testi-av">CS</div>
+          <div>
+            <div class="testi-name">Claudia Sosa</div>
+            <div class="testi-role">Haras · Buenos Aires</div>
+          </div>
+        </div>
+        <div class="testi-result">+ Cero disputas en 6 meses</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final">
+  <div class="cta-inner">
+    <div class="cta-tag"><span class="dot"></span>Listo para probar</div>
+    <h2>¿Seguís coordinando<br>traslados por <em>WhatsApp?</em></h2>
+    <p>Probá Ruta Directa gratis. Crear cuenta toma 2 minutos y ya podés buscar viajes con transportistas verificados.</p>
+    <div class="cta-actions">
+      <a class="cta-btn-pri" href="pagina_register.html">
+        Crear cuenta gratis
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a class="cta-btn-sec" href="pagina_Agroads.html">Ver viajes disponibles</a>
+    </div>
+    <div class="cta-proof">
+      <span>✓ Sin tarjeta</span>
+      <span>✓ Sin permanencia</span>
+      <span>✓ +1.200 viajes completados</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand"><div class="logo-mark">R</div>Ruta Directa</div>
+      <p class="footer-tag">El marketplace de transporte equino más confiable de Argentina.</p>
+      <div class="footer-socials"><a class="fs">IG</a><a class="fs">FB</a><a class="fs">WA</a><a class="fs">YT</a></div>
+    </div>
+    <div class="footer-col"><h5>Plataforma</h5><ul><li><a href="pagina_Agroads.html">Buscar viajes</a></li><li><a>Para camioneros</a></li><li><a>Cómo funciona</a></li></ul></div>
+    <div class="footer-col"><h5>Ayuda</h5><ul><li><a>Preguntas frecuentes</a></li><li><a>Soporte</a></li><li><a>Contacto</a></li></ul></div>
+    <div class="footer-col"><h5>Legal</h5><ul><li><a>Términos</a></li><li><a>Privacidad</a></li><li><a>Cancelaciones</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 Ruta Directa — Argentina</span>
+    <div class="footer-legal"><a>Términos</a><a>Privacidad</a></div>
+  </div>
+</footer>
+
+</body>
+</html>
