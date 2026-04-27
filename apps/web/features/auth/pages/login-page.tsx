@@ -1,162 +1,117 @@
-import type { ReactNode } from "react";
-import { LoginForm } from "../components/forms/login-form";
+'use client';
 
-const horseBackground = "url('/images/auth/login-hero.jpg')";
+import { useState } from 'react';
+import Link from 'next/link';
 
-const sharedImageOverlay =
-  "radial-gradient(circle at 18% 18%, rgba(108,196,255,0.18), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,204,92,0.18), transparent 18%), linear-gradient(180deg, rgba(30,92,128,0.18), rgba(42,130,114,0.3), rgba(38,88,78,0.5))";
+export function LoginPageView() {
+  const [showPw, setShowPw] = useState(false);
 
-type TrustHighlight = {
-  title: string;
-  description: string;
-  icon: ReactNode;
-};
-
-function ShieldIcon() {
   return (
-    <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 3.5 5.5 6v5.2c0 4.35 2.78 8.4 6.5 9.8 3.72-1.4 6.5-5.45 6.5-9.8V6L12 3.5Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-      <path d="m9.3 12.1 1.8 1.8 3.6-4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-    </svg>
-  );
-}
+    <div className="auth-wrap">
 
-function RouteIcon() {
-  return (
-    <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7 6.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM17 12.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M9.5 9h3.25c1.8 0 3.25 1.45 3.25 3.25V13" stroke="currentColor" strokeDasharray="2.5 2.5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-    </svg>
-  );
-}
+      {/* LEFT — panel de marca */}
+      <div className="auth-left">
+        <Link className="auth-brand" href="/">
+          <div className="auth-brand-mark">R</div>
+          <div className="auth-brand-word">Ruta<em> Directa</em></div>
+        </Link>
 
-function ValueIcon() {
-  return (
-    <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 4v16M7.5 8.25C7.5 6.73 8.84 5.5 10.5 5.5h3c1.66 0 3 1.23 3 2.75S15.16 11 13.5 11h-3c-1.66 0-3 1.23-3 2.75s1.34 2.75 3 2.75h3c1.66 0 3-1.23 3-2.75" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-const highlights: TrustHighlight[] = [
-  {
-    title: "Acceso protegido",
-    description: "Ingreso seguro para clientes y transportistas autorizados.",
-    icon: <ShieldIcon />,
-  },
-  {
-    title: "Operacion trazable",
-    description: "Estados visibles para cada reserva y cada tramo del servicio.",
-    icon: <RouteIcon />,
-  },
-  {
-    title: "Valor operativo",
-    description: "Menos friccion para publicar, reservar y coordinar capacidad.",
-    icon: <ValueIcon />,
-  },
-];
-
-function LeftImagePanel() {
-  return (
-    <div className="grid h-full grid-rows-[3fr_1fr] overflow-hidden bg-primary">
-      <div
-        className="overflow-hidden"
-        style={{
-          backgroundImage: `${sharedImageOverlay}, ${horseBackground}`,
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-      >
-        <div className="relative flex h-full w-full flex-col justify-between p-5 sm:p-6">
-          <div className="inline-flex w-fit items-center gap-3 rounded-[1.5rem] px-4 py-3 text-primary-foreground">
-            <div className="flex size-10 items-center justify-center border-full bg-transparent text-sm font-semibold tracking-[0.18em]">
-              ET
+        <div className="auth-quote">
+          <div className="auth-quote-eyebrow"><span className="dot"></span>Bienvenido de vuelta</div>
+          <h2>Tu próximo viaje<br />está a un <em>click.</em></h2>
+          <p>Más de 1.200 traslados completados con transportistas verificados, pago protegido y comprobante digital.</p>
+          <div className="auth-stats">
+            <div className="auth-stat">
+              <div className="auth-stat-n">+1.200</div>
+              <div className="auth-stat-l">Viajes</div>
             </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary-foreground/62">
-                Equine Terra
-              </p>
-              <p className="text-sm font-medium text-primary-foreground/90">
-                Cupos y retornos para transporte equino
-              </p>
+            <div className="auth-stat">
+              <div className="auth-stat-n">+480</div>
+              <div className="auth-stat-l">Camioneros</div>
+            </div>
+            <div className="auth-stat">
+              <div className="auth-stat-n">4.8★</div>
+              <div className="auth-stat-l">Calificación</div>
             </div>
           </div>
+        </div>
 
-          <div className="max-w-xl px-5 py-6 text-primary-foreground sm:px-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary-foreground/68">
-              La forma inteligente de mover equinos
-            </p>
-            <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight text-primary-foreground sm:text-4xl sm:leading-tight">
-              Reserva capacidad confiable y reduci las millas vacias.
-            </h1>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-primary-foreground/80 sm:text-[15px]">
-              Equine Terra conecta transportistas y clientes para publicar cupos,
-              encontrar retornos y confirmar reservas con trazabilidad clara desde
-              la salida hasta la entrega.
-            </p>
+        <Link className="auth-foot-link" href="/">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Volver al inicio
+        </Link>
+      </div>
+
+      {/* RIGHT — formulario */}
+      <div className="auth-right">
+        <div className="auth-form-wrap">
+          <div className="auth-form-head">
+            <div className="auth-form-eyebrow">Iniciar sesión</div>
+            <h1 className="auth-form-title">Hola de nuevo 👋</h1>
+            <p className="auth-form-sub">¿Sos nuevo en Ruta Directa? <Link href="/register">Creá tu cuenta gratis</Link></p>
+          </div>
+
+          <div className="social-btns">
+            <button type="button" className="social-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continuar con Google
+            </button>
+            <button type="button" className="social-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              Continuar con Facebook
+            </button>
+          </div>
+
+          <div className="divider">
+            <div className="divider-line"></div>
+            <span className="divider-text">o con email</span>
+            <div className="divider-line"></div>
+          </div>
+
+          <form onSubmit={(e) => e.preventDefault()}>
+            <div className="field">
+              <label className="field-label">Email</label>
+              <div className="field-wrap">
+                <span className="field-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </span>
+                <input type="email" className="field-input" placeholder="tu@email.com" required />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="field-label">Contraseña</label>
+              <div className="field-wrap">
+                <span className="field-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <input type={showPw ? 'text' : 'password'} className="field-input" placeholder="Tu contraseña" required />
+                <button type="button" className="field-toggle" onClick={() => setShowPw(p => !p)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="field-row">
+              <label className="checkbox-label">
+                <input type="checkbox" defaultChecked />
+                Mantener sesión iniciada
+              </label>
+              <span className="field-link">¿Olvidaste tu contraseña?</span>
+            </div>
+
+            <button type="submit" className="submit-btn">
+              Ingresar
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </form>
+
+          <div className="auth-help">
+            ¿Necesitás ayuda? <a>Contactanos</a>
           </div>
         </div>
       </div>
 
-      <div className="bg-primary px-5 py-5 text-primary-foreground sm:px-6 sm:py-6">
-        <div className="mx-auto flex h-full max-w-5xl flex-col justify-center">
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {highlights.map((highlight) => (
-              <article
-                key={highlight.title}
-                className="rounded-[1.6rem] border border-white/10 bg-[rgba(20,52,40,0.96)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-              >
-                <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-primary-foreground">
-                  {highlight.icon}
-                </div>
-                <h2 className="mt-4 text-sm font-semibold">{highlight.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-primary-foreground/72">
-                  {highlight.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
-  );
-}
-
-type LoginPageViewProps = {
-  justRegistered?: boolean;
-};
-
-export function LoginPageView({ justRegistered = false }: LoginPageViewProps) {
-  return (
-    <>
-      <main className="hidden h-screen overflow-hidden bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))] lg:grid lg:grid-cols-[1.1fr_0.9fr]">
-        <aside className="h-screen">
-          <LeftImagePanel />
-        </aside>
-
-        <main className="h-screen overflow-hidden">
-          <div className="flex h-full items-center justify-center px-8 py-10 xl:px-12 xl:py-12">
-            <div className="flex w-full items-center justify-center">
-              <LoginForm justRegistered={justRegistered} />
-            </div>
-          </div>
-        </main>
-      </main>
-
-      <main className="bg-[linear-gradient(180deg,rgba(249,244,229,0.98),rgba(243,229,197,0.92))] lg:hidden">
-        <section className="px-4 pb-4 pt-4 sm:px-6">
-          <div className="min-h-[22rem]">
-            <LeftImagePanel />
-          </div>
-        </section>
-
-        <section className="px-4 pb-6 pt-2 sm:px-6 sm:pb-8">
-          <div className="mx-auto max-w-md">
-            <LoginForm justRegistered={justRegistered} />
-          </div>
-        </section>
-      </main>
-    </>
   );
 }
