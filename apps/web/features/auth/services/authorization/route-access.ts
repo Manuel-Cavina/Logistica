@@ -31,7 +31,7 @@ type AuthRouteAccessResolution =
     };
 
 export const AUTHENTICATED_REDIRECT_PATH = DEFAULT_AUTHENTICATED_REDIRECT_PATH;
-export const UNAUTHENTICATED_REDIRECT_PATH = "/";
+export const UNAUTHENTICATED_REDIRECT_PATH = "/login";
 
 export function resolveAuthRouteAccess({
   allowedRoles,

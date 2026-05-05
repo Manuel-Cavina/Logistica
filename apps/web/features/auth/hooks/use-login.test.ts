@@ -76,7 +76,7 @@ describe("loginRequest", () => {
         fetchMock,
       ),
     ).rejects.toMatchObject({
-      message: "Credenciales inválidas",
+      message: "Credenciales invalidas",
       name: "LoginRequestError",
     });
   });
