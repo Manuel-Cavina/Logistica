@@ -64,7 +64,7 @@ export async function loginRequest(
   if (response.status === 401) {
     throw new LoginRequestError(
       "INVALID_CREDENTIALS",
-      "Credenciales inválidas",
+      "Credenciales invalidas",
       response.status,
     );
   }

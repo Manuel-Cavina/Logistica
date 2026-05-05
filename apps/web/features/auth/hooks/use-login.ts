@@ -16,7 +16,7 @@ import type {
 import { LoginRequestError } from "../types/auth.types";
 
 const DEFAULT_ERROR_MESSAGE =
-  "No se pudo iniciar sesiÃ³n. IntentÃ¡ nuevamente en unos segundos.";
+  "No se pudo iniciar sesion. Intenta nuevamente en unos segundos.";
 
 function resolveErrorMessage(error: unknown): string {
   if (error instanceof LoginRequestError) {
@@ -24,7 +24,7 @@ function resolveErrorMessage(error: unknown): string {
   }
 
   if (error instanceof TypeError) {
-    return "No pudimos conectar con la API. VerificÃ¡ tu red e intentÃ¡ nuevamente.";
+    return "No pudimos conectar con la API. Verifica tu red e intenta nuevamente.";
   }
 
   return DEFAULT_ERROR_MESSAGE;

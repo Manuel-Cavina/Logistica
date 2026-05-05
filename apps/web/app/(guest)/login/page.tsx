@@ -1,5 +1,13 @@
 import { LoginPageView } from "@/features/auth/pages/login-page";
 
-export default function LoginPage() {
-  return <LoginPageView />;
+type LoginPageProps = {
+  searchParams?: Promise<{
+    registered?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return <LoginPageView justRegistered={resolvedSearchParams?.registered === "1"} />;
 }
