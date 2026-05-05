@@ -17,16 +17,12 @@ import {
 } from "../utils/register-form-values";
 
 function getPwScore(value: string) {
-  if (!value) {
-    return 0;
-  }
-
+  if (!value) return 0;
   let score = 0;
-  if (value.length >= 8) score += 1;
-  if (/[A-Z]/.test(value)) score += 1;
-  if (/[0-9]/.test(value)) score += 1;
-  if (/[^A-Za-z0-9]/.test(value)) score += 1;
-
+  if (value.length >= 8) score++;
+  if (/[A-Z]/.test(value)) score++;
+  if (/[0-9]/.test(value)) score++;
+  if (/[^A-Za-z0-9]/.test(value)) score++;
   return score;
 }
 
@@ -37,11 +33,11 @@ function getPwClass(score: number): string {
 }
 
 function getPwHint(score: number, empty: boolean): string {
-  if (empty) return "Usa al menos 8 caracteres con numeros y mayusculas";
-  if (score <= 1) return "Contrasena debil";
-  if (score === 2) return "Contrasena regular";
-  if (score === 3) return "Contrasena buena";
-  return "Contrasena fuerte";
+  if (empty) return "Usá al menos 8 caracteres con números y mayúsculas";
+  if (score <= 1) return "Contraseña débil";
+  if (score === 2) return "Contraseña regular";
+  if (score === 3) return "Contraseña buena";
+  return "Contraseña fuerte";
 }
 
 export function RegisterPageView() {
@@ -65,12 +61,12 @@ export function RegisterPageView() {
       registerAccount(toRegisterSubmissionValues(values)),
   );
   const role = watch("role");
-  const password = watch("password");
+  const pwValue = watch("password");
   const isTransporter = role === "TRANSPORTER";
-  const pwScore = getPwScore(password);
+  const pwScore = getPwScore(pwValue);
   const pwClass = getPwClass(pwScore);
-  const pwHint = getPwHint(pwScore, !password);
-  const pwHintColor = !password
+  const pwHint = getPwHint(pwScore, !pwValue);
+  const pwHintColor = !pwValue
     ? "var(--c5)"
     : pwScore <= 1
       ? "#ef4444"
@@ -90,7 +86,7 @@ export function RegisterPageView() {
       startTransition(() => {
         router.push("/login?registered=1");
       });
-    }, 900);
+    }, 1400);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -125,6 +121,7 @@ export function RegisterPageView() {
 
   return (
     <div className="auth-wrap">
+      {/* LEFT — panel de marca */}
       <div className="auth-left">
         <Link className="auth-brand" href="/">
           <div className="auth-brand-mark">R</div>
@@ -135,13 +132,12 @@ export function RegisterPageView() {
 
         <div className="auth-quote">
           <div className="auth-quote-eyebrow">
-            <span className="dot" />
-            Crear cuenta
+            <span className="dot"></span>Crear cuenta
           </div>
           <h2>
-            Sumate a la red de transporte equino mas <em>confiable.</em>
+            Sumate a la red de transporte equino más <em>confiable.</em>
           </h2>
-          <p>Empeza gratis. Sin tarjeta, sin permanencia.</p>
+          <p>Empezá gratis. Sin tarjeta, sin permanencia.</p>
 
           <div className="bens">
             <div className="ben">
@@ -160,7 +156,7 @@ export function RegisterPageView() {
               <div className="ben-text">
                 <strong>Acceso completo gratis</strong>
                 <span>
-                  Busca viajes, reserva cupos y coordina directo con
+                  Buscá viajes, reservá cupos y coordiná directo con
                   transportistas.
                 </span>
               </div>
@@ -180,9 +176,7 @@ export function RegisterPageView() {
               </div>
               <div className="ben-text">
                 <strong>Pago siempre protegido</strong>
-                <span>
-                  Sena retenida hasta que confirmas la entrega del traslado.
-                </span>
+                <span>Seña retenida hasta que confirmás la entrega del traslado.</span>
               </div>
             </div>
             <div className="ben">
@@ -222,16 +216,18 @@ export function RegisterPageView() {
         </Link>
       </div>
 
+      {/* RIGHT — formulario */}
       <div className="auth-right" style={{ overflowY: "auto" }}>
         <div className="auth-form-wrap" style={{ maxWidth: "440px" }}>
           <div className="auth-form-head">
             <div className="auth-form-eyebrow">Crear cuenta</div>
-            <h1 className="auth-form-title">Empeza ahora</h1>
+            <h1 className="auth-form-title">Empezá ahora</h1>
             <p className="auth-form-sub">
-              Ya tenes cuenta? <Link href="/login">Inicia sesion</Link>
+              ¿Ya tenés cuenta? <Link href="/login">Iniciá sesión</Link>
             </p>
           </div>
 
+          {/* Role selector */}
           <div className="role-tabs">
             <button
               type="button"
@@ -239,7 +235,7 @@ export function RegisterPageView() {
               disabled={isDisabled}
               onClick={() => selectRole("CLIENT")}
             >
-              <span className="role-tab-icon">EQ</span>
+              <span className="role-tab-icon">🐴</span>
               <span className="role-tab-name">Tengo caballos</span>
               <span className="role-tab-desc">Cliente</span>
             </button>
@@ -249,28 +245,45 @@ export function RegisterPageView() {
               disabled={isDisabled}
               onClick={() => selectRole("TRANSPORTER")}
             >
-              <span className="role-tab-icon">TR</span>
+              <span className="role-tab-icon">🚛</span>
               <span className="role-tab-name">Soy camionero</span>
               <span className="role-tab-desc">Transportista</span>
             </button>
           </div>
-          {getFieldError("role") ? (
-            <p className="field-error">{getFieldError("role")}</p>
-          ) : null}
 
-          <div className="social-btns" aria-hidden="true">
-            <button type="button" className="social-btn" disabled>
+          {/* Social */}
+          <div className="social-btns">
+            <button type="button" className="social-btn" disabled={isDisabled}>
+              <svg width="16" height="16" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
               Continuar con Google
             </button>
           </div>
 
           <div className="divider">
-            <div className="divider-line" />
+            <div className="divider-line"></div>
             <span className="divider-text">o con email</span>
-            <div className="divider-line" />
+            <div className="divider-line"></div>
           </div>
 
           <form noValidate onSubmit={handleSubmit(onSubmit)}>
+            {/* Nombre + Apellido */}
             {isTransporter ? (
               <div className="field">
                 <label className="field-label" htmlFor="displayName">
@@ -332,7 +345,7 @@ export function RegisterPageView() {
                       className="field-input"
                       disabled={isDisabled}
                       id="firstName"
-                      placeholder="Maria"
+                      placeholder="María"
                       type="text"
                       {...register("firstName")}
                     />
@@ -377,6 +390,7 @@ export function RegisterPageView() {
               </div>
             )}
 
+            {/* Email */}
             <div className="field">
               <label className="field-label" htmlFor="email">
                 Email
@@ -411,10 +425,11 @@ export function RegisterPageView() {
               ) : null}
             </div>
 
+            {/* Teléfono */}
             {!isTransporter ? (
               <div className="field">
                 <label className="field-label" htmlFor="phone">
-                  Telefono <span className="field-optional">Opcional</span>
+                  Teléfono
                 </label>
                 <div className="field-wrap">
                   <span className="field-icon">
@@ -446,9 +461,10 @@ export function RegisterPageView() {
               </div>
             ) : null}
 
+            {/* Contraseña */}
             <div className="field">
               <label className="field-label" htmlFor="password">
-                Contrasena
+                Contraseña
               </label>
               <div className="field-wrap">
                 <span className="field-icon">
@@ -470,7 +486,7 @@ export function RegisterPageView() {
                   className="field-input"
                   disabled={isDisabled}
                   id="password"
-                  placeholder="Minimo 8 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   type={showPw ? "text" : "password"}
                   {...register("password")}
                 />
@@ -500,7 +516,7 @@ export function RegisterPageView() {
                 {[1, 2, 3, 4].map((item) => (
                   <div
                     key={item}
-                    className={`pw-bar${password && item <= pwScore ? ` ${pwClass}` : ""}`}
+                    className={`pw-bar${pwValue && item <= pwScore ? ` ${pwClass}` : ""}`}
                   />
                 ))}
               </div>
@@ -509,6 +525,7 @@ export function RegisterPageView() {
               </div>
             </div>
 
+            {/* Terms */}
             <div className="terms-row">
               <input
                 type="checkbox"
@@ -518,15 +535,16 @@ export function RegisterPageView() {
                 onChange={(event) => setAcceptedTerms(event.target.checked)}
               />
               <label htmlFor="terms">
-                Acepto los <Link href="/">Terminos</Link> y la{" "}
-                <Link href="/">Politica de Privacidad</Link>.
+                Acepto los <Link href="/">Términos</Link> y la{" "}
+                <Link href="/">Política de Privacidad</Link>. Quiero recibir
+                novedades por email.
               </label>
             </div>
 
             {isSuccess ? (
               <div className="auth-feedback auth-feedback-success" aria-live="polite">
                 Cuenta creada correctamente. Te estamos redirigiendo a iniciar
-                sesion.
+                sesión.
               </div>
             ) : null}
 
@@ -556,7 +574,7 @@ export function RegisterPageView() {
           </form>
 
           <div className="auth-help">
-            Ya tenes cuenta? <Link href="/login">Inicia sesion</Link>
+            ¿Ya tenés cuenta? <Link href="/login">Iniciá sesión</Link>
           </div>
         </div>
       </div>
