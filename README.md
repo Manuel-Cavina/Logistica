@@ -1,159 +1,202 @@
-# Turborepo starter
+# Logística — Plataforma de Cupos y Retornos
 
-This Turborepo starter is maintained by the Turborepo core team.
+Plataforma web para conectar clientes que necesitan trasladar carga con transportistas que tienen cupos disponibles o viajes de retorno.
 
-## Using this example
+El MVP inicial está enfocado en el transporte de equinos, pero la arquitectura está pensada desde el primer día para soportar otros rubros como alimentos, animales, carga general o personas sin reescribir el core del sistema.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
-```
+## Objetivo del producto
 
-## What's inside?
+El objetivo principal es reducir viajes vacíos, mejorar la ocupación de los transportistas y profesionalizar la contratación de traslados mediante:
 
-This Turborepo includes the following packages/apps:
+- publicación de viajes con cupos disponibles;
+- reserva de capacidad por parte del cliente;
+- pago protegido con seña;
+- trazabilidad mínima del traslado;
+- comprobantes digitales;
+- reputación y verificación de transportistas;
+- métricas de eficiencia como cupos ocupados, retornos aprovechados y kilómetros vacíos evitados.
 
-### Apps and Packages
+---
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Problema que resuelve
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+En muchos traslados, especialmente en el transporte de caballos, existen cupos libres o viajes de retorno que no se aprovechan. Esto genera costos altos, viajes vacíos, coordinación informal por WhatsApp, poca trazabilidad, riesgo de cancelaciones y problemas de cobro.
 
-### Utilities
+Esta plataforma busca convertir ese proceso informal en un flujo digital más seguro, ordenado y medible.
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Propuesta de valor
 
-### Build
+Para clientes:
 
-To build all apps and packages, run the following command:
+- encontrar transporte confiable de forma más rápida;
+- reservar cupos disponibles;
+- pagar con protección;
+- seguir el estado del traslado;
+- recibir comprobantes digitales;
+- calificar al transportista.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Para transportistas:
 
-```sh
-cd my-turborepo
-turbo build
-```
+- llenar cupos vacíos;
+- publicar retornos;
+- mejorar la ocupación de sus viajes;
+- cobrar con menor riesgo;
+- ordenar reservas, pagos y evidencias;
+- construir reputación profesional.
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+## Alcance del MVP
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+El MVP incluye las funcionalidades necesarias para cerrar un flujo real de negocio:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+- registro y login con roles;
+- roles base: cliente, transportista y administrador;
+- onboarding de transportista;
+- verificación manual inicial;
+- carga de vehículo o trailer;
+- publicación de ofertas de viaje;
+- búsqueda de ofertas por origen, destino, fecha y cupos;
+- reserva de cupos;
+- control transaccional para evitar sobreventa;
+- pago con seña mediante PSP externo;
+- webhook de pago idempotente;
+- chat interno con restricción anti-puenteo;
+- check-in y check-out con evidencias;
+- confirmación de entrega;
+- reputación básica;
+- comprobante digital en PDF;
+- panel de pagos con estados retenido, disponible o en disputa;
+- base preparada para multi-rubro.
 
-```sh
-turbo build --filter=docs
-```
+---
 
-Without global `turbo`:
+## Fuera de alcance del MVP
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Para mantener el producto realista y vendible, el MVP no incluye:
 
-### Develop
+- tracking GPS avanzado;
+- KYC automatizado;
+- subastas o cotizaciones complejas;
+- billetera propia;
+- token cripto;
+- multi-rubro visible en UI;
+- integraciones contables o ERP;
+- automatizaciones sofisticadas no esenciales.
 
-To develop all apps and packages, run the following command:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Flujo principal del cliente
 
-```sh
-cd my-turborepo
-turbo dev
-```
+1. El cliente crea una solicitud de traslado.
+2. Busca ofertas compatibles por ruta, fecha y cupos.
+3. Revisa detalle, precio, reputación y condiciones.
+4. Reserva cupos.
+5. Paga una seña protegida.
+6. Sigue el traslado desde un timeline.
+7. Confirma la entrega.
+8. Descarga el comprobante.
+9. Califica al transportista.
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## Flujo principal del transportista
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+1. El transportista se registra.
+2. Completa su perfil y verificación.
+3. Carga su vehículo o trailer.
+4. Publica una oferta de viaje con cupos disponibles.
+5. Recibe reservas confirmadas.
+6. Realiza check-in y check-out con evidencias.
+7. Finaliza el traslado.
+8. Cobra el pago cuando corresponde.
+9. Califica al cliente.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
-```
+## Reglas de negocio principales
 
-Without global `turbo`:
+### Reservas y cupos
 
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Una oferta puede tener múltiples reservas.  
+Los cupos nunca deben sobrevenderse.  
+La reserva de cupos debe resolverse mediante transacciones de base de datos.
 
-### Remote Caching
+### Pagos
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+La plataforma no custodia dinero directamente.  
+Los pagos se delegan a un PSP externo.  
+El sistema solo gestiona estados de pago como iniciado, retenido, liberado, reembolsado o en disputa.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+### Contacto
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+El contacto completo entre cliente y transportista se habilita solamente después de una reserva confirmada con seña.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+### Disputas
 
-```sh
-cd my-turborepo
-turbo login
-```
+Una disputa congela el estado del pago y habilita intervención manual de administración.
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+## Estados principales
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Booking
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+- `PENDING_PAYMENT`
+- `CONFIRMED`
+- `IN_PROGRESS`
+- `DELIVERED_PENDING_CONFIRMATION`
+- `COMPLETED`
+- `CANCELLED`
+- `DISPUTED`
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Offer
 
-```sh
-turbo link
-```
+- `DRAFT`
+- `PUBLISHED`
+- `FULL`
+- `CLOSED`
+- `IN_PROGRESS`
+- `COMPLETED`
+- `CANCELLED`
 
-Without global `turbo`:
+### Payment
 
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+- `INITIATED`
+- `HELD`
+- `RELEASED`
+- `REFUNDED`
+- `DISPUTED`
+- `FAILED`
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+## Arquitectura del producto
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+El sistema está diseñado como una plataforma multi-rubro, aunque el MVP muestre solamente equinos.
+
+Entidades núcleo:
+
+- `User`
+- `DriverProfile`
+- `Vehicle`
+- `TripOffer`
+- `Booking`
+- `Payment`
+- `Proof`
+- `Review`
+- `Dispute`
+- `CargoType`
+- `CapacityUnit`
+
+La idea central es que “equinos” sea una configuración inicial, no una limitación estructural.
+
+Ejemplo:
+
+```ts
+cargo_type = "EQUINE";
+capacity_unit = "SLOT";
