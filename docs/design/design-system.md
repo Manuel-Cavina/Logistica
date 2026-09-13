@@ -126,25 +126,27 @@ Container `max-width:1280px`, padding `64px 32px`. Title en Lora con highlight a
 - **transition:all .25s**: estándar para cards
 - **transition:all .15-.18s**: para botones y links
 
-## 7. Páginas existentes y su rol
+## 7. Mockups de referencia
 
-| Archivo | Propósito |
-|---|---|
-| `pagina_Agroads.html` | Home — hero, transportistas, ofertas, cats, banners, últimos |
-| `publicacion_viaje.html` | Detalle de viaje programado + flujo de reserva con cupos (5 pasos) |
-| `publicacion_transportista.html` | Perfil del transportista + flujo para proponer viaje (4 pasos) |
-| `pagina_como_funciona.html` | Explicación del producto, flujos cliente/camionero, testimonios |
-| `pagina_login.html` | Split layout con quote izquierda + form derecha |
-| `pagina_register.html` | Split layout con beneficios + form con role selector |
+Los mockups HTML estáticos viven en [`mockups/`](mockups/). Son la referencia visual; la implementación real está en `apps/web`.
+
+| Mockup | Ruta en la app | Propósito |
+|---|---|---|
+| [`home.html`](mockups/home.html) | `/` | Home — hero, transportistas, ofertas, cats, banners, últimos |
+| [`viaje.html`](mockups/viaje.html) | `/viaje/[id]` | Detalle de viaje programado + flujo de reserva con cupos (5 pasos) |
+| [`transportista.html`](mockups/transportista.html) | `/transportista/[id]` | Perfil del transportista + flujo para proponer viaje (4 pasos) |
+| [`como-funciona.html`](mockups/como-funciona.html) | `/como-funciona` | Explicación del producto, flujos cliente/camionero, testimonios |
+| [`login.html`](mockups/login.html) | `/login` | Split layout con quote izquierda + form derecha |
+| [`register.html`](mockups/register.html) | `/register` | Split layout con beneficios + form con role selector |
 
 ## 8. Reglas de navegación
 
-- El logo siempre lleva a `pagina_Agroads.html`
-- Cards de "Contratá un transportista" → `publicacion_transportista.html`
-- Cards de "Ofertas de la semana" y "Últimos publicados" → `publicacion_viaje.html`
-- Nav cta "Registrate" → `pagina_register.html`
-- Nav link "Ingresá" → `pagina_login.html`
-- Footer/Nav "Cómo funciona" → `pagina_como_funciona.html`
+- El logo siempre lleva a `/`
+- Cards de "Contratá un transportista" → `/transportista/[id]`
+- Cards de "Ofertas de la semana" y "Últimos publicados" → `/viaje/[id]`
+- Nav cta "Registrate" → `/register`
+- Nav link "Ingresá" → `/login`
+- Footer/Nav "Cómo funciona" → `/como-funciona`
 
 ## 9. Tono editorial
 

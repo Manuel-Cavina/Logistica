@@ -38,15 +38,15 @@ Propuesta de valor:
 ```
 /
 ├─ AGENTS.md
-├─ CODEX_CONTEXT.md
+├─ README.md
 ├─ package.json
 ├─ pnpm-workspace.yaml
 ├─ turbo.json
+├─ docker-compose.yml
 ├─ .env.example
 ├─ .gitignore
 ├─ .editorconfig
 ├─ .prettierrc
-├─ .eslintrc.cjs
 ├─ .github/
 │  ├─ ISSUE_TEMPLATE/
 │  │  ├─ epic.yml
@@ -60,24 +60,23 @@ Propuesta de valor:
 │  ├─ web/          ← Next.js App Router
 │  └─ api/          ← NestJS monolito modular
 ├─ packages/
-│  ├─ database/          ← PrismaService + PrismaModule (@logistica/database)
+│  ├─ database/          ← Prisma schema + migraciones + PrismaService (@logistica/database)
 │  ├─ shared/            ← schemas Zod + interfaces (@logistica/shared)
 │  ├─ eslint-config/     ← configuración ESLint compartida
 │  └─ typescript-config/ ← configuración TypeScript compartida
+├─ scripts/              ← automatización de issues, ramas y PRs (pnpm issues:create, agent:branch, agent:pr)
 └─ docs/
    ├─ PRD.md
-   ├─ backlog.md
+   ├─ backlog.md + backlog.yaml
    ├─ architecture.md
    ├─ api.md
    ├─ glossary.md
    ├─ governance.md
-   ├─ runbook.md
+   ├─ parallel-agent-workflow.md
    ├─ TECH_DEBT.md
-   └─ decisions/
-      ├─ 001-monorepo.md
-      ├─ 002-auth-strategy.md
-      ├─ 003-payments-psp-escrow.md
-      └─ 004-booking-anti-overbooking.md
+   ├─ audits/            ← auditorías del estado real del sistema (la más reciente manda)
+   ├─ design/            ← sistema de diseño + mockups HTML de referencia
+   └─ decisions/         ← ADRs (pendiente: crear con el primer ADR)
 ```
 
 ---
@@ -423,15 +422,16 @@ Si una tarea toca una zona protegida, el agente debe:
 
 ```bash
 pnpm install          # instalar dependencias
-pnpm dev              # levantar todo en modo desarrollo
+docker compose up -d  # levantar PostgreSQL local
+pnpm dev              # levantar web + api en modo desarrollo
 pnpm build            # build de producción (debe pasar sin errores)
 pnpm lint             # linting (correr antes de abrir PR)
 pnpm typecheck        # verificación de tipos (correr antes de abrir PR)
 pnpm test             # tests (correr después de cambios en módulos críticos)
-pnpm test:e2e         # tests de integración
-pnpm db:migrate       # aplicar migraciones Prisma
-pnpm db:seed          # seed de datos iniciales
-pnpm db:studio        # Prisma Studio local
+
+pnpm --filter @logistica/database db:migrate     # crear/aplicar migraciones Prisma (solo dev)
+pnpm --filter @logistica/database db:studio      # Prisma Studio local
+pnpm --filter @logistica/database prisma:deploy  # aplicar migraciones en staging/producción
 ```
 
 Si se agregan apps o packages, deben integrarse sin romper ninguno de estos comandos.
@@ -446,35 +446,15 @@ Si se agregan apps o packages, deben integrarse sin romper ninguno de estos coma
 - Si el agente necesita un valor de configuración, debe referenciarlo como variable de entorno
   y documentarlo en `.env.example`.
 
-Variables mínimas requeridas:
+La fuente de verdad de las variables es `.env.example`. La API valida al arrancar
+(`apps/api/src/app.module.ts`) y no levanta sin estas:
+
 ```
-# Base de datos
 DATABASE_URL=
-
-# Auth (JWT)
-JWT_SECRET=
-JWT_REFRESH_SECRET=
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-# Mercado Pago
-MP_ACCESS_TOKEN=
-MP_PUBLIC_KEY=
-MP_WEBHOOK_SECRET=
-
-# Storage (Cloudflare R2)
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
-R2_PUBLIC_URL=
-
-# Sentry
-SENTRY_DSN=
-
-# App
-NEXT_PUBLIC_API_URL=
-NODE_ENV=development
+AUTH_ACCESS_TOKEN_SECRET=
+AUTH_REFRESH_TOKEN_SECRET=
+AUTH_ACCESS_TOKEN_TTL_SECONDS=
+AUTH_REFRESH_TOKEN_TTL_SECONDS=
 ```
 
 ---
@@ -681,45 +661,3 @@ Podés revisar el PR en GitHub.
 Confirmá cuando estés listo para continuar con la siguiente rama:
 doc/Documentacion-Base
 ```
-```
-
----
-
-## Paso 2 — El prompt inicial para arrancar todo el plan
-
-Con el `AGENTS.md` actualizado, este es el prompt que le das a Claude Code para ejecutar las 5 ramas del plan:
-```
-Leé el AGENTS.md completo, especialmente la sección 
-"Protocolo de ramas y PRs".
-
-Tenés que ejecutar el plan de 5 ramas del documento que te paso. 
-El orden es exactamente este:
-
-1. doc/Correccion-AGENTS-Stack-y-Estructura (5 commits)
-2. fix/GitHub-CI-Templates (3 commits)
-3. fix/Configuracion-Formato-Raiz (2 commits)
-4. doc/Completar-env-example (1 commit)
-5. doc/Documentacion-Base (4 commits)
-
-Reglas que debés seguir sin excepción:
-
-- Cada rama parte de develop actualizado (git fetch origin && git pull origin develop)
-- Commits atómicos: un commit por cambio lógico, con el mensaje exacto del plan
-- Después de git push de cada rama: DETENETE y reportá según el formato del AGENTS.md
-- No inicies la siguiente rama hasta que yo te diga "seguir" o "continuar"
-- Si algo no está claro en el plan, preguntá antes de implementar
-
-Arrancá con la rama 1: doc/Correccion-AGENTS-Stack-y-Estructura
-```
-
----
-
-## Paso 3 — Tu flujo de revisión en GitHub
-
-Después de cada push que hace Claude Code, tu flujo es:
-```
-1. Abrís GitHub → tu repo → Pull Requests → New Pull Request
-2. base: develop ← compare: nombre-de-la-rama
-3. Revisás los archivos cambiados (Files changed)
-4. Si está bien: volvés a Claude Code y escribís "continuar"
-5. Si necesita ajustes: se los decís antes de continuar

@@ -263,7 +263,8 @@ La actualización de documentación va en el mismo PR que produce el cambio, no 
 Documentos principales
 
 AGENTS.md
-CODEX_CONTEXT.md
+README.md
+docs/audits/ (la auditoría más reciente describe el estado real del sistema)
 docs/PRD.md
 docs/architecture.md
 docs/backlog.md
