@@ -10,8 +10,25 @@ jobs:
   ci:
     name: Lint, typecheck, tests y build
     runs-on: ubuntu-latest
+
+    # Base descartable para los tests de integración (ej. concurrencia de reservas).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: logistica_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d logistica_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
-      DATABASE_URL: postgresql://postgres:postgres@ci-placeholder.invalid:5432/logistica_ci
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/logistica_ci
 
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +42,9 @@ jobs:
 
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
+
+      - name: Aplicar migraciones
+        run: pnpm --filter @logistica/database prisma:deploy
 
       - name: Lint
         run: pnpm lint
