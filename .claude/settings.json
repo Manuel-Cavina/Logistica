@@ -1,7 +1,35 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "mcp__plugin_engram_engram__mem_search",
+      "Bash(eza -la --git-ignore)",
+      "Bash(ls -la)",
+      "mcp__plugin_engram_engram__mem_save",
+      "mcp__plugin_engram_engram__mem_session_summary",
+      "Bash(rg -i \"\\(^|/\\)\\(dist|\\\\.next|coverage|\\\\.turbo|node_modules|\\\\.cache|build\\)/|\\\\.tsbuildinfo$|\\\\.log$|\\\\.DS_Store|Thumbs\\\\.db|settings\\\\.local\\\\.json|\\\\.env$\")",
+      "Bash(xargs wc -l)",
+      "Bash(sort -k2)",
+      "Bash(bat --style=plain packages/typescript-config/package.json)",
+      "Bash(git checkout *)",
+      "Bash(mkdir -p docs/design/mockups docs/audits)",
+      "Bash(git mv *)",
+      "Bash(node __TRACKED_VAR__/relink-mockups.cjs docs/design/mockups)",
+      "Bash(node __TRACKED_VAR__/nb-to-md.cjs SYSTEM_AUDIT.ipynb docs/audits/2026-05-05-system-audit.md)",
+      "Bash(node -e 'const fs=require\\(\"fs\"\\);const f=\"AGENTS.md\";let s=fs.readFileSync\\(f,\"utf8\"\\);const i=s.indexOf\\(\"## Paso 2\"\\);if\\(i<0\\)throw new Error\\(\"marker not found\"\\);s=s.slice\\(0,i\\).replace\\(/`{3}\\\\r?\\\\n`{3}\\\\s*---\\\\s*$/,\"```\\\\n\"\\);fs.writeFileSync\\(f,s\\);console.log\\(s.slice\\(-160\\)\\)')",
+      "Bash(pnpm lint *)",
+      "Bash(tee /c/tmp/lint_output.txt)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(pnpm typecheck *)",
+      "Bash(tee /c/tmp/typecheck_output.txt)",
+      "Bash(pnpm test *)",
+      "Bash(tee /c/tmp/test_output.txt)",
+      "Bash(grep -n -E \"Tasks:|Cached:|Time:|FAIL|PASS|failed|passed|Test Suites|error TS|✓|✗\" /c/tmp/test_output.txt | tail -100)",
+      "Read(//c/tmp/**)",
+      "Bash(grep -n -E \"^\\\\s*Tasks:|^\\\\s*Cached:|^\\\\s*Time:|FAIL |Failed|failed|error TS|Test Suites:|Tests:\" /c/tmp/test_output.txt | tail -60)",
+      "Bash(awk 'NR>=256 && NR<=345 {print length\\($0\\), NR}' /c/tmp/test_output.txt | sort -n | head -30)",
+      "Bash(awk 'NR>=256 && NR<=345 && length\\($0\\)<200 {print NR\": \"$0}' /c/tmp/test_output.txt)",
+      "Bash(gh run *)"
     ]
   }
 }

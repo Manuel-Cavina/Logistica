@@ -34,6 +34,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# TypeScript
+*.tsbuildinfo
+
+# Local tooling (per developer, never committed)
+.claude/settings.local.json
+.atl/
+.worktrees/
+
 # Misc
 .DS_Store
 *.pem
