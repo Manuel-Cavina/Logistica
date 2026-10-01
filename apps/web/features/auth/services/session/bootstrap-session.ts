@@ -10,6 +10,8 @@ const UNAUTHENTICATED_SESSION: AuthSessionSnapshot = {
 };
 
 async function refreshAuthenticatedSession(): Promise<AuthSessionSnapshot> {
+  // El refresh token vive en cookie httpOnly; el frontend solo recibe un access
+  // token rotado para reconstruir la sesión sin exponer credenciales persistentes.
   const refreshResult = await refreshSession();
   const user = await getMe(refreshResult.accessToken);
 
@@ -26,6 +28,8 @@ export async function bootstrapSessionState(): Promise<AuthSessionSnapshot> {
     const user = await getMe(currentAccessToken);
     const tokenRole = getAccessTokenRole(currentAccessToken);
 
+    // Si el backend cambió el rol efectivo, rotamos el access token para que los
+    // guards client-side no tomen decisiones con claims viejos.
     if (tokenRole && tokenRole !== user.role) {
       return await refreshAuthenticatedSession();
     }

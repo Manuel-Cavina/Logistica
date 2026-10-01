@@ -37,6 +37,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const bootstrapStartedRef = useRef(false);
   const bootstrapInFlightRef = useRef<Promise<void> | null>(null);
   const latestBootstrapRef = useRef<() => Promise<void>>(async () => undefined);
+  // Versiona los cambios manuales de sesión para que un bootstrap viejo no pise
+  // un login/logout más reciente cuando las requests resuelven fuera de orden.
   const sessionVersionRef = useRef(0);
 
   function applyAuthenticatedSession(
@@ -69,6 +71,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function bootstrapSession(): Promise<void> {
+    // React Strict Mode puede ejecutar efectos más de una vez en desarrollo.
+    // Reutilizamos la promesa activa para no disparar refresh/me duplicados.
     if (bootstrapInFlightRef.current) {
       return bootstrapInFlightRef.current;
     }

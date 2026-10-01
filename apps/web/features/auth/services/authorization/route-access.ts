@@ -33,6 +33,8 @@ type AuthRouteAccessResolution =
 export const AUTHENTICATED_REDIRECT_PATH = DEFAULT_AUTHENTICATED_REDIRECT_PATH;
 export const UNAUTHENTICATED_REDIRECT_PATH = "/login";
 
+// Mantener esta decisión como función pura hace que los guards sean testeables:
+// React solo ejecuta redirects/render, mientras esta función concentra la regla.
 export function resolveAuthRouteAccess({
   allowedRoles,
   isBootstrapped,

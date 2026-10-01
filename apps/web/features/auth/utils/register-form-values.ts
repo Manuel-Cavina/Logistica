@@ -26,6 +26,8 @@ export const defaultRegisterFormValues: RegisterFormFields = {
 export function toRegisterSubmissionValues(
   values: RegisterFormFields,
 ): RegisterFormValues {
+  // El formulario captura campos distintos según rol, pero la API espera DTOs
+  // específicos. Este mapper evita enviar datos de cliente al registro transportista.
   if (values.role === "TRANSPORTER") {
     return {
       role: "TRANSPORTER",

@@ -4,8 +4,8 @@ import "@testing-library/jest-dom";
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useLogin } from "@/features/auth/hooks/use-login";
-import { LoginForm } from "./forms/login-form";
+import { useLogin } from "../hooks/use-login";
+import { LoginPageView } from "./login-page";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -18,7 +18,7 @@ jest.mock("next/link", () => ({
   }) => React.createElement("a", { href }, children),
 }));
 
-jest.mock("@/features/auth/hooks/use-login", () => ({
+jest.mock("../hooks/use-login", () => ({
   useLogin: jest.fn(),
 }));
 
@@ -34,12 +34,12 @@ function createDeferred<T>() {
   return { promise, resolve };
 }
 
-describe("LoginForm", () => {
+describe("LoginPageView", () => {
   beforeEach(() => {
     mockedUseLogin.mockReset();
   });
 
-  it("shows field errors in the client and keeps submit disabled for invalid values", async () => {
+  it("shows client validation errors and keeps submit disabled for invalid values", async () => {
     const login = jest.fn(async () => null);
 
     mockedUseLogin.mockReturnValue({
@@ -49,15 +49,15 @@ describe("LoginForm", () => {
       login,
     });
 
-    render(<LoginForm />);
+    render(<LoginPageView />);
 
     const user = userEvent.setup();
-    const submitButton = screen.getByRole("button", { name: "Iniciar sesion" });
+    const submitButton = screen.getByRole("button", { name: "Ingresar" });
 
     expect(submitButton).toBeDisabled();
 
     await user.type(screen.getByLabelText("Email"), "invalid-email");
-    await user.type(screen.getByLabelText("Contrasena"), "12345");
+    await user.type(screen.getByPlaceholderText("Tu contraseña"), "12345");
 
     await waitFor(() => {
       expect(screen.getByText("Ingresa un email valido.")).toBeInTheDocument();
@@ -81,14 +81,14 @@ describe("LoginForm", () => {
       login,
     });
 
-    render(<LoginForm />);
+    render(<LoginPageView />);
 
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText("Email"), "client@example.com");
-    await user.type(screen.getByLabelText("Contrasena"), "secret1");
+    await user.type(screen.getByPlaceholderText("Tu contraseña"), "secret1");
 
-    const submitButton = screen.getByRole("button", { name: "Iniciar sesion" });
+    const submitButton = screen.getByRole("button", { name: "Ingresar" });
 
     await waitFor(() => {
       expect(submitButton).toBeEnabled();
@@ -122,7 +122,7 @@ describe("LoginForm", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Iniciar sesion" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Ingresar" })).toBeEnabled();
     });
   });
 });

@@ -790,7 +790,7 @@ Total encontrado: 16 rutas reales `page.tsx`.
 
 - Tipo de pagina: guest-only
 - Usuario objetivo: visitante
-- Componentes principales: `LoginPageView`, `LoginForm`
+- Componentes principales: `LoginPageView`
 - Servicios/API clients usados: `loginRequest`
 - Endpoints consumidos: `POST /auth/login`
 - Formularios existentes: email/password
@@ -802,7 +802,7 @@ Total encontrado: 16 rutas reales `page.tsx`.
 
 - Tipo de pagina: guest-only
 - Usuario objetivo: visitante
-- Componentes principales: `RegisterPageView`, `RegisterForm`, `RoleSelector`
+- Componentes principales: `RegisterPageView`
 - Servicios/API clients usados: `registerRequest`
 - Endpoints consumidos: `POST /auth/register`
 - Formularios existentes: registro cliente/transportista
