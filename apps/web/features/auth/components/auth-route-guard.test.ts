@@ -2,7 +2,7 @@ import {
   AUTHENTICATED_REDIRECT_PATH,
   resolveAuthRouteAccess,
   UNAUTHENTICATED_REDIRECT_PATH,
-} from "./auth-route-access";
+} from "../services/authorization/route-access";
 
 describe("resolveAuthRouteAccess", () => {
   it("shows the fallback while the session bootstrap is still pending", () => {

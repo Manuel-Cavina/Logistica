@@ -8,7 +8,7 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/lib/api";
+} from "@/src/lib/api";
 
 const originalFetch = global.fetch;
 const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;

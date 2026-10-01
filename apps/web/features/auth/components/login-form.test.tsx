@@ -5,7 +5,7 @@ import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useLogin } from "@/features/auth/hooks/use-login";
-import { LoginForm } from "./login-form";
+import { LoginForm } from "./forms/login-form";
 
 jest.mock("next/link", () => ({
   __esModule: true,

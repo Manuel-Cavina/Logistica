@@ -1,4 +1,4 @@
-import { executeLogout } from "../services/logout-flow";
+import { executeLogout } from "../services/session/logout-flow";
 
 describe("executeLogout", () => {
   it("closes the remote session and clears local auth state", async () => {

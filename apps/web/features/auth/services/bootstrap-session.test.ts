@@ -1,5 +1,5 @@
-import { clearAccessToken, getAccessToken, setAccessToken } from "./access-token-store";
-import { bootstrapSessionState } from "./bootstrap-session";
+import { clearAccessToken, getAccessToken, setAccessToken } from "./session/access-token-store";
+import { bootstrapSessionState } from "./session/bootstrap-session";
 
 const originalFetch = global.fetch;
 const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;

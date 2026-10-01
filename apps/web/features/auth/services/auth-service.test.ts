@@ -1,5 +1,9 @@
-import { clearAccessToken, getAccessToken, setAccessToken } from "./access-token-store";
-import { getMe, logout, refreshSession } from "./auth-service";
+import { clearAccessToken, getAccessToken, setAccessToken } from "./session/access-token-store";
+import {
+  getMe,
+  logoutRequest as logout,
+  refreshSession,
+} from "./api/auth-api";
 
 const originalFetch = global.fetch;
 const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;
