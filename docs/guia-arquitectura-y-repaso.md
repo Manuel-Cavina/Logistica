@@ -645,22 +645,28 @@ La idea de esa limpieza fue correcta: no borrar por intuición, sino verificar r
 
 Si no recordás nada, leé en este orden:
 
-1. `README.md`  
+1. `README.md`
    Para entender el producto y cómo correrlo.
 
-2. `docs/guia-arquitectura-y-repaso.md`  
-   Este archivo. Sirve como mapa mental.
+2. `docs/README.md`
+   Para saber qué documento es fuente de verdad de cada tema.
 
-3. `docs/audits/2026-05-05-system-audit.md`  
+3. `docs/guia-arquitectura-y-repaso.md`
+   Este archivo. Sirve como mapa mental y guía de aprendizaje.
+
+4. `docs/architecture.md`
+   Para entender la arquitectura técnica vigente.
+
+5. `docs/api.md`
+   Para ver el inventario actual de endpoints.
+
+6. `docs/audits/2026-05-05-system-audit.md`
    Para ver el estado real auditado módulo por módulo.
 
-4. `docs/architecture.md`  
-   Para entender decisiones arquitectónicas vigentes.
-
-5. `packages/database/prisma/schema.prisma`  
+7. `packages/database/prisma/schema.prisma`
    Para ver qué entidades existen realmente.
 
-6. Tests de cada módulo  
+8. Tests de cada módulo
    Para entender comportamiento esperado con ejemplos concretos.
 
 ---

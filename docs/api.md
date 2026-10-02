@@ -1,439 +1,308 @@
-# Contratos de la API
+# API reference
+<!-- version: 2.0 | last updated: 2026-10-02 -->
 
-Estado documentado en este archivo:
+This document is the current HTTP endpoint inventory for `apps/api`. It lists routes, ownership, roles, and important behavior. Detailed business explanations belong in `docs/architecture.md` or `docs/guia-arquitectura-y-repaso.md`.
 
-- implementado hasta E1 Auth y E2 Transporter Onboarding
-- sin document upload todavia
-- sin `verificationNote` todavia
-
-Base URL de desarrollo: `http://localhost:3001`
+> Source checked against NestJS controllers under `apps/api/src`.
 
 ---
 
-## Autenticacion
+## 1. Conventions
+
+Routes below are shown without host.
+
+Authentication uses:
+
+- access token for protected API calls;
+- refresh token cookie for refresh/logout flows;
+- role guards for `CLIENT`, `TRANSPORTER`, and `ADMIN` boundaries.
+
+Validation uses Zod schemas through `ZodValidationPipe`.
+
+---
+
+## 2. Endpoint summary
+
+| Domain | Method | Route | Auth | Role |
+|---|---:|---|---|---|
+| Auth | `POST` | `/auth/register` | No | Public |
+| Auth | `POST` | `/auth/login` | No | Public |
+| Auth | `GET` | `/auth/me` | Yes | Any authenticated |
+| Auth | `POST` | `/auth/refresh` | Cookie | Session owner |
+| Auth | `POST` | `/auth/logout` | Cookie | Session owner |
+| Transporter profile | `GET` | `/transporter/profile` | Yes | `TRANSPORTER` |
+| Transporter profile | `PATCH` | `/transporter/profile` | Yes | `TRANSPORTER` |
+| Admin transporters | `GET` | `/admin/transporters` | Yes | `ADMIN` |
+| Admin transporters | `GET` | `/admin/transporters/:id` | Yes | `ADMIN` |
+| Admin transporters | `PATCH` | `/admin/transporters/:id/verification-status` | Yes | `ADMIN` |
+| Vehicles | `GET` | `/vehicles` | Yes | `TRANSPORTER` |
+| Vehicles | `POST` | `/vehicles` | Yes | `TRANSPORTER` |
+| Vehicles | `PATCH` | `/vehicles/:id` | Yes | `TRANSPORTER` |
+| Vehicles | `PATCH` | `/vehicles/:id/deactivate` | Yes | `TRANSPORTER` |
+| Trailers | `GET` | `/trailers` | Yes | `TRANSPORTER` |
+| Trailers | `POST` | `/trailers` | Yes | `TRANSPORTER` |
+| Trailers | `PATCH` | `/trailers/:id` | Yes | `TRANSPORTER` |
+| Trailers | `PATCH` | `/trailers/:id/deactivate` | Yes | `TRANSPORTER` |
+| Trip offers | `GET` | `/trip-offers/search` | No | Public |
+| Trip offers | `GET` | `/trip-offers/:id/public` | No | Public |
+| Trip offers | `GET` | `/trip-offers/my` | Yes | `TRANSPORTER` |
+| Trip offers | `POST` | `/trip-offers` | Yes | `TRANSPORTER` |
+| Trip offers | `PATCH` | `/trip-offers/:id` | Yes | `TRANSPORTER` |
+| Trip offers | `POST` | `/trip-offers/:id/publish` | Yes | `TRANSPORTER` |
+| Trip offers | `POST` | `/trip-offers/:id/close` | Yes | `TRANSPORTER` |
+| Trip offers | `POST` | `/trip-offers/:id/cancel` | Yes | `TRANSPORTER` |
+| Bookings | `POST` | `/bookings` | Yes | `CLIENT` |
+| Bookings | `GET` | `/bookings/:id` | Yes | `CLIENT` |
+| Bookings | `POST` | `/bookings/:id/cancel` | Yes | `CLIENT` |
+
+---
+
+## 3. Auth
 
 ### `POST /auth/register`
 
-Registro publico. Solo admite `CLIENT` y `TRANSPORTER`.
+Creates an account and initial profile data.
 
-**Body CLIENT**
-
-```json
-{
-  "role": "CLIENT",
-  "email": "string",
-  "password": "string",
-  "firstName": "string",
-  "lastName": "string",
-  "phone": "string (opcional)"
-}
-```
-
-**Body TRANSPORTER**
-
-```json
-{
-  "role": "TRANSPORTER",
-  "email": "string",
-  "password": "string",
-  "displayName": "string"
-}
-```
-
-**Respuesta 201**
-
-```json
-{
-  "account": {
-    "id": "string",
-    "email": "string",
-    "role": "CLIENT | TRANSPORTER",
-    "isEmailVerified": false
-  }
-}
-```
-
-**Errores**
-
-- `400` registro invalido o no se pudo completar
-
----
+- Public route.
+- Validated with `RegisterSchema` from `@logistica/shared`.
+- Rate-limited by `AuthRateLimitGuard` and auth throttle config.
 
 ### `POST /auth/login`
 
-Inicia sesion y devuelve `accessToken` en el body. El `refreshToken` se devuelve
-en cookie HttpOnly.
+Authenticates an account.
 
-**Body**
-
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-**Respuesta 200**
-
-```json
-{
-  "account": {
-    "id": "string",
-    "email": "string",
-    "role": "CLIENT | TRANSPORTER | ADMIN",
-    "isEmailVerified": true
-  },
-  "accessToken": "string"
-}
-```
-
-**Cookie**
-
-- `refresh_token` por defecto
-- el nombre real puede cambiar via `AUTH_REFRESH_COOKIE_NAME`
-
-**Errores**
-
-- `401` credenciales invalidas
-
----
+- Public route.
+- Validated with `LoginSchema`.
+- Rate-limited.
+- Sets the refresh cookie through the authentication cookie configuration.
+- Returns the login response without exposing the refresh token in the JSON body.
 
 ### `GET /auth/me`
 
-Devuelve la cuenta autenticada. Requiere bearer token.
+Returns current authenticated account data.
 
-**Headers**
-
-- `Authorization: Bearer <accessToken>`
-
-**Respuesta 200**
-
-```json
-{
-  "id": "string",
-  "email": "string",
-  "role": "CLIENT | TRANSPORTER | ADMIN"
-}
-```
-
-**Errores**
-
-- `401` token invalido o expirado
-
----
+- Requires `JwtAuthGuard`.
+- Uses account data from the JWT payload.
 
 ### `POST /auth/refresh`
 
-Rota el refresh token y devuelve un nuevo access token.
+Rotates/refreshes the session.
 
-**Respuesta 200**
-
-```json
-{
-  "accessToken": "string"
-}
-```
-
-**Errores**
-
-- `401` refresh token invalido, expirado o revocado
-
----
+- Reads refresh token from configured cookie.
+- Clears the refresh cookie when refresh is unauthorized.
+- Returns a new access-token response and sets a new refresh cookie.
 
 ### `POST /auth/logout`
 
-Revoca la sesion actual y limpia la cookie de refresh.
+Revokes the current refresh session and clears the refresh cookie.
 
-**Respuesta 204**
-
-Sin body.
+- Returns `204 No Content`.
 
 ---
 
-## Perfil del transportista
-
-Todos los endpoints de esta seccion requieren:
-
-- bearer token valido
-- rol `TRANSPORTER`
+## 4. Transporter profile
 
 ### `GET /transporter/profile`
 
-Devuelve el perfil del transportista autenticado.
+Returns the authenticated transporter profile.
 
-**Respuesta 200**
-
-```json
-{
-  "displayName": "string",
-  "businessName": "string | null",
-  "contactPhone": "string | null",
-  "bio": "string | null",
-  "maxDetourKmDefault": "number | null",
-  "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
-}
-```
-
-**Errores**
-
-- `401` no autenticado
-- `403` rol incorrecto
-- `404` no existe perfil asociado a la cuenta
-
----
+- Requires `JwtAuthGuard` and `RolesGuard`.
+- Role: `TRANSPORTER`.
 
 ### `PATCH /transporter/profile`
 
-Actualiza el perfil del transportista autenticado.
+Updates the authenticated transporter profile.
 
-Todos los campos son opcionales, pero el payload debe incluir al menos uno.
-
-**Body**
-
-```json
-{
-  "displayName": "string",
-  "businessName": "string | null",
-  "contactPhone": "string | null",
-  "bio": "string | null",
-  "maxDetourKmDefault": "number | null"
-}
-```
-
-Regla actual:
-
-- si el perfil esta en `INCOMPLETE`
-- y despues del update tiene `displayName` y `contactPhone`
-- entonces pasa automaticamente a `PENDING`
-
-**Respuesta 200**
-
-Mismo shape que `GET /transporter/profile`.
-
-**Errores**
-
-- `401` no autenticado
-- `403` rol incorrecto
-- `404` no existe perfil asociado a la cuenta
+- Requires role `TRANSPORTER`.
+- Validated with `UpdateTransporterProfileSchema` from `@logistica/shared`.
+- Service owns verification-status transition rules.
 
 ---
 
-## Admin - transportistas
+## 5. Admin transporters
 
-Todos los endpoints de esta seccion requieren:
-
-- bearer token valido
-- rol `ADMIN`
+All admin transporter routes require `JwtAuthGuard`, `RolesGuard`, and role `ADMIN`.
 
 ### `GET /admin/transporters`
 
-Lista perfiles de transportistas.
+Lists transporter profiles for admin review.
 
-**Query params**
-
-- `status` (opcional): `INCOMPLETE | PENDING | VERIFIED | REJECTED`
-
-**Respuesta 200**
-
-```json
-[
-  {
-    "id": "string",
-    "displayName": "string",
-    "contactPhone": "string | null",
-    "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
-  }
-]
-```
-
----
+Query is validated with `GetAdminTransportersQuerySchema`.
 
 ### `GET /admin/transporters/:id`
 
-Devuelve el detalle de un perfil transportista.
+Returns one transporter detail for admin review.
 
-**Path params**
-
-- `id`: `cuid` del `TransporterProfile`
-
-**Respuesta 200**
-
-```json
-{
-  "id": "string",
-  "displayName": "string",
-  "businessName": "string | null",
-  "contactPhone": "string | null",
-  "bio": "string | null",
-  "maxDetourKmDefault": "number | null",
-  "verificationStatus": "INCOMPLETE | PENDING | VERIFIED | REJECTED"
-}
-```
-
-**Errores**
-
-- `404` perfil no encontrado
-
----
+Route params are validated with `GetAdminTransporterParamsSchema`.
 
 ### `PATCH /admin/transporters/:id/verification-status`
 
-Actualiza manualmente el estado de verificacion.
+Updates transporter verification status.
 
-**Body**
-
-```json
-{
-  "verificationStatus": "VERIFIED | REJECTED"
-}
-```
-
-Reglas actuales:
-
-- solo admite `VERIFIED` o `REJECTED`
-- solo es valido si el perfil estaba en `PENDING`
-
-**Respuesta 200**
-
-Mismo shape que `GET /admin/transporters/:id`.
-
-**Errores**
-
-- `404` perfil no encontrado
-- `409` transicion de estado invalida
+Body is validated with `UpdateAdminTransporterVerificationStatusSchema`.
 
 ---
 
-## Flota E3
+## 6. Vehicles
 
-Todos los endpoints de esta seccion requieren:
-
-- bearer token valido
-- rol `TRANSPORTER`
+All vehicle routes require role `TRANSPORTER`.
 
 ### `GET /vehicles`
 
-Lista los vehicles del transportista autenticado.
+Lists the authenticated transporter's vehicles.
 
-**Respuesta 200**
+### `POST /vehicles`
 
-```json
-[
-  {
-    "id": "string",
-    "licensePlate": "string",
-    "brand": "string",
-    "model": "string",
-    "isActive": true
-  }
-]
-```
+Creates a vehicle for the authenticated transporter.
 
-Reglas actuales:
+Body is validated with `CreateVehicleSchema` from `@logistica/shared`.
 
-- devuelve solo resources propios de la cuenta autenticada
-- ordena activos primero
+### `PATCH /vehicles/:id`
+
+Updates one owned vehicle.
+
+Params are validated with `VehicleParamsSchema`. Body is validated with `UpdateVehicleSchema`.
+
+### `PATCH /vehicles/:id/deactivate`
+
+Soft-deactivates one owned vehicle.
 
 ---
+
+## 7. Trailers
+
+All trailer routes require role `TRANSPORTER`.
 
 ### `GET /trailers`
 
-Lista los trailers del transportista autenticado.
+Lists the authenticated transporter's trailers.
 
-**Respuesta 200**
+### `POST /trailers`
 
-```json
-[
-  {
-    "id": "string",
-    "totalCapacity": 12,
-    "cargoType": "EQUINE | GENERAL_CARGO | FOOD | PEOPLE",
-    "capacityUnit": "SLOT | KG | M3 | SEAT",
-    "isActive": true
-  }
-]
-```
+Creates a trailer for the authenticated transporter.
 
-Reglas actuales:
+Body is validated with `CreateTrailerSchema` from `@logistica/shared`.
 
-- devuelve solo resources propios de la cuenta autenticada
-- ordena activos primero
+### `PATCH /trailers/:id`
 
-### Contrato interno previsto para E4
+Updates one owned trailer.
 
-`TrailerService.hasActiveTrailer(accountId: string): Promise<boolean>`
+Params are validated with `TrailerParamsSchema`. Body is validated with `UpdateTrailerSchema`.
 
-Uso esperado:
+### `PATCH /trailers/:id/deactivate`
 
-- validar si el transportista tiene al menos un trailer activo antes de publicar una `TripOffer`
-- reutilizar el criterio desde futuros modulos sin duplicar queries ni materializar el listado completo
+Soft-deactivates one owned trailer.
 
 ---
 
-## Trip offers
+## 8. Trip offers
 
 ### `GET /trip-offers/search`
 
-Busqueda publica de ofertas publicadas.
+Public search for published trip offers.
 
-**Query params**
+Query is validated with `SearchTripOffersQuerySchema`.
 
-- `origin`: `string` requerido
-- `destination`: `string` requerido
-- `date`: fecha requerida
-- `requiredCapacity`: entero positivo requerido
-- `minPrice`: entero no negativo opcional
-- `maxPrice`: entero no negativo opcional
-- `verifiedOnly`: `true | false` opcional
-- `maxDetourKm`: entero no negativo opcional
-- `sortBy`: `price | proximity | rating` opcional
-- `sortOrder`: `asc | desc` opcional, solo valido cuando `sortBy=price`
-- `page`: entero positivo opcional, default `1`
-- `limit`: entero positivo opcional, maximo `20`, default `10`
+Important behavior:
 
-**Respuesta 200**
+- public route;
+- returns paginated search response;
+- filters and sorting are owned by `TripOfferService`;
+- should not expose private transporter/account data.
 
-```json
-{
-  "items": [
-    {
-      "id": "string",
-      "originLabel": "string",
-      "destinationLabel": "string",
-      "departureDate": "2026-05-01T00:00:00.000Z",
-      "availableCapacity": 4,
-      "pricePerSlot": 120000,
-      "cargoType": "EQUINE | GENERAL_CARGO | FOOD | PEOPLE",
-      "status": "PUBLISHED | FULL"
-    }
-  ],
-  "page": 1,
-  "limit": 10,
-  "total": 1,
-  "totalPages": 1
-}
-```
+### `GET /trip-offers/:id/public`
 
-**Reglas actuales**
+Public detail for one trip offer.
 
-- solo devuelve ofertas `PUBLISHED` con capacidad suficiente y filtros aplicados antes de paginar
-- si no se envia `sortBy`, el backend mantiene su orden default actual
-- `sortBy=price` ordena por `pricePerSlot`
-- `sortBy=proximity` usa una aproximacion temporal: menor `maxDetourKm` primero
-- `sortBy=rating` queda soportado desde ahora, pero mientras no exista rating agregado persistido el orden se resuelve con desempate estable
-- desempate estable para ordenamientos explicitos: `departureDate asc` y luego `id asc`
-- `sortOrder` solo se admite con `sortBy=price`
+Params are validated with `TripOfferParamsSchema`.
 
-**Errores**
+### `GET /trip-offers/my`
 
-- `400` query invalida
+Lists offers owned by the authenticated transporter.
+
+- Requires role `TRANSPORTER`.
+
+### `POST /trip-offers`
+
+Creates an offer for the authenticated transporter.
+
+- Requires role `TRANSPORTER`.
+- Body is validated with `CreateTripOfferSchema`.
+
+### `PATCH /trip-offers/:id`
+
+Updates an owned offer.
+
+- Requires role `TRANSPORTER`.
+- Params validated with `TripOfferParamsSchema`.
+- Body validated with `UpdateTripOfferSchema`.
+
+### `POST /trip-offers/:id/publish`
+
+Publishes an owned draft offer.
+
+- Requires role `TRANSPORTER`.
+- Returns `200`.
+
+### `POST /trip-offers/:id/close`
+
+Closes an owned offer.
+
+- Requires role `TRANSPORTER`.
+- Returns `200`.
+
+### `POST /trip-offers/:id/cancel`
+
+Cancels an owned offer.
+
+- Requires role `TRANSPORTER`.
+- Returns `200`.
 
 ---
 
-## Fuera de alcance por ahora
+## 9. Bookings
 
-Todavia no existen en la API:
+All booking routes require role `CLIENT`.
 
-- endpoints de documentos de transportista
-- `verificationNote`
-- detalle publico de `TripOffer`
+### `POST /bookings`
+
+Creates a booking for the authenticated client.
+
+Body is validated with `CreateBookingSchema` from `@logistica/shared`.
+
+Important behavior:
+
+- booking creation must protect available capacity;
+- price snapshots are stored at booking time;
+- current initial status is `PENDING_PAYMENT`;
+- payment continuation is pending until Mercado Pago/webhooks are implemented.
+
+### `GET /bookings/:id`
+
+Returns one booking owned by the authenticated client.
+
+Params are validated with `BookingParamsSchema`.
+
+### `POST /bookings/:id/cancel`
+
+Cancels one owned booking when service rules allow it.
+
+Params are validated with `BookingParamsSchema`.
+
+---
+
+## 10. Not implemented yet
+
+These product areas do not currently have API controllers in `apps/api/src`:
+
+- payments and Mercado Pago preferences;
+- Mercado Pago webhooks;
+- proof/evidence upload confirmation;
+- reviews/reputation;
+- disputes;
+- contact/chat restriction endpoints;
+- receipt/PDF generation;
+- password recovery backend;
+- real admin users endpoint.
+
+When any of these are added, update this document in the same PR.

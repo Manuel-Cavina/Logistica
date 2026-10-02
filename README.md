@@ -265,6 +265,8 @@ pnpm agent:pr --lane backend-e3 --issue-number 123 --issue-title "Extender schem
 
 | Documento | Contenido |
 |---|---|
+| [`docs/README.md`](docs/README.md) | Mapa de documentación y fuente de verdad de cada archivo |
+| [`docs/guia-arquitectura-y-repaso.md`](docs/guia-arquitectura-y-repaso.md) | Guía para recuperar contexto y entender la arquitectura paso a paso |
 | [`docs/PRD.md`](docs/PRD.md) | Visión de producto, público y métricas de éxito |
 | [`docs/architecture.md`](docs/architecture.md) | Arquitectura del sistema |
 | [`docs/api.md`](docs/api.md) | Endpoints de la API |

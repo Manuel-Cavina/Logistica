@@ -1,381 +1,329 @@
 # Architecture
-<!-- version: 2.0 | ultima actualizacion: 2026-04-06 -->
+<!-- version: 3.0 | last updated: 2026-10-02 -->
 
-## 1. Objetivo
+This document is the current technical architecture reference for Ruta Directa. It explains system boundaries, module structure, data model, and rules that should stay stable while the MVP evolves.
 
-Definir la arquitectura vigente del MVP sobre la base real implementada y dejar
-claro el punto de partida para E3.
+> For a learning-oriented explanation, read `docs/guia-arquitectura-y-repaso.md`. For historical implementation detail, read `docs/audits/2026-05-05-system-audit.md`.
 
-Este documento no describe un sistema ideal. Describe:
+---
 
-- que esta implementado hoy
-- que decisiones estructurales ya estan tomadas
-- que piezas faltan todavia
+## 1. System purpose
 
-## 2. Stack oficial
+Ruta Directa is a marketplace for transport capacity and return trips. The first vertical is equine transport, but the core model is prepared for multiple cargo types and capacity units.
 
-| Capa | Tecnologia |
-|---|---|
-| Frontend | Next.js 15 App Router + Tailwind CSS |
-| Backend | NestJS modular |
-| ORM | Prisma |
-| Base de datos | PostgreSQL |
-| Monorepo | pnpm workspaces + Turborepo |
-| Storage previsto | Cloudflare R2 |
-| Pagos previstos | Mercado Pago |
-
-## 3. Estado actual del sistema
-
-Implementado hoy:
-
-- auth publica y autenticada
-- sesiones con refresh token rotado
-- perfil de cliente en registro
-- perfil de transportista
-- verificacion manual basica por admin
-- onboarding de transportista en frontend
-- listado y detalle admin de transportistas
-
-No implementado todavia:
-
-- documentos de transportista
-- `verificationNote`
-- vehiculos
-- trailers
-- ofertas
-- booking
-- pagos
-- evidencias
-
-## 4. Bounded contexts actuales
-
-### Identity
-
-Responsabilidad:
-
-- cuentas
-- roles
-- autenticacion
-- sesiones
-- perfil del transportista
-
-Modulos actuales:
-
-- `identity/accounts`
-- `identity/authentication`
-- `identity/transporter-profile`
-
-### Admin
-
-Responsabilidad:
-
-- revision manual de perfiles de transportistas
-
-Modulo actual:
-
-- `admin`
-
-### Common
-
-Responsabilidad:
-
-- pipes y utilidades compartidas del backend
-
-Modulo actual:
-
-- `common`
-
-### Fleet
-
-Responsabilidad prevista para E3:
-
-- `Vehicle`
-- `Trailer`
-- capacidad operativa del transportista
-
-Todavia no existe implementacion.
-
-## 5. Modelo de datos vigente
-
-### Enums implementados
-
-```prisma
-enum AccountRole {
-  CLIENT
-  TRANSPORTER
-  ADMIN
-}
-
-enum AccountStatus {
-  ACTIVE
-  SUSPENDED
-  DISABLED
-}
-
-enum TransporterVerificationStatus {
-  INCOMPLETE
-  PENDING
-  VERIFIED
-  REJECTED
-}
-```
-
-### Entidades implementadas
-
-#### Account
-
-Identidad central del sistema.
-
-Campos clave:
-
-- `id`
-- `email`
-- `passwordHash`
-- `role`
-- `status`
-- `isEmailVerified`
-- `lastLoginAt`
-
-#### UserProfile
-
-Perfil de negocio para cuentas `CLIENT`.
-
-Campos clave:
-
-- `accountId`
-- `firstName`
-- `lastName`
-- `phone`
-
-#### TransporterProfile
-
-Perfil de negocio para cuentas `TRANSPORTER`.
-
-Campos clave:
-
-- `accountId`
-- `displayName`
-- `businessName`
-- `contactPhone`
-- `bio`
-- `maxDetourKmDefault`
-- `verificationStatus`
-
-Importante:
-
-- hoy no existe `verificationNote`
-- hoy no existe `TransporterDocument`
-
-#### Session
-
-Persistencia de refresh tokens rotados.
-
-Campos clave:
-
-- `accountId`
-- `tokenHash`
-- `tokenFamily`
-- `expiresAt`
-- `revokedAt`
-
-## 6. Reglas arquitectonicas vigentes
-
-### Account es la identidad del sistema
-
-No usar `User` como nombre del modelo raiz. La identidad real es `Account`.
-
-Consecuencias:
-
-- en JWT y guards se trabaja con `accountId`
-- los perfiles son extensiones de `Account`
-- no usar `userId` para referirse a una cuenta
-
-### Controllers delgados
-
-- reciben request
-- validan con Zod
-- delegan al service
-
-### Services con reglas de negocio
-
-- aplican transiciones
-- validan permisos y consistencia
-- llaman a repositories
-
-### Repositories como unico acceso a Prisma
-
-- no usar Prisma directo desde services
-- centralizar `select`, `where` y `update`
-
-### Tests colocalizados
-
-Cada modulo sigue el patron:
+Core product path:
 
 ```text
-modulo/
-├─ modulo.controller.ts
-├─ modulo.controller.spec.ts
+Transporter publishes capacity -> Client searches -> Client books -> Payment is handled by PSP -> Trip is operated -> Delivery/reputation closes the flow
+```
+
+Current code has foundations for identity, transporter onboarding, admin verification, fleet, trip offers, and bookings. Payments, webhooks, proofs, reviews, disputes, and PDF receipts are still pending product areas.
+
+---
+
+## 2. Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15 App Router, React 19, Tailwind CSS |
+| Backend | NestJS modular monolith |
+| ORM | Prisma |
+| Database | PostgreSQL |
+| Contracts | Zod schemas and TypeScript types in `@logistica/shared` |
+| Monorepo | pnpm workspaces + Turborepo |
+| Planned storage | Cloudflare R2 with presigned direct upload |
+| Planned payments | Mercado Pago |
+
+---
+
+## 3. Repository boundaries
+
+```text
+apps/
+├─ web/        Next.js frontend
+└─ api/        NestJS backend
+
+packages/
+├─ shared/     Zod schemas and shared TypeScript contracts
+├─ database/   Prisma schema, migrations, generated client, PrismaService
+├─ eslint-config/
+└─ typescript-config/
+
+docs/          Product, architecture, API, governance, audit, design docs
+scripts/       Project automation
+```
+
+Dependency direction:
+
+```text
+apps/web ───────┐
+                ├─ packages/shared
+apps/api ───────┘
+   │
+   └─ packages/database
+```
+
+Rules:
+
+- `apps/web` never imports from `apps/api`.
+- `apps/api` never imports from `apps/web`.
+- `packages/shared` must not depend on app code.
+- `packages/database` owns Prisma concerns; app modules consume it through `PrismaService`.
+
+---
+
+## 4. Backend architecture
+
+Backend source lives in `apps/api/src/`.
+
+Current top-level modules:
+
+```text
+admin/
+booking/
+common/
+identity/accounts/
+identity/authentication/
+identity/transporter-profile/
+trailer/
+trip-offer/
+vehicle/
+```
+
+Request flow:
+
+```text
+Controller -> Service -> Repository -> PrismaService -> PostgreSQL
+```
+
+| Layer | Responsibility |
+|---|---|
+| Controller | HTTP route, guards, params/body validation, delegation. |
+| Service | Business rules, state transitions, transactional orchestration. |
+| Repository | Prisma queries and persistence details. |
+| DTO/schema | Input/output shape and validation. |
+| Types | Prisma selects, internal return types, typed payloads. |
+
+Standard module shape:
+
+```text
+src/<module>/
+├─ <module>.module.ts
+├─ <module>.controller.ts
+├─ <module>.controller.spec.ts
 ├─ application/
-│  ├─ modulo.service.ts
-│  └─ modulo.service.spec.ts
+│  ├─ <module>.service.ts
+│  └─ <module>.service.spec.ts
 ├─ dto/
 ├─ repositories/
 └─ types/
 ```
 
-No usar `__tests__`.
+The intent is simple: controllers stay thin, services hold business rules, repositories are the only Prisma access point inside feature modules.
 
-## 7. API implementada hoy
+---
 
-### Auth
+## 5. Bounded contexts
 
-Endpoints reales:
+| Context | Responsibility | Current modules |
+|---|---|---|
+| Identity | Accounts, authentication, sessions, roles, transporter profile. | `identity/accounts`, `identity/authentication`, `identity/transporter-profile` |
+| Admin | Manual transporter verification and administrative review. | `admin` |
+| Fleet | Transporter vehicles and trailers. | `vehicle`, `trailer` |
+| Marketplace | Trip offers and public search/detail. | `trip-offer` |
+| Booking | Client reservations and anti-overbooking flow. | `booking` |
+| Common | Shared backend utilities. | `common` |
 
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/me`
-- `POST /auth/refresh`
-- `POST /auth/logout`
+Planned later contexts:
 
-Detalles relevantes:
+- payments/webhooks;
+- proofs/evidence;
+- reviews/reputation;
+- disputes;
+- receipts/PDF;
+- green metrics.
 
-- registro publico solo para `CLIENT` y `TRANSPORTER`
-- `ADMIN` de desarrollo puede existir via variables `AUTH_MOCK_ADMIN_*`
-- `refreshToken` va en cookie HttpOnly
+---
 
-### Transporter profile
+## 6. API surface summary
 
-Endpoints reales:
+Canonical endpoint details live in `docs/api.md`. Architecture only keeps the domain map.
 
-- `GET /transporter/profile`
-- `PATCH /transporter/profile`
+| Domain | Implemented routes |
+|---|---|
+| Auth | Register, login, current user, refresh, logout. |
+| Transporter profile | Own profile read/update. |
+| Admin transporters | List, detail, verification status update. |
+| Vehicles | Own vehicle list/create/update/deactivate. |
+| Trailers | Own trailer list/create/update/deactivate. |
+| Trip offers | Public search/detail, own list/create/update/publish/close/cancel. |
+| Bookings | Client create/detail/cancel. |
 
-Transicion real implementada:
+---
 
-- `INCOMPLETE -> PENDING` al completar `displayName` y `contactPhone`
+## 7. Frontend architecture
 
-### Admin transporters
-
-Endpoints reales:
-
-- `GET /admin/transporters`
-- `GET /admin/transporters/:id`
-- `PATCH /admin/transporters/:id/verification-status`
-
-Transiciones reales permitidas:
-
-- `PENDING -> VERIFIED`
-- `PENDING -> REJECTED`
-
-## 8. Frontend vigente
-
-### Router
-
-Estructura actual:
+Frontend source lives in `apps/web/`.
 
 ```text
-app/
-├─ (guest)/
-│  ├─ login/page.tsx
-│  └─ register/page.tsx
-├─ (protected)/
-│  ├─ layout.tsx
-│  ├─ dashboard/page.tsx
-│  ├─ onboarding/transporter/page.tsx
-│  └─ admin/
-│     ├─ transporters/page.tsx
-│     ├─ transporters/[id]/page.tsx
-│     └─ users/page.tsx
-└─ forgot-password/page.tsx
+apps/web/
+├─ app/          Next.js routes and layouts
+├─ features/     Domain-specific UI, hooks, services, types
+├─ components/   Shared UI primitives
+├─ src/lib/      Shared API/form utilities
+└─ public/       Public assets
 ```
 
-### Guards
+Rule:
 
-Patron actual:
+```text
+app/ routes should be small entrypoints.
+features/ contains real screen composition and client-side behavior.
+src/lib/ contains reusable infrastructure.
+components/ui contains reusable visual primitives.
+```
 
-- `ProtectedAppGuard` protege el arbol autenticado
-- `TransporterProfileGuard` resuelve acceso segun `verificationStatus`
+Current feature areas:
 
-Comportamiento actual:
+| Feature | Purpose |
+|---|---|
+| `features/auth` | Login, register, session provider, auth guards. |
+| `features/dashboard` | Protected dashboard hub. |
+| `features/transporter-onboarding` | Transporter profile completion. |
+| `features/admin` | Admin transporter and user screens. |
+| `features/vehicle` | Vehicle/trailer UI. |
+| `features/trips` | Public trip/transporter presentation screens. |
 
-- `INCOMPLETE` o `REJECTED` redirigen a onboarding
-- `PENDING` y `VERIFIED` pueden continuar
+Use Server Components by default. Use `"use client"` only for hooks, providers, forms, browser APIs, state, or event handlers.
 
-### Mutaciones
+---
 
-No se usan Server Actions.
+## 8. Data model
 
-Las mutaciones actuales van por cliente HTTP desde hooks y services de
-feature.
+Prisma schema lives in `packages/database/prisma/schema.prisma`.
 
-## 9. Estado de verificacion del transportista
+Current implemented models:
 
-### Lo que existe hoy
+| Model | Purpose |
+|---|---|
+| `Account` | Login identity, role, status, session relation. |
+| `UserProfile` | Personal profile attached to an account. |
+| `TransporterProfile` | Transporter business profile and verification status. |
+| `Vehicle` | Transporter vehicle. |
+| `Trailer` | Transporter trailer and capacity metadata. |
+| `TripOffer` | Published or draft transport offer. |
+| `Booking` | Client reservation for capacity. |
+| `Session` | Refresh token session tracking. |
+
+Important enums:
+
+| Enum | Values |
+|---|---|
+| `AccountRole` | `CLIENT`, `TRANSPORTER`, `ADMIN` |
+| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DISABLED` |
+| `TransporterVerificationStatus` | `INCOMPLETE`, `PENDING`, `VERIFIED`, `REJECTED` |
+| `CargoType` | `EQUINE`, `GENERAL_CARGO`, `FOOD`, `PEOPLE` |
+| `CapacityUnit` | `SLOT`, `KG`, `M3`, `SEAT` |
+| `TripOfferStatus` | `DRAFT`, `PUBLISHED`, `FULL`, `CLOSED`, `CANCELLED` |
+| `BookingStatus` | `PENDING_PAYMENT`, `EXPIRED`, `CONFIRMED`, `IN_PROGRESS`, `DELIVERED_PENDING_CONFIRMATION`, `COMPLETED`, `CANCELLED`, `DISPUTED` |
+
+Payments, proofs, reviews, and disputes are product concepts but do not currently exist as Prisma models in the checked schema.
+
+---
+
+## 9. State and business rules
+
+### Transporter verification
 
 ```text
 INCOMPLETE -> PENDING -> VERIFIED
-                      -> REJECTED
+                   └──> REJECTED
 ```
 
-### Lo que no existe hoy
+A transporter starts incomplete, completes onboarding, then waits for admin review.
 
-- documentos
-- presigned URLs
-- motivo de rechazo
-- flujo de reenvio documental
+### Trip offer
 
-## 10. Variables de entorno vigentes
+Current schema statuses:
 
-Fuente de verdad actual: `.env.example`
-
-```env
-NODE_ENV=
-DATABASE_URL=
-AUTH_ACCESS_TOKEN_SECRET=
-AUTH_REFRESH_TOKEN_SECRET=
-AUTH_ACCESS_TOKEN_TTL_SECONDS=
-AUTH_REFRESH_TOKEN_TTL_SECONDS=
-AUTH_REFRESH_COOKIE_NAME=
-AUTH_MOCK_ADMIN_ENABLED=
-AUTH_MOCK_ADMIN_EMAIL=
-AUTH_MOCK_ADMIN_PASSWORD=
-API_INTERNAL_URL=
-CORS_ALLOWED_ORIGINS=
-NEXT_PUBLIC_API_URL=
-MP_ACCESS_TOKEN=
-MP_PUBLIC_KEY=
-MP_WEBHOOK_SECRET=
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
-R2_PUBLIC_URL=
-SENTRY_DSN=
+```text
+DRAFT -> PUBLISHED -> FULL
+          ├──> CLOSED
+          └──> CANCELLED
 ```
 
-## 11. Decisiones ya tomadas
+A transporter owns their offers. Public search/detail must only expose safe public data.
 
-- monolito modular en NestJS
-- App Router en frontend
-- `Account` como identidad principal
-- `TransporterProfile` como extension de negocio
-- sessions persistidas en DB con refresh token hasheado
-- verificacion manual de transportistas en MVP
-- sin documentos aun en E2 implementado
+### Booking
 
-## 12. Siguiente paso arquitectonico: E3
+Current schema statuses include the full future flow, but the implemented transactional path currently starts at `PENDING_PAYMENT`. Payment continuation is pending because Mercado Pago integration is not implemented yet.
 
-La siguiente epica debe incorporar el contexto Fleet:
+Booking creation must protect capacity updates transactionally.
 
-- `Vehicle`
-- `Trailer`
-- capacidad total
-- activacion y desactivacion
-- precondicion futura para publicar `TripOffer`
+---
 
-Condiciones para E3:
+## 10. Protected areas
 
-- mantener el patron controller -> service -> repository
-- no anticipar `TripOffer` si no es necesario
-- dejar `cargoType` y `capacityUnit` listos en modelo aunque el MVP siga
-  operando visualmente como Equinos
+These areas need extra review and explicit approval for risky changes:
+
+| Area | Why |
+|---|---|
+| Auth/session/roles | Security and authorization. |
+| Booking anti-overbooking | Data consistency and capacity correctness. |
+| Payments/webhooks | Money, idempotency, and external PSP behavior. |
+| Prisma migrations | Data loss risk. |
+| Production configuration/deploy | Environment safety. |
+
+---
+
+## 11. Environment variables
+
+API startup validates these required values:
+
+```text
+DATABASE_URL
+AUTH_ACCESS_TOKEN_SECRET
+AUTH_REFRESH_TOKEN_SECRET
+AUTH_ACCESS_TOKEN_TTL_SECONDS
+AUTH_REFRESH_TOKEN_TTL_SECONDS
+```
+
+Payment and storage variables are expected when those integrations are implemented.
+
+---
+
+## 12. Testing expectations
+
+Minimum expectations:
+
+- colocated `*.spec.ts` files;
+- unit tests for service business rules;
+- integration/controller tests for HTTP boundaries;
+- concurrency/idempotency tests for critical flows;
+- lint, typecheck, tests, and build before PR readiness.
+
+Root commands:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+API tests that touch Prisma require a reachable PostgreSQL database.
+
+---
+
+## 13. Documentation ownership
+
+Avoid duplicating details across docs:
+
+| Topic | Canonical doc |
+|---|---|
+| Product scope | `docs/PRD.md` |
+| Architecture | `docs/architecture.md` |
+| Endpoint inventory | `docs/api.md` |
+| Learning guide | `docs/guia-arquitectura-y-repaso.md` |
+| Historical audit | `docs/audits/2026-05-05-system-audit.md` |
+| Doc map | `docs/README.md` |

@@ -1,4 +1,7 @@
-Governance
+# Governance
+
+> Workflow and collaboration rules. Agent-specific operational rules live in `AGENTS.md`.
+
 <!-- version: 1.0 | última actualización: 2026-03-13 | revisar si cambian reglas de trabajo, zonas críticas o uso de agentes -->
 1. Objetivo
 Definir reglas simples y claras para trabajar este proyecto sin desorden, retrabajo ni decisiones inconsistentes.

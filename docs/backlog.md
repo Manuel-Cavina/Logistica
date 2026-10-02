@@ -1,4 +1,7 @@
-Backlog
+# Backlog
+
+> Narrative backlog for humans. The machine-readable source used by `pnpm issues:create` is `docs/backlog.yaml`.
+
 <!-- version: 1.0 | última actualización: 2026-03-13 | revisar si cambia el orden de épicas, dependencias o criterios de sprint -->
 1. Objetivo
 Convertir la visión del producto y la arquitectura inicial en un backlog ejecutable, ordenado por épicas, dependencias y prioridad de implementación.
